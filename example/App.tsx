@@ -1,6 +1,6 @@
 import React from 'react';
 import {Text, View, StyleSheet } from 'react-native';
-import { MunimWifi } from 'react-native-munim-wifi';
+import { MunimWifi } from 'munim-wifi';
 
 function App(): React.JSX.Element {
   return (

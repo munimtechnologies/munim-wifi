@@ -1,5 +1,5 @@
 {
-  "name": "react-native-munim-wifi",
+  "name": "munim-wifi",
   "version": "0.1.0",
   "description": "munim-wifi is a react native package built with Nitro",
   "main": "./lib/commonjs/index.js",
@@ -16,7 +16,7 @@
   },
   "keywords": [
     "react-native",
-    "react-native-munim-wifi"
+    "munim-wifi"
   ],
   "files": [
     "src",
@@ -42,11 +42,11 @@
   "workspaces": [
     "example"
   ],
-  "repository": "https://github.com/sheehanmunim/react-native-munim-wifi.git",
+  "repository": "https://github.com/sheehanmunim/munim-wifi.git",
   "author": "sheehanmunim",
   "license": "MIT",
-  "bugs": "https://github.com/sheehanmunim/react-native-munim-wifi/issues",
-  "homepage": "https://github.com/sheehanmunim/react-native-munim-wifi#readme",
+  "bugs": "https://github.com/sheehanmunim/munim-wifi/issues",
+  "homepage": "https://github.com/sheehanmunim/munim-wifi#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
