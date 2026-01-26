@@ -193,7 +193,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
     func getRSSI(ssid: String) throws -> Promise<Variant_NullType_Double> {
         let promise = Promise<Variant_NullType_Double>()
         // iOS limitation: RSSI not available for scanned networks
-        promise.resolve(withResult: .first(margelo.nitro.NullType.null))
+        promise.resolve(withResult: .first(NullType.null))
         return promise
     }
     
@@ -202,7 +202,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         if let current = try? getCurrentNetworkSync(), current.ssid == ssid {
             promise.resolve(withResult: .second(current.bssid))
         } else {
-            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
+            promise.resolve(withResult: .first(NullType.null))
         }
         return promise
     }
@@ -210,7 +210,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
     func getChannelInfo(ssid: String) throws -> Promise<Variant_NullType_ChannelInfo> {
         let promise = Promise<Variant_NullType_ChannelInfo>()
         // iOS limitation: Channel and frequency not available
-        promise.resolve(withResult: .first(margelo.nitro.NullType.null))
+        promise.resolve(withResult: .first(NullType.null))
         return promise
     }
     
@@ -229,7 +229,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
             )
             promise.resolve(withResult: .second(network))
         } else {
-            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
+            promise.resolve(withResult: .first(NullType.null))
         }
         return promise
     }
@@ -260,7 +260,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         if let result = result {
             promise.resolve(withResult: .second(result))
         } else {
-            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
+            promise.resolve(withResult: .first(NullType.null))
         }
         return promise
     }
@@ -319,7 +319,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         if let address = address {
             promise.resolve(withResult: .second(address))
         } else {
-            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
+            promise.resolve(withResult: .first(NullType.null))
         }
         return promise
     }
