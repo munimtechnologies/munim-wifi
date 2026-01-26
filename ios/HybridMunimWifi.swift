@@ -50,9 +50,15 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         
         NEHotspotNetwork.fetchCurrent { network in
             if let network = network {
+                // Get IP address
+                let ipAddress = self.getIPAddressSync()
                 result = CurrentNetworkInfo(
                     ssid: network.ssid,
-                    bssid: network.bssid ?? ""
+                    bssid: network.bssid ?? "",
+                    ipAddress: ipAddress,
+                    subnetMask: nil,
+                    gateway: nil,
+                    dnsServers: nil
                 )
             }
             semaphore.signal()
@@ -60,6 +66,38 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         
         _ = semaphore.wait(timeout: .now() + 5)
         return result
+    }
+    
+    // Helper to get IP address synchronously
+    private func getIPAddressSync() -> String? {
+        var address: String?
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        
+        guard getifaddrs(&ifaddr) == 0 else { return nil }
+        defer { freeifaddrs(ifaddr) }
+        
+        guard var ptr = ifaddr else { return nil }
+        
+        while ptr != nil {
+            defer { ptr = ptr.pointee.ifa_next }
+            
+            let interface = ptr.pointee
+            let addrFamily = interface.ifa_addr.pointee.sa_family
+            
+            if addrFamily == UInt8(AF_INET) {
+                let name = String(cString: interface.ifa_name)
+                if name == "en0" || name == "en1" {
+                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                    getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                              &hostname, socklen_t(hostname.count),
+                              nil, socklen_t(0), NI_NUMERICHOST)
+                    address = String(cString: hostname)
+                    break
+                }
+            }
+        }
+        
+        return address
     }
     
     func scanNetworks(options: ScanOptions?) throws -> Promise<[WifiNetwork]> {
@@ -78,7 +116,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
                 channel: nil, // Not available on iOS
                 capabilities: nil,
                 isSecure: nil,
-                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+                timestamp: Date().timeIntervalSince1970 * 1000
             )
             scanResults = [network]
             promise.resolve(withResult: [network])
@@ -102,7 +140,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
                 channel: nil,
                 capabilities: nil,
                 isSecure: nil,
-                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+                timestamp: Date().timeIntervalSince1970 * 1000
             )
             scanResults = [network]
         }
@@ -138,14 +176,15 @@ class HybridMunimWifi: HybridMunimWifiSpec {
                     channel: nil,
                     capabilities: nil,
                     isSecure: nil,
-                    timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+                    timestamp: Date().timeIntervalSince1970 * 1000
                 )]
             }
         }
         
         let fingerprint = WifiFingerprint(
             networks: networks,
-            timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+            timestamp: Date().timeIntervalSince1970 * 1000,
+            location: nil
         )
         promise.resolve(withResult: fingerprint)
         return promise
@@ -154,7 +193,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
     func getRSSI(ssid: String) throws -> Promise<Variant_NullType_Double> {
         let promise = Promise<Variant_NullType_Double>()
         // iOS limitation: RSSI not available for scanned networks
-        promise.resolve(withResult: .first(NullType()))
+        promise.resolve(withResult: .first(margelo.nitro.NullType.null))
         return promise
     }
     
@@ -163,7 +202,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         if let current = try? getCurrentNetworkSync(), current.ssid == ssid {
             promise.resolve(withResult: .second(current.bssid))
         } else {
-            promise.resolve(withResult: .first(NullType()))
+            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
         }
         return promise
     }
@@ -171,7 +210,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
     func getChannelInfo(ssid: String) throws -> Promise<Variant_NullType_ChannelInfo> {
         let promise = Promise<Variant_NullType_ChannelInfo>()
         // iOS limitation: Channel and frequency not available
-        promise.resolve(withResult: .first(NullType()))
+        promise.resolve(withResult: .first(margelo.nitro.NullType.null))
         return promise
     }
     
@@ -186,11 +225,11 @@ class HybridMunimWifi: HybridMunimWifiSpec {
                 channel: nil, // Not available on iOS
                 capabilities: nil,
                 isSecure: nil,
-                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+                timestamp: Date().timeIntervalSince1970 * 1000
             )
             promise.resolve(withResult: .second(network))
         } else {
-            promise.resolve(withResult: .first(NullType()))
+            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
         }
         return promise
     }
@@ -202,9 +241,15 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         
         NEHotspotNetwork.fetchCurrent { network in
             if let network = network {
+                // Get IP address
+                let ipAddress = self.getIPAddressSync()
                 result = CurrentNetworkInfo(
                     ssid: network.ssid,
-                    bssid: network.bssid ?? ""
+                    bssid: network.bssid ?? "",
+                    ipAddress: ipAddress,
+                    subnetMask: nil,
+                    gateway: nil,
+                    dnsServers: nil
                 )
             }
             semaphore.signal()
@@ -215,7 +260,7 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         if let result = result {
             promise.resolve(withResult: .second(result))
         } else {
-            promise.resolve(withResult: .first(NullType()))
+            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
         }
         return promise
     }
@@ -269,37 +314,12 @@ class HybridMunimWifi: HybridMunimWifiSpec {
     
     func getIPAddress() throws -> Promise<Variant_NullType_String> {
         let promise = Promise<Variant_NullType_String>()
-        var address: String?
-        var ifaddr: UnsafeMutablePointer<ifaddrs>?
-        
-        guard getifaddrs(&ifaddr) == 0 else { return nil }
-        defer { freeifaddrs(ifaddr) }
-        
-        guard var ptr = ifaddr else { return nil }
-        
-        while ptr != nil {
-            defer { ptr = ptr.pointee.ifa_next }
-            
-            let interface = ptr.pointee
-            let addrFamily = interface.ifa_addr.pointee.sa_family
-            
-            if addrFamily == UInt8(AF_INET) {
-                let name = String(cString: interface.ifa_name)
-                if name == "en0" || name == "en1" {
-                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-                    getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
-                              &hostname, socklen_t(hostname.count),
-                              nil, socklen_t(0), NI_NUMERICHOST)
-                    address = String(cString: hostname)
-                    break
-                }
-            }
-        }
+        let address = getIPAddressSync()
         
         if let address = address {
             promise.resolve(withResult: .second(address))
         } else {
-            promise.resolve(withResult: .first(NullType()))
+            promise.resolve(withResult: .first(margelo.nitro.NullType.null))
         }
         return promise
     }
