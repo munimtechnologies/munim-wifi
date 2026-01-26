@@ -1,6 +1,6 @@
 {
   "name": "munim-wifi",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "munim-wifi is a react native package built with Nitro",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
