@@ -29,10 +29,14 @@ Pod::Spec.new do |s|
   # The generated iOS bridge files include headers like "ScanOptions.hpp"
   # which are located in nitrogen/generated/shared/c++/
   # Use USER_HEADER_SEARCH_PATHS for quoted includes (user headers)
+  # Also add HEADER_SEARCH_PATHS as a fallback
   existing_xcconfig = s.attributes_hash['pod_target_xcconfig'] || {}
   current_user_header_paths = existing_xcconfig['USER_HEADER_SEARCH_PATHS'] || '$(inherited)'
+  current_header_paths = existing_xcconfig['HEADER_SEARCH_PATHS'] || '$(inherited)'
+  shared_header_path = '$(SRCROOT)/nitrogen/generated/shared/c++'
   s.pod_target_xcconfig = existing_xcconfig.merge({
-    "USER_HEADER_SEARCH_PATHS" => "#{current_user_header_paths} $(SRCROOT)/nitrogen/generated/shared/c++"
+    "USER_HEADER_SEARCH_PATHS" => "#{current_user_header_paths} \"#{shared_header_path}\"",
+    "HEADER_SEARCH_PATHS" => "#{current_header_paths} \"#{shared_header_path}\""
   })
 
   s.dependency 'React-jsi'
