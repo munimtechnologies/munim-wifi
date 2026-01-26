@@ -33,7 +33,7 @@ int initialize(JavaVM* vm) {
     HybridObjectRegistry::registerHybridObjectConstructor(
       "MunimWifi",
       []() -> std::shared_ptr<HybridObject> {
-        static DefaultConstructableObject<JHybridMunimWifiSpec::javaobject> object("com/munimwifi/HybridMunimWifi");
+        static DefaultConstructableObject<JHybridMunimWifiSpec::javaobject> object("com/margelo/nitro/munimwifi/HybridMunimWifi");
         auto instance = object.create();
         return instance->cthis()->shared();
       }

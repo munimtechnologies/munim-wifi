@@ -25,6 +25,15 @@ Pod::Spec.new do |s|
   load 'nitrogen/generated/ios/MunimWifi+autolinking.rb'
   add_nitrogen_files(s)
 
+  # Add header search path for shared C++ headers
+  # The generated iOS bridge files include headers like "ScanOptions.hpp"
+  # which are located in nitrogen/generated/shared/c++/
+  existing_xcconfig = s.attributes_hash['pod_target_xcconfig'] || {}
+  current_header_paths = existing_xcconfig['HEADER_SEARCH_PATHS'] || '$(inherited)'
+  s.pod_target_xcconfig = existing_xcconfig.merge({
+    "HEADER_SEARCH_PATHS" => "#{current_header_paths} ${PODS_TARGET_SRCROOT}/nitrogen/generated/shared/c++"
+  })
+
   s.dependency 'React-jsi'
   s.dependency 'React-callinvoker'
   install_modules_dependencies(s)
