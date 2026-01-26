@@ -4,7 +4,7 @@ munim-wifi is a react native package built with Nitro
 
 [![Version](https://img.shields.io/npm/v/munim-wifi.svg)](https://www.npmjs.com/package/munim-wifi)
 [![Downloads](https://img.shields.io/npm/dm/munim-wifi.svg)](https://www.npmjs.com/package/munim-wifi)
-[![License](https://img.shields.io/npm/l/munim-wifi.svg)](https://github.com/sheehanmunim/munim-wifi/LICENSE)
+[![License](https://img.shields.io/npm/l/munim-wifi.svg)](https://github.com/munimtechnologies/munim-wifi/LICENSE)
 
 ## Requirements
 

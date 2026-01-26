@@ -42,11 +42,11 @@
   "workspaces": [
     "example"
   ],
-  "repository": "https://github.com/sheehanmunim/munim-wifi.git",
+  "repository": "https://github.com/munimtechnologies/munim-wifi.git",
   "author": "sheehanmunim",
   "license": "MIT",
-  "bugs": "https://github.com/sheehanmunim/munim-wifi/issues",
-  "homepage": "https://github.com/sheehanmunim/munim-wifi#readme",
+  "bugs": "https://github.com/munimtechnologies/munim-wifi/issues",
+  "homepage": "https://github.com/munimtechnologies/munim-wifi#readme",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
