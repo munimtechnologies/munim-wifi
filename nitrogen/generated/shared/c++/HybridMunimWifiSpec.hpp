@@ -21,6 +21,10 @@ namespace margelo::nitro::munimwifi { struct ScanOptions; }
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `ConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 
 #include <NitroModules/Promise.hpp>
 #include "WifiNetwork.hpp"
@@ -32,6 +36,8 @@ namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 #include <NitroModules/Null.hpp>
 #include <variant>
 #include "ChannelInfo.hpp"
+#include "CurrentNetworkInfo.hpp"
+#include "ConnectionOptions.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -75,6 +81,10 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getBSSID(const std::string& ssid) = 0;
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, ChannelInfo>>> getChannelInfo(const std::string& ssid) = 0;
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> getCurrentNetwork() = 0;
+      virtual std::shared_ptr<Promise<void>> connectToNetwork(const ConnectionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<void>> disconnect() = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() = 0;
       virtual void addListener(const std::string& eventName) = 0;
       virtual void removeListeners(double count) = 0;
 

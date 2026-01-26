@@ -10,6 +10,8 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
 // Forward declaration of `Location` to properly resolve imports.
@@ -27,6 +29,7 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 
 // Include C++ defined types
 #include "ChannelInfo.hpp"
+#include "CurrentNetworkInfo.hpp"
 #include "HybridMunimWifiSpec.hpp"
 #include "Location.hpp"
 #include "ScanOptions.hpp"
@@ -557,6 +560,118 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return Func_void_std__variant_nitro__NullType__WifiNetwork__Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::optional<std::vector<std::string>>
+  /**
+   * Specialized version of `std::optional<std::vector<std::string>>`.
+   */
+  using std__optional_std__vector_std__string__ = std::optional<std::vector<std::string>>;
+  inline std::optional<std::vector<std::string>> create_std__optional_std__vector_std__string__(const std::vector<std::string>& value) noexcept {
+    return std::optional<std::vector<std::string>>(value);
+  }
+  inline bool has_value_std__optional_std__vector_std__string__(const std::optional<std::vector<std::string>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::vector<std::string> get_std__optional_std__vector_std__string__(const std::optional<std::vector<std::string>>& optional) noexcept {
+    return *optional;
+  }
+  
+  // pragma MARK: std::variant<nitro::NullType, CurrentNetworkInfo>
+  /**
+   * Wrapper struct for `std::variant<nitro::NullType, CurrentNetworkInfo>`.
+   * std::variant cannot be used in Swift because of a Swift bug.
+   * Not even specializing it works. So we create a wrapper struct.
+   */
+  struct std__variant_nitro__NullType__CurrentNetworkInfo_ final {
+    std::variant<nitro::NullType, CurrentNetworkInfo> variant;
+    std__variant_nitro__NullType__CurrentNetworkInfo_(std::variant<nitro::NullType, CurrentNetworkInfo> variant): variant(variant) { }
+    operator std::variant<nitro::NullType, CurrentNetworkInfo>() const noexcept {
+      return variant;
+    }
+    inline size_t index() const noexcept {
+      return variant.index();
+    }
+    inline nitro::NullType get_0() const noexcept {
+      return std::get<0>(variant);
+    }
+    inline CurrentNetworkInfo get_1() const noexcept {
+      return std::get<1>(variant);
+    }
+  };
+  inline std__variant_nitro__NullType__CurrentNetworkInfo_ create_std__variant_nitro__NullType__CurrentNetworkInfo_(nitro::NullType value) noexcept {
+    return std__variant_nitro__NullType__CurrentNetworkInfo_(value);
+  }
+  inline std__variant_nitro__NullType__CurrentNetworkInfo_ create_std__variant_nitro__NullType__CurrentNetworkInfo_(const CurrentNetworkInfo& value) noexcept {
+    return std__variant_nitro__NullType__CurrentNetworkInfo_(value);
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>`.
+   */
+  using std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo___ = std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>;
+  inline std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> create_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo___() noexcept {
+    return Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>::create();
+  }
+  inline PromiseHolder<std::variant<nitro::NullType, CurrentNetworkInfo>> wrap_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo___(std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> promise) noexcept {
+    return PromiseHolder<std::variant<nitro::NullType, CurrentNetworkInfo>>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>&)>`.
+   */
+  using Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_ = std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__variant_nitro__NullType__CurrentNetworkInfo__Wrapper final {
+  public:
+    explicit Func_void_std__variant_nitro__NullType__CurrentNetworkInfo__Wrapper(std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& /* result */)>&& func): _function(std::make_unique<std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& /* result */)>>(std::move(func))) {}
+    inline void call(std::variant<nitro::NullType, CurrentNetworkInfo> result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_ create_Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__variant_nitro__NullType__CurrentNetworkInfo__Wrapper wrap_Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_(Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_ value) noexcept {
+    return Func_void_std__variant_nitro__NullType__CurrentNetworkInfo__Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<void>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<void>>`.
+   */
+  using std__shared_ptr_Promise_void__ = std::shared_ptr<Promise<void>>;
+  inline std::shared_ptr<Promise<void>> create_std__shared_ptr_Promise_void__() noexcept {
+    return Promise<void>::create();
+  }
+  inline PromiseHolder<void> wrap_std__shared_ptr_Promise_void__(std::shared_ptr<Promise<void>> promise) noexcept {
+    return PromiseHolder<void>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void()>
+  /**
+   * Specialized version of `std::function<void()>`.
+   */
+  using Func_void = std::function<void()>;
+  /**
+   * Wrapper class for a `std::function<void()>`, this can be used from Swift.
+   */
+  class Func_void_Wrapper final {
+  public:
+    explicit Func_void_Wrapper(std::function<void()>&& func): _function(std::make_unique<std::function<void()>>(std::move(func))) {}
+    inline void call() const noexcept {
+      _function->operator()();
+    }
+  private:
+    std::unique_ptr<std::function<void()>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void create_Func_void(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_Wrapper wrap_Func_void(Func_void value) noexcept {
+    return Func_void_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<HybridMunimWifiSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridMunimWifiSpec>`.
@@ -648,6 +763,24 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork____ create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork____(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>>
+  using Result_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo____ = Result<std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>>;
+  inline Result_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo____ create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo____(const std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo____ create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__CurrentNetworkInfo____(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<void>>>
+  using Result_std__shared_ptr_Promise_void___ = Result<std::shared_ptr<Promise<void>>>;
+  inline Result_std__shared_ptr_Promise_void___ create_Result_std__shared_ptr_Promise_void___(const std::shared_ptr<Promise<void>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<void>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_void___ create_Result_std__shared_ptr_Promise_void___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<void>>>::withError(error);
   }
 
 } // namespace margelo::nitro::munimwifi::bridge::swift

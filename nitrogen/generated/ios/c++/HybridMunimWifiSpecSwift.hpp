@@ -22,6 +22,10 @@ namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 namespace margelo::nitro::munimwifi { struct Location; }
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `ConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 
 #include <NitroModules/Promise.hpp>
 #include "WifiNetwork.hpp"
@@ -34,6 +38,8 @@ namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 #include <NitroModules/Null.hpp>
 #include <variant>
 #include "ChannelInfo.hpp"
+#include "CurrentNetworkInfo.hpp"
+#include "ConnectionOptions.hpp"
 
 #include "MunimWifi-Swift-Cxx-Umbrella.hpp"
 
@@ -163,6 +169,38 @@ namespace margelo::nitro::munimwifi {
     }
     inline std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) override {
       auto __result = _swiftPart.getNetworkInfo(ssid);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> getCurrentNetwork() override {
+      auto __result = _swiftPart.getCurrentNetwork();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<void>> connectToNetwork(const ConnectionOptions& options) override {
+      auto __result = _swiftPart.connectToNetwork(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<void>> disconnect() override {
+      auto __result = _swiftPart.disconnect();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() override {
+      auto __result = _swiftPart.getIPAddress();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

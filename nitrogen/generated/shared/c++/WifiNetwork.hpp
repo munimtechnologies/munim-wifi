@@ -42,8 +42,8 @@ namespace margelo::nitro::munimwifi {
   public:
     std::string ssid     SWIFT_PRIVATE;
     std::string bssid     SWIFT_PRIVATE;
-    double rssi     SWIFT_PRIVATE;
-    double frequency     SWIFT_PRIVATE;
+    std::optional<double> rssi     SWIFT_PRIVATE;
+    std::optional<double> frequency     SWIFT_PRIVATE;
     std::optional<double> channel     SWIFT_PRIVATE;
     std::optional<std::string> capabilities     SWIFT_PRIVATE;
     std::optional<bool> isSecure     SWIFT_PRIVATE;
@@ -51,7 +51,7 @@ namespace margelo::nitro::munimwifi {
 
   public:
     WifiNetwork() = default;
-    explicit WifiNetwork(std::string ssid, std::string bssid, double rssi, double frequency, std::optional<double> channel, std::optional<std::string> capabilities, std::optional<bool> isSecure, std::optional<double> timestamp): ssid(ssid), bssid(bssid), rssi(rssi), frequency(frequency), channel(channel), capabilities(capabilities), isSecure(isSecure), timestamp(timestamp) {}
+    explicit WifiNetwork(std::string ssid, std::string bssid, std::optional<double> rssi, std::optional<double> frequency, std::optional<double> channel, std::optional<std::string> capabilities, std::optional<bool> isSecure, std::optional<double> timestamp): ssid(ssid), bssid(bssid), rssi(rssi), frequency(frequency), channel(channel), capabilities(capabilities), isSecure(isSecure), timestamp(timestamp) {}
 
   public:
     friend bool operator==(const WifiNetwork& lhs, const WifiNetwork& rhs) = default;
@@ -69,8 +69,8 @@ namespace margelo::nitro {
       return margelo::nitro::munimwifi::WifiNetwork(
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid"))),
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid"))),
-        JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "rssi"))),
-        JSIConverter<double>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "frequency"))),
+        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "rssi"))),
+        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "frequency"))),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "channel"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "capabilities"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isSecure"))),
@@ -81,8 +81,8 @@ namespace margelo::nitro {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "ssid"), JSIConverter<std::string>::toJSI(runtime, arg.ssid));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "bssid"), JSIConverter<std::string>::toJSI(runtime, arg.bssid));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "rssi"), JSIConverter<double>::toJSI(runtime, arg.rssi));
-      obj.setProperty(runtime, PropNameIDCache::get(runtime, "frequency"), JSIConverter<double>::toJSI(runtime, arg.frequency));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "rssi"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.rssi));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "frequency"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.frequency));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "channel"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.channel));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "capabilities"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.capabilities));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "isSecure"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isSecure));
@@ -99,8 +99,8 @@ namespace margelo::nitro {
       }
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid")))) return false;
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid")))) return false;
-      if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "rssi")))) return false;
-      if (!JSIConverter<double>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "frequency")))) return false;
+      if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "rssi")))) return false;
+      if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "frequency")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "channel")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "capabilities")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isSecure")))) return false;

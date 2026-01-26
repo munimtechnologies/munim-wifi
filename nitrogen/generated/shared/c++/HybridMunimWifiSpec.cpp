@@ -25,6 +25,10 @@ namespace margelo::nitro::munimwifi {
       prototype.registerHybridMethod("getBSSID", &HybridMunimWifiSpec::getBSSID);
       prototype.registerHybridMethod("getChannelInfo", &HybridMunimWifiSpec::getChannelInfo);
       prototype.registerHybridMethod("getNetworkInfo", &HybridMunimWifiSpec::getNetworkInfo);
+      prototype.registerHybridMethod("getCurrentNetwork", &HybridMunimWifiSpec::getCurrentNetwork);
+      prototype.registerHybridMethod("connectToNetwork", &HybridMunimWifiSpec::connectToNetwork);
+      prototype.registerHybridMethod("disconnect", &HybridMunimWifiSpec::disconnect);
+      prototype.registerHybridMethod("getIPAddress", &HybridMunimWifiSpec::getIPAddress);
       prototype.registerHybridMethod("addListener", &HybridMunimWifiSpec::addListener);
       prototype.registerHybridMethod("removeListeners", &HybridMunimWifiSpec::removeListeners);
     });

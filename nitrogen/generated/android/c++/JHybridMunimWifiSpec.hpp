@@ -66,6 +66,10 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getBSSID(const std::string& ssid) override;
     std::shared_ptr<Promise<std::variant<nitro::NullType, ChannelInfo>>> getChannelInfo(const std::string& ssid) override;
     std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> getCurrentNetwork() override;
+    std::shared_ptr<Promise<void>> connectToNetwork(const ConnectionOptions& options) override;
+    std::shared_ptr<Promise<void>> disconnect() override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() override;
     void addListener(const std::string& eventName) override;
     void removeListeners(double count) override;
 

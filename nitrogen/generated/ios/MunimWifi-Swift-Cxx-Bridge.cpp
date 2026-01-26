@@ -86,6 +86,22 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, CurrentNetworkInfo>& /* result */)>
+  Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_ create_Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__variant_nitro__NullType__CurrentNetworkInfo_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::variant<nitro::NullType, CurrentNetworkInfo>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void()>
+  Func_void create_Func_void(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)]() mutable -> void {
+      swiftClosure.call();
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridMunimWifiSpec>
   std::shared_ptr<HybridMunimWifiSpec> create_std__shared_ptr_HybridMunimWifiSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     MunimWifi::HybridMunimWifiSpec_cxx swiftPart = MunimWifi::HybridMunimWifiSpec_cxx::fromUnsafe(swiftUnsafePointer);

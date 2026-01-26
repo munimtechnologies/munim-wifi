@@ -93,6 +93,22 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun getCurrentNetwork(): Promise<Variant_NullType_CurrentNetworkInfo>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun connectToNetwork(options: ConnectionOptions): Promise<Unit>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun disconnect(): Promise<Unit>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getIPAddress(): Promise<Variant_NullType_String>
+  
+  @DoNotStrip
+  @Keep
   abstract fun addListener(eventName: String): Unit
   
   @DoNotStrip

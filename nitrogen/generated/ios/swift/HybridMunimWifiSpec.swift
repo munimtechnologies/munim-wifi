@@ -25,6 +25,10 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func getBSSID(ssid: String) throws -> Promise<Variant_NullType_String>
   func getChannelInfo(ssid: String) throws -> Promise<Variant_NullType_ChannelInfo>
   func getNetworkInfo(ssid: String) throws -> Promise<Variant_NullType_WifiNetwork>
+  func getCurrentNetwork() throws -> Promise<Variant_NullType_CurrentNetworkInfo>
+  func connectToNetwork(options: ConnectionOptions) throws -> Promise<Void>
+  func disconnect() throws -> Promise<Void>
+  func getIPAddress() throws -> Promise<Variant_NullType_String>
   func addListener(eventName: String) throws -> Void
   func removeListeners(count: Double) throws -> Void
 }

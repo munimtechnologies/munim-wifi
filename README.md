@@ -79,19 +79,86 @@
 ### Wi-Fi Scanning
 
 - 📡 **Network Scanning**: Scan for nearby Wi-Fi networks with detailed information
-- 📶 **Signal Strength**: Get RSSI (signal strength) values for all networks
-- 🔍 **Network Details**: Retrieve SSIDs, BSSIDs (MAC addresses), channels, and frequencies
+- 📶 **Signal Strength**: Get RSSI (signal strength) values for all networks (Android only)
+- 🔍 **Network Details**: Retrieve SSIDs, BSSIDs (MAC addresses), channels, and frequencies (Android only)
 - 📊 **Wi-Fi Fingerprinting**: Create comprehensive Wi-Fi fingerprints for location services
-- 🔄 **Continuous Scanning**: Support for continuous scanning with event-based updates
+- 🔄 **Continuous Scanning**: Support for continuous scanning with event-based updates (Android only)
 - 📱 **Cross-platform**: Works on both iOS and Android
+
+### Network Management
+
+- 🔌 **Connect to Networks**: Programmatically connect to Wi-Fi networks
+- 🔌 **Disconnect**: Disconnect from current Wi-Fi network
+- 📱 **Current Network Info**: Get information about currently connected network
+- 🌐 **IP Address**: Retrieve IP address information for current connection
 
 ### Additional Features
 
-- 📱 **Cross-platform**: Works on both iOS and Android
+- 📱 **Cross-platform**: Works on both iOS and Android (with platform-specific limitations)
 - 🎯 **TypeScript Support**: Full TypeScript definitions included
 - ⚡ **High Performance**: Built with React Native's Nitro modules architecture
 - 🚀 **Expo Compatible**: Works seamlessly with Expo managed and bare workflows
 - 🔐 **Permission Handling**: Built-in permission request helpers
+
+### ⚠️ Platform Limitations
+
+#### iOS Limitations
+
+**Critical: CoreWLAN is macOS Only**
+CoreWLAN framework is NOT available on iOS - it only works on macOS. The iOS implementation uses `NEHotspotNetwork` and `NEHotspotConfiguration` APIs.
+
+**iOS Wi-Fi Scanning Capabilities:**
+iOS has very limited Wi-Fi scanning capabilities:
+
+✅ **Available on iOS:**
+- Get SSID (network name) - via `NEHotspotNetwork.fetchCurrent()`
+- Get BSSID (MAC address) - via `NEHotspotNetwork.fetchCurrent()`
+- Connect to Wi-Fi networks - via `NEHotspotConfiguration`
+- Disconnect from Wi-Fi - via `NEHotspotConfiguration`
+- Get current connected network info
+
+❌ **NOT Available on iOS:**
+- RSSI (signal strength) - Cannot be retrieved for scanned networks
+- Channel information - Not available
+- Frequency information - Not available
+- General network scanning - Only works for hotspot networks via NEHotspotHelper (requires special entitlement)
+
+**iOS Requirements:**
+- Location permission (precise location) required
+- "Access Wi-Fi Information" entitlement in Xcode
+- "Hotspot Configuration" capability for connecting to networks
+- iOS 13+ requires location permission
+
+#### Android Limitations
+
+**Scanning Restrictions:**
+- `WifiManager.startScan()` is deprecated in Android P (API 28) but still works
+- **Throttling limits:**
+  - Foreground apps: 4 scans every 2 minutes
+  - Background apps: More restrictive
+- Requires location permission (Android 6.0+)
+- Passive listening available on Android 10+ (API 29)
+
+✅ **Available on Android:**
+- Full network scanning with SSID, BSSID, RSSI, channel, frequency
+- Connect/disconnect to networks
+- Get current network info
+- All features work, but with throttling limits
+
+#### Feature Support Matrix
+
+| Feature | iOS | Android | Notes |
+|---------|-----|---------|-------|
+| Scan networks | ⚠️ Limited | ✅ Full | iOS: SSID/BSSID only, no RSSI/channel/frequency |
+| Get SSID | ✅ | ✅ | Both platforms |
+| Get BSSID | ✅ | ✅ | Both platforms |
+| Get RSSI | ❌ | ✅ | iOS: Not available for scanned networks |
+| Get Channel | ❌ | ✅ | iOS: Not available |
+| Get Frequency | ❌ | ✅ | iOS: Not available |
+| Connect to network | ✅ | ✅ | Both platforms (requires entitlements/capabilities) |
+| Disconnect | ✅ | ✅ | Both platforms |
+| Get current network | ✅ | ✅ | Both platforms |
+| Wi-Fi fingerprinting | ⚠️ Limited | ✅ Full | iOS: Limited to SSID/BSSID only |
 
 ## 📦 Installation
 
@@ -344,22 +411,56 @@ Gets BSSID (MAC address) for a specific network by SSID.
 #### `getChannelInfo(ssid)`
 
 Gets channel and frequency information for a specific network by SSID.
+**Note: Not available on iOS - returns null.**
 
 **Parameters:**
 
 - `ssid` (string): The SSID of the network
 
-**Returns:** Promise<{ channel: number; frequency: number } | null>
+**Returns:** Promise<ChannelInfo | null>
 
 #### `getNetworkInfo(ssid)`
 
 Gets all available information for a specific network by SSID.
+**Note: On iOS, RSSI, channel, and frequency will be undefined.**
 
 **Parameters:**
 
 - `ssid` (string): The SSID of the network
 
 **Returns:** Promise<WifiNetwork | null>
+
+#### `getCurrentNetwork()`
+
+Gets information about the currently connected Wi-Fi network.
+
+**Returns:** Promise<CurrentNetworkInfo | null>
+
+#### `connectToNetwork(options)`
+
+Connects to a Wi-Fi network.
+**Note: Requires appropriate permissions and capabilities on both platforms.**
+
+**Parameters:**
+
+- `options` (ConnectionOptions):
+  - `ssid` (string): The SSID of the network
+  - `password?` (string): Optional password for secured networks
+  - `isWEP?` (boolean): Whether the network uses WEP encryption
+
+**Returns:** Promise<void>
+
+#### `disconnect()`
+
+Disconnects from the current Wi-Fi network.
+
+**Returns:** Promise<void>
+
+#### `getIPAddress()`
+
+Gets IP address information for the current Wi-Fi connection.
+
+**Returns:** Promise<string | null>
 
 ### Event Management
 
@@ -392,12 +493,35 @@ Adds an event listener.
 interface WifiNetwork {
   ssid: string
   bssid: string
-  rssi: number
-  frequency: number
-  channel?: number
+  rssi?: number // Not available on iOS
+  frequency?: number // Not available on iOS
+  channel?: number // Not available on iOS
   capabilities?: string
   isSecure?: boolean
   timestamp?: number
+}
+```
+
+#### `CurrentNetworkInfo`
+
+```typescript
+interface CurrentNetworkInfo {
+  ssid: string
+  bssid: string
+  ipAddress?: string
+  subnetMask?: string
+  gateway?: string
+  dnsServers?: string[]
+}
+```
+
+#### `ConnectionOptions`
+
+```typescript
+interface ConnectionOptions {
+  ssid: string
+  password?: string
+  isWEP?: boolean
 }
 ```
 

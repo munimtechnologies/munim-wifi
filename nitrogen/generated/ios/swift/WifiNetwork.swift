@@ -19,8 +19,20 @@ public extension WifiNetwork {
   /**
    * Create a new instance of `WifiNetwork`.
    */
-  init(ssid: String, bssid: String, rssi: Double, frequency: Double, channel: Double?, capabilities: String?, isSecure: Bool?, timestamp: Double?) {
-    self.init(std.string(ssid), std.string(bssid), rssi, frequency, { () -> bridge.std__optional_double_ in
+  init(ssid: String, bssid: String, rssi: Double?, frequency: Double?, channel: Double?, capabilities: String?, isSecure: Bool?, timestamp: Double?) {
+    self.init(std.string(ssid), std.string(bssid), { () -> bridge.std__optional_double_ in
+      if let __unwrappedValue = rssi {
+        return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_double_ in
+      if let __unwrappedValue = frequency {
+        return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_double_ in
       if let __unwrappedValue = channel {
         return bridge.create_std__optional_double_(__unwrappedValue)
       } else {
@@ -58,13 +70,13 @@ public extension WifiNetwork {
   }
   
   @inline(__always)
-  var rssi: Double {
-    return self.__rssi
+  var rssi: Double? {
+    return self.__rssi.value
   }
   
   @inline(__always)
-  var frequency: Double {
-    return self.__frequency
+  var frequency: Double? {
+    return self.__frequency.value
   }
   
   @inline(__always)

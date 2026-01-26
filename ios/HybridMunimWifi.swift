@@ -6,73 +6,29 @@
 //
 
 import Foundation
-import CoreWLAN
-import CoreLocation
 import NetworkExtension
+import CoreLocation
+import SystemConfiguration.CaptiveNetwork
 
 class HybridMunimWifi: HybridMunimWifiSpec {
-    private let wifiClient = CWWiFiClient.shared()
     private var locationManager: CLLocationManager?
-    private var scanResults: [CWNetwork] = []
+    private var scanResults: [WifiNetwork] = []
     private var isScanning = false
     
-    private func getFrequencyChannel(frequency: Int) -> Int {
-        // Convert frequency (MHz) to channel number
-        if frequency >= 2412 && frequency <= 2484 {
-            // 2.4 GHz band
-            return ((frequency - 2412) / 5) + 1
-        } else if frequency >= 5170 && frequency <= 5825 {
-            // 5 GHz band
-            return ((frequency - 5170) / 5) + 36
-        }
-        return 0
-    }
-    
-    private func convertNetwork(_ network: CWNetwork) -> WifiNetwork {
-        guard let channel = network.wlanChannel else {
-            return WifiNetwork(
-                ssid: network.ssid ?? "",
-                bssid: network.bssid ?? "",
-                rssi: Int(network.rssiValue),
-                frequency: 0,
-                channel: 0,
-                capabilities: network.ies?.description ?? "",
-                isSecure: false,
-                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
-            )
-        }
-        
-        let channelNumber = Int(channel.channelNumber)
-        let frequency: Int
-        if channel.channelBand == .band2GHz {
-            frequency = 2412 + (channelNumber - 1) * 5
-        } else {
-            frequency = 5170 + (channelNumber - 36) * 5
-        }
-        
-        let isSecure = network.supportsSecurity(.WPA2Personal) || 
-                      network.supportsSecurity(.WPA3Personal) ||
-                      network.supportsSecurity(.WPAEnterprise) ||
-                      network.supportsSecurity(.WPA3Enterprise)
-        
-        return WifiNetwork(
-            ssid: network.ssid ?? "",
-            bssid: network.bssid ?? "",
-            rssi: Int(network.rssiValue),
-            frequency: frequency,
-            channel: channelNumber,
-            capabilities: network.ies?.description ?? "",
-            isSecure: isSecure,
-            timestamp: Int64(Date().timeIntervalSince1970 * 1000)
-        )
-    }
+    // Note: iOS has very limited Wi-Fi scanning capabilities
+    // CoreWLAN is macOS only - not available on iOS
+    // iOS can only get SSID/BSSID, not RSSI, channel, or frequency
     
     func isWifiEnabled() throws -> Bool {
-        return wifiClient.interface()?.powerOn() ?? false
+        // On iOS, we can't directly check if Wi-Fi is enabled
+        // We can infer it by checking if we can get current network
+        if let _ = try? getCurrentNetworkSync() {
+            return true
+        }
+        return false
     }
     
     func requestWifiPermission() throws -> Bool {
-        // On iOS, Wi-Fi scanning requires location permission
         let locationManager = CLLocationManager()
         self.locationManager = locationManager
         
@@ -80,67 +36,68 @@ class HybridMunimWifi: HybridMunimWifiSpec {
         return status == .authorizedWhenInUse || status == .authorizedAlways
     }
     
+    // Helper to get current network synchronously
+    private func getCurrentNetworkSync() -> CurrentNetworkInfo? {
+        var result: CurrentNetworkInfo? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        NEHotspotNetwork.fetchCurrent { network in
+            if let network = network {
+                result = CurrentNetworkInfo(
+                    ssid: network.ssid,
+                    bssid: network.bssid ?? ""
+                )
+            }
+            semaphore.signal()
+        }
+        
+        _ = semaphore.wait(timeout: .now() + 5)
+        return result
+    }
+    
     func scanNetworks(maxResults: Double?, timeout: Double?) throws -> [WifiNetwork] {
-        guard let interface = wifiClient.interface() else {
-            throw NSError(domain: "MunimWifi", code: 1, userInfo: [NSLocalizedDescriptionKey: "Wi-Fi interface not available"])
+        // iOS limitation: Cannot scan for networks directly
+        // Only can get current connected network
+        // For scanning, we can only return the current network if connected
+        // This is a major iOS limitation
+        
+        if let current = try? getCurrentNetworkSync() {
+            let network = WifiNetwork(
+                ssid: current.ssid,
+                bssid: current.bssid,
+                rssi: nil, // Not available on iOS
+                frequency: nil, // Not available on iOS
+                channel: nil, // Not available on iOS
+                capabilities: nil,
+                isSecure: nil,
+                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+            )
+            scanResults = [network]
+            return [network]
         }
         
-        guard interface.powerOn() else {
-            throw NSError(domain: "MunimWifi", code: 2, userInfo: [NSLocalizedDescriptionKey: "Wi-Fi is not enabled"])
-        }
-        
-        // Check location permission
-        let locationManager = CLLocationManager()
-        let status = locationManager.authorizationStatus
-        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
-            throw NSError(domain: "MunimWifi", code: 3, userInfo: [NSLocalizedDescriptionKey: "Location permission not granted"])
-        }
-        
-        do {
-            let networks = try interface.scanForNetworks(withName: nil)
-            scanResults = networks
-            
-            let wifiNetworks = networks.map { convertNetwork($0) }
-            let max = maxResults.map { Int($0) } ?? wifiNetworks.count
-            return Array(wifiNetworks.prefix(max))
-        } catch {
-            throw error
-        }
+        // Return empty array if not connected
+        return []
     }
     
     func startScan(maxResults: Double?, timeout: Double?) throws {
         isScanning = true
-        
-        guard let interface = wifiClient.interface() else {
-            isScanning = false
-            return
+        // iOS limitation: Cannot continuously scan
+        // Just get current network once
+        if let current = try? getCurrentNetworkSync() {
+            let network = WifiNetwork(
+                ssid: current.ssid,
+                bssid: current.bssid,
+                rssi: nil,
+                frequency: nil,
+                channel: nil,
+                capabilities: nil,
+                isSecure: nil,
+                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+            )
+            scanResults = [network]
         }
-        
-        guard interface.powerOn() else {
-            isScanning = false
-            return
-        }
-        
-        // Check location permission
-        let locationManager = CLLocationManager()
-        let status = locationManager.authorizationStatus
-        guard status == .authorizedWhenInUse || status == .authorizedAlways else {
-            isScanning = false
-            return
-        }
-        
-        // Start scanning in background
-        DispatchQueue.global(qos: .background).async { [weak self] in
-            guard let self = self else { return }
-            
-            do {
-                let networks = try interface.scanForNetworks(withName: nil)
-                self.scanResults = networks
-                self.isScanning = false
-            } catch {
-                self.isScanning = false
-            }
-        }
+        isScanning = false
     }
     
     func stopScan() throws {
@@ -148,75 +105,151 @@ class HybridMunimWifi: HybridMunimWifiSpec {
     }
     
     func getSSIDs() throws -> [String] {
-        let networks = scanResults.isEmpty ? (try? wifiClient.interface()?.scanForNetworks(withName: nil)) ?? [] : scanResults
-        return networks.compactMap { $0.ssid }.unique()
+        // iOS limitation: Can only get current network SSID
+        if let current = try? getCurrentNetworkSync() {
+            return [current.ssid]
+        }
+        return []
     }
     
     func getWifiFingerprint() throws -> WifiFingerprint {
-        let networks = scanResults.isEmpty ? (try? wifiClient.interface()?.scanForNetworks(withName: nil)) ?? [] : scanResults
-        let wifiNetworks = networks.map { convertNetwork($0) }
+        // iOS limitation: Can only get current network, no RSSI/channel/frequency
+        let networks = scanResults.isEmpty ? (try? scanNetworks(maxResults: nil, timeout: nil)) ?? [] : scanResults
         
         return WifiFingerprint(
-            networks: wifiNetworks,
+            networks: networks,
             timestamp: Int64(Date().timeIntervalSince1970 * 1000)
         )
     }
     
     func getRSSI(ssid: String) throws -> Double? {
-        let networks = scanResults.isEmpty ? (try? wifiClient.interface()?.scanForNetworks(withName: nil)) ?? [] : scanResults
-        let network = networks.first { $0.ssid == ssid }
-        return network.map { Double($0.rssiValue) }
+        // iOS limitation: RSSI not available for scanned networks
+        return nil
     }
     
     func getBSSID(ssid: String) throws -> String? {
-        let networks = scanResults.isEmpty ? (try? wifiClient.interface()?.scanForNetworks(withName: nil)) ?? [] : scanResults
-        let network = networks.first { $0.ssid == ssid }
-        return network?.bssid
+        if let current = try? getCurrentNetworkSync(), current.ssid == ssid {
+            return current.bssid
+        }
+        return nil
     }
     
     func getChannelInfo(ssid: String) throws -> ChannelInfo? {
-        let networks = scanResults.isEmpty ? (try? wifiClient.interface()?.scanForNetworks(withName: nil)) ?? [] : scanResults
-        guard let network = networks.first(where: { $0.ssid == ssid }),
-              let channel = network.wlanChannel else {
-            return nil
-        }
-        
-        let channelNumber = Int(channel.channelNumber)
-        let frequency: Int
-        if channel.channelBand == .band2GHz {
-            frequency = 2412 + (channelNumber - 1) * 5
-        } else {
-            frequency = 5170 + (channelNumber - 36) * 5
-        }
-        
-        return ChannelInfo(
-            channel: channelNumber,
-            frequency: frequency
-        )
+        // iOS limitation: Channel and frequency not available
+        return nil
     }
     
     func getNetworkInfo(ssid: String) throws -> WifiNetwork? {
-        let networks = scanResults.isEmpty ? (try? wifiClient.interface()?.scanForNetworks(withName: nil)) ?? [] : scanResults
-        guard let network = networks.first(where: { $0.ssid == ssid }) else {
-            return nil
+        if let current = try? getCurrentNetworkSync(), current.ssid == ssid {
+            return WifiNetwork(
+                ssid: current.ssid,
+                bssid: current.bssid,
+                rssi: nil, // Not available on iOS
+                frequency: nil, // Not available on iOS
+                channel: nil, // Not available on iOS
+                capabilities: nil,
+                isSecure: nil,
+                timestamp: Int64(Date().timeIntervalSince1970 * 1000)
+            )
         }
-        return convertNetwork(network)
+        return nil
+    }
+    
+    func getCurrentNetwork() throws -> CurrentNetworkInfo? {
+        var result: CurrentNetworkInfo? = nil
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        NEHotspotNetwork.fetchCurrent { network in
+            if let network = network {
+                result = CurrentNetworkInfo(
+                    ssid: network.ssid,
+                    bssid: network.bssid ?? ""
+                )
+            }
+            semaphore.signal()
+        }
+        
+        _ = semaphore.wait(timeout: .now() + 5)
+        return result
+    }
+    
+    func connectToNetwork(options: ConnectionOptions) throws {
+        let configuration: NEHotspotConfiguration
+        
+        if let password = options.password {
+            if options.isWEP == true {
+                configuration = NEHotspotConfiguration(ssid: options.ssid, passphrase: password, isWEP: true)
+            } else {
+                configuration = NEHotspotConfiguration(ssid: options.ssid, passphrase: password, isWEP: false)
+            }
+        } else {
+            configuration = NEHotspotConfiguration(ssid: options.ssid)
+        }
+        
+        configuration.joinOnce = false
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        var error: Error?
+        
+        NEHotspotConfigurationManager.shared.apply(configuration) { applyError in
+            error = applyError
+            semaphore.signal()
+        }
+        
+        _ = semaphore.wait(timeout: .now() + 30)
+        
+        if let error = error {
+            throw error
+        }
+    }
+    
+    func disconnect() throws {
+        // On iOS, we can't directly disconnect from Wi-Fi
+        // We can only remove saved configurations
+        // This is an iOS limitation
+        // Note: This will remove the network from saved networks, not disconnect immediately
+        if let current = try? getCurrentNetworkSync() {
+            NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: current.ssid)
+        }
+    }
+    
+    func getIPAddress() throws -> String? {
+        var address: String?
+        var ifaddr: UnsafeMutablePointer<ifaddrs>?
+        
+        guard getifaddrs(&ifaddr) == 0 else { return nil }
+        defer { freeifaddrs(ifaddr) }
+        
+        guard var ptr = ifaddr else { return nil }
+        
+        while ptr != nil {
+            defer { ptr = ptr.pointee.ifa_next }
+            
+            let interface = ptr.pointee
+            let addrFamily = interface.ifa_addr.pointee.sa_family
+            
+            if addrFamily == UInt8(AF_INET) {
+                let name = String(cString: interface.ifa_name)
+                if name == "en0" || name == "en1" {
+                    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+                    getnameinfo(interface.ifa_addr, socklen_t(interface.ifa_addr.pointee.sa_len),
+                              &hostname, socklen_t(hostname.count),
+                              nil, socklen_t(0), NI_NUMERICHOST)
+                    address = String(cString: hostname)
+                    break
+                }
+            }
+        }
+        
+        return address
     }
     
     func addListener(eventName: String) throws {
-        // Event listener implementation can be added here if needed
         print("[MunimWifi] Adding listener for event: \(eventName)")
+        // Note: iOS has limited event support for Wi-Fi changes
     }
     
     func removeListeners(count: Double) throws {
-        // Event listener removal implementation can be added here if needed
         print("[MunimWifi] Removing \(count) listeners")
-    }
-}
-
-extension Array where Element: Hashable {
-    func unique() -> [Element] {
-        var seen = Set<Element>()
-        return filter { seen.insert($0).inserted }
     }
 }

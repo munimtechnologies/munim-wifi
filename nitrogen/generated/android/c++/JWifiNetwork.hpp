@@ -36,10 +36,10 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JString> ssid = this->getFieldValue(fieldSsid);
       static const auto fieldBssid = clazz->getField<jni::JString>("bssid");
       jni::local_ref<jni::JString> bssid = this->getFieldValue(fieldBssid);
-      static const auto fieldRssi = clazz->getField<double>("rssi");
-      double rssi = this->getFieldValue(fieldRssi);
-      static const auto fieldFrequency = clazz->getField<double>("frequency");
-      double frequency = this->getFieldValue(fieldFrequency);
+      static const auto fieldRssi = clazz->getField<jni::JDouble>("rssi");
+      jni::local_ref<jni::JDouble> rssi = this->getFieldValue(fieldRssi);
+      static const auto fieldFrequency = clazz->getField<jni::JDouble>("frequency");
+      jni::local_ref<jni::JDouble> frequency = this->getFieldValue(fieldFrequency);
       static const auto fieldChannel = clazz->getField<jni::JDouble>("channel");
       jni::local_ref<jni::JDouble> channel = this->getFieldValue(fieldChannel);
       static const auto fieldCapabilities = clazz->getField<jni::JString>("capabilities");
@@ -51,8 +51,8 @@ namespace margelo::nitro::munimwifi {
       return WifiNetwork(
         ssid->toStdString(),
         bssid->toStdString(),
-        rssi,
-        frequency,
+        rssi != nullptr ? std::make_optional(rssi->value()) : std::nullopt,
+        frequency != nullptr ? std::make_optional(frequency->value()) : std::nullopt,
         channel != nullptr ? std::make_optional(channel->value()) : std::nullopt,
         capabilities != nullptr ? std::make_optional(capabilities->toStdString()) : std::nullopt,
         isSecure != nullptr ? std::make_optional(static_cast<bool>(isSecure->value())) : std::nullopt,
@@ -66,15 +66,15 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JWifiNetwork::javaobject> fromCpp(const WifiNetwork& value) {
-      using JSignature = JWifiNetwork(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, double, double, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>);
+      using JSignature = JWifiNetwork(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.ssid),
         jni::make_jstring(value.bssid),
-        value.rssi,
-        value.frequency,
+        value.rssi.has_value() ? jni::JDouble::valueOf(value.rssi.value()) : nullptr,
+        value.frequency.has_value() ? jni::JDouble::valueOf(value.frequency.value()) : nullptr,
         value.channel.has_value() ? jni::JDouble::valueOf(value.channel.value()) : nullptr,
         value.capabilities.has_value() ? jni::make_jstring(value.capabilities.value()) : nullptr,
         value.isSecure.has_value() ? jni::JBoolean::valueOf(value.isSecure.value()) : nullptr,

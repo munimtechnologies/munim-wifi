@@ -7,6 +7,8 @@ import type {
   ScanOptions,
   ChannelInfo,
   Location,
+  CurrentNetworkInfo,
+  ConnectionOptions,
 } from './specs/munim-wifi.nitro'
 
 const MunimWifi =
@@ -127,12 +129,51 @@ export function getChannelInfo(ssid: string): Promise<ChannelInfo | null> {
 
 /**
  * Get all available information for a specific network by SSID.
+ * Note: On iOS, RSSI, channel, and frequency will be undefined.
  *
  * @param ssid - The SSID of the network.
  * @returns Promise resolving to WifiNetwork object, or null if network not found.
  */
 export function getNetworkInfo(ssid: string): Promise<WifiNetwork | null> {
   return MunimWifi.getNetworkInfo(ssid)
+}
+
+/**
+ * Get information about the currently connected Wi-Fi network.
+ *
+ * @returns Promise resolving to current network info, or null if not connected.
+ */
+export function getCurrentNetwork(): Promise<CurrentNetworkInfo | null> {
+  return MunimWifi.getCurrentNetwork()
+}
+
+/**
+ * Connect to a Wi-Fi network.
+ * Note: Requires appropriate permissions and capabilities on both platforms.
+ *
+ * @param options - Connection options including SSID and password.
+ * @returns Promise resolving when connection is attempted.
+ */
+export function connectToNetwork(options: ConnectionOptions): Promise<void> {
+  return MunimWifi.connectToNetwork(options)
+}
+
+/**
+ * Disconnect from the current Wi-Fi network.
+ *
+ * @returns Promise resolving when disconnection is complete.
+ */
+export function disconnect(): Promise<void> {
+  return MunimWifi.disconnect()
+}
+
+/**
+ * Get IP address information for the current Wi-Fi connection.
+ *
+ * @returns Promise resolving to IP address string, or null if not connected.
+ */
+export function getIPAddress(): Promise<string | null> {
+  return MunimWifi.getIPAddress()
 }
 
 // ========== Event Management ==========
@@ -214,6 +255,10 @@ export default {
   getBSSID,
   getChannelInfo,
   getNetworkInfo,
+  getCurrentNetwork,
+  connectToNetwork,
+  disconnect,
+  getIPAddress,
   addNetworkFoundListener,
   addEventListener,
   addListener,

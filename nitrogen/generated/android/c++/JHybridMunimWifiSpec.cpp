@@ -15,8 +15,12 @@ namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 namespace margelo::nitro::munimwifi { struct Location; }
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `ConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/JPromise.hpp>
@@ -38,8 +42,14 @@ namespace margelo::nitro::munimwifi { struct ScanOptions; }
 #include "JVariant_NullType_ChannelInfo.hpp"
 #include "JChannelInfo.hpp"
 #include "JVariant_NullType_WifiNetwork.hpp"
+#include "CurrentNetworkInfo.hpp"
+#include "JVariant_NullType_CurrentNetworkInfo.hpp"
+#include "JCurrentNetworkInfo.hpp"
+#include <NitroModules/JUnit.hpp>
 #include "ScanOptions.hpp"
 #include "JScanOptions.hpp"
+#include "ConnectionOptions.hpp"
+#include "JConnectionOptions.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -241,6 +251,68 @@ namespace margelo::nitro::munimwifi {
       auto __promise = Promise<std::variant<nitro::NullType, WifiNetwork>>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<JVariant_NullType_WifiNetwork>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> JHybridMunimWifiSpec::getCurrentNetwork() {
+    static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("getCurrentNetwork");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JVariant_NullType_CurrentNetworkInfo>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<void>> JHybridMunimWifiSpec::connectToNetwork(const ConnectionOptions& options) {
+    static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JConnectionOptions> /* options */)>("connectToNetwork");
+    auto __result = method(_javaPart, JConnectionOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<void>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& /* unit */) {
+        __promise->resolve();
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<void>> JHybridMunimWifiSpec::disconnect() {
+    static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("disconnect");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<void>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& /* unit */) {
+        __promise->resolve();
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> JHybridMunimWifiSpec::getIPAddress() {
+    static const auto method = javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("getIPAddress");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<std::variant<nitro::NullType, std::string>>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JVariant_NullType_String>(__boxedResult);
         __promise->resolve(__result->toCpp());
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {

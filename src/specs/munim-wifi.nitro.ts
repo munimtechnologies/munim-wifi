@@ -12,16 +12,33 @@ export interface ChannelInfo {
   frequency: number
 }
 
+// Current network information
+export interface CurrentNetworkInfo {
+  ssid: string
+  bssid: string
+  ipAddress?: string
+  subnetMask?: string
+  gateway?: string
+  dnsServers?: string[]
+}
+
 // Wi-Fi Network information
 export interface WifiNetwork {
   ssid: string
   bssid: string
-  rssi: number
-  frequency: number
-  channel?: number
+  rssi?: number // Not available on iOS
+  frequency?: number // Not available on iOS
+  channel?: number // Not available on iOS
   capabilities?: string
   isSecure?: boolean
   timestamp?: number
+}
+
+// Connection options
+export interface ConnectionOptions {
+  ssid: string
+  password?: string
+  isWEP?: boolean
 }
 
 // Wi-Fi Fingerprint data
@@ -84,7 +101,7 @@ export interface MunimWifi
 
   /**
    * Get Wi-Fi fingerprint containing all network information.
-   * This includes SSIDs, BSSIDs, RSSI, channels, and frequencies.
+   * Note: On iOS, RSSI, channel, and frequency are not available.
    *
    * @returns Promise resolving to Wi-Fi fingerprint data.
    */
@@ -92,9 +109,10 @@ export interface MunimWifi
 
   /**
    * Get RSSI (signal strength) for a specific network by SSID.
+   * Note: Not available on iOS - returns null.
    *
    * @param ssid - The SSID of the network.
-   * @returns Promise resolving to RSSI value in dBm, or null if network not found.
+   * @returns Promise resolving to RSSI value in dBm, or null if network not found or not available.
    */
   getRSSI(ssid: string): Promise<number | null>
 
@@ -108,19 +126,51 @@ export interface MunimWifi
 
   /**
    * Get channel and frequency information for a specific network by SSID.
+   * Note: Not available on iOS - returns null.
    *
    * @param ssid - The SSID of the network.
-   * @returns Promise resolving to object with channel and frequency, or null if network not found.
+   * @returns Promise resolving to object with channel and frequency, or null if network not found or not available.
    */
   getChannelInfo(ssid: string): Promise<ChannelInfo | null>
 
   /**
    * Get all available information for a specific network by SSID.
+   * Note: On iOS, RSSI, channel, and frequency will be undefined.
    *
    * @param ssid - The SSID of the network.
    * @returns Promise resolving to WifiNetwork object, or null if network not found.
    */
   getNetworkInfo(ssid: string): Promise<WifiNetwork | null>
+
+  /**
+   * Get information about the currently connected Wi-Fi network.
+   *
+   * @returns Promise resolving to current network info, or null if not connected.
+   */
+  getCurrentNetwork(): Promise<CurrentNetworkInfo | null>
+
+  /**
+   * Connect to a Wi-Fi network.
+   * Note: Requires appropriate permissions and capabilities on both platforms.
+   *
+   * @param options - Connection options including SSID and password.
+   * @returns Promise resolving when connection is attempted.
+   */
+  connectToNetwork(options: ConnectionOptions): Promise<void>
+
+  /**
+   * Disconnect from the current Wi-Fi network.
+   *
+   * @returns Promise resolving when disconnection is complete.
+   */
+  disconnect(): Promise<void>
+
+  /**
+   * Get IP address information for the current Wi-Fi connection.
+   *
+   * @returns Promise resolving to IP address string, or null if not connected.
+   */
+  getIPAddress(): Promise<string | null>
 
   // ========== Event Management ==========
 

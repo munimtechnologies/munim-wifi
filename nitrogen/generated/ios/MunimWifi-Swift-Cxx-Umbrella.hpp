@@ -10,6 +10,10 @@
 // Forward declarations of C++ defined types
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `ConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
+// Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
 // Forward declaration of `Location` to properly resolve imports.
@@ -23,6 +27,8 @@ namespace margelo::nitro::munimwifi { struct WifiNetwork; }
 
 // Include C++ defined types
 #include "ChannelInfo.hpp"
+#include "ConnectionOptions.hpp"
+#include "CurrentNetworkInfo.hpp"
 #include "HybridMunimWifiSpec.hpp"
 #include "Location.hpp"
 #include "ScanOptions.hpp"
