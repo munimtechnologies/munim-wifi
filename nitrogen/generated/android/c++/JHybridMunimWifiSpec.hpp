@@ -55,7 +55,19 @@ namespace margelo::nitro::munimwifi {
 
   public:
     // Methods
-    double sum(double num1, double num2) override;
+    std::shared_ptr<Promise<bool>> isWifiEnabled() override;
+    std::shared_ptr<Promise<bool>> requestWifiPermission() override;
+    std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) override;
+    void startScan(const std::optional<ScanOptions>& options) override;
+    void stopScan() override;
+    std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() override;
+    std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, double>>> getRSSI(const std::string& ssid) override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getBSSID(const std::string& ssid) override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, ChannelInfo>>> getChannelInfo(const std::string& ssid) override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) override;
+    void addListener(const std::string& eventName) override;
+    void removeListeners(double count) override;
 
   private:
     friend HybridBase;

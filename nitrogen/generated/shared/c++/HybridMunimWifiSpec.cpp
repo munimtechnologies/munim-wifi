@@ -14,7 +14,19 @@ namespace margelo::nitro::munimwifi {
     HybridObject::loadHybridMethods();
     // load custom methods/properties
     registerHybrids(this, [](Prototype& prototype) {
-      prototype.registerHybridMethod("sum", &HybridMunimWifiSpec::sum);
+      prototype.registerHybridMethod("isWifiEnabled", &HybridMunimWifiSpec::isWifiEnabled);
+      prototype.registerHybridMethod("requestWifiPermission", &HybridMunimWifiSpec::requestWifiPermission);
+      prototype.registerHybridMethod("scanNetworks", &HybridMunimWifiSpec::scanNetworks);
+      prototype.registerHybridMethod("startScan", &HybridMunimWifiSpec::startScan);
+      prototype.registerHybridMethod("stopScan", &HybridMunimWifiSpec::stopScan);
+      prototype.registerHybridMethod("getSSIDs", &HybridMunimWifiSpec::getSSIDs);
+      prototype.registerHybridMethod("getWifiFingerprint", &HybridMunimWifiSpec::getWifiFingerprint);
+      prototype.registerHybridMethod("getRSSI", &HybridMunimWifiSpec::getRSSI);
+      prototype.registerHybridMethod("getBSSID", &HybridMunimWifiSpec::getBSSID);
+      prototype.registerHybridMethod("getChannelInfo", &HybridMunimWifiSpec::getChannelInfo);
+      prototype.registerHybridMethod("getNetworkInfo", &HybridMunimWifiSpec::getNetworkInfo);
+      prototype.registerHybridMethod("addListener", &HybridMunimWifiSpec::addListener);
+      prototype.registerHybridMethod("removeListeners", &HybridMunimWifiSpec::removeListeners);
     });
   }
 

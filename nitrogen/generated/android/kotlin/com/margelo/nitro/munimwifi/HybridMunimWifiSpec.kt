@@ -10,6 +10,8 @@ package com.margelo.nitro.munimwifi
 import androidx.annotation.Keep
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
+import com.margelo.nitro.core.Promise
+import com.margelo.nitro.core.NullType
 import com.margelo.nitro.core.HybridObject
 
 /**
@@ -47,7 +49,55 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   // Methods
   @DoNotStrip
   @Keep
-  abstract fun sum(num1: Double, num2: Double): Double
+  abstract fun isWifiEnabled(): Promise<Boolean>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun requestWifiPermission(): Promise<Boolean>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun startScan(options: ScanOptions?): Unit
+  
+  @DoNotStrip
+  @Keep
+  abstract fun stopScan(): Unit
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getSSIDs(): Promise<Array<String>>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getWifiFingerprint(): Promise<WifiFingerprint>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getRSSI(ssid: String): Promise<Variant_NullType_Double>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getBSSID(ssid: String): Promise<Variant_NullType_String>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getChannelInfo(ssid: String): Promise<Variant_NullType_ChannelInfo>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getNetworkInfo(ssid: String): Promise<Variant_NullType_WifiNetwork>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun addListener(eventName: String): Unit
+  
+  @DoNotStrip
+  @Keep
+  abstract fun removeListeners(count: Double): Unit
 
   private external fun initHybrid(): HybridData
 

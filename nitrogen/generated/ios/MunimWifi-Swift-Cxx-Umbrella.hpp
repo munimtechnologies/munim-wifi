@@ -8,14 +8,35 @@
 #pragma once
 
 // Forward declarations of C++ defined types
+// Forward declaration of `ChannelInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
+// Forward declaration of `Location` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct Location; }
+// Forward declaration of `ScanOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `WifiFingerprint` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
+// Forward declaration of `WifiNetwork` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiNetwork; }
 
 // Include C++ defined types
+#include "ChannelInfo.hpp"
 #include "HybridMunimWifiSpec.hpp"
+#include "Location.hpp"
+#include "ScanOptions.hpp"
+#include "WifiFingerprint.hpp"
+#include "WifiNetwork.hpp"
+#include <NitroModules/Null.hpp>
+#include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>
 #include <exception>
 #include <memory>
+#include <optional>
+#include <string>
+#include <variant>
+#include <vector>
 
 // C++ helpers for Swift
 #include "MunimWifi-Swift-Cxx-Bridge.hpp"

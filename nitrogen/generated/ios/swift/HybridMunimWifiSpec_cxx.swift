@@ -126,14 +126,257 @@ open class HybridMunimWifiSpec_cxx {
 
   // Methods
   @inline(__always)
-  public final func sum(num1: Double, num2: Double) -> bridge.Result_double_ {
+  public final func isWifiEnabled() -> bridge.Result_std__shared_ptr_Promise_bool___ {
     do {
-      let __result = try self.__implementation.sum(num1: num1, num2: num2)
-      let __resultCpp = __result
-      return bridge.create_Result_double_(__resultCpp)
+      let __result = try self.__implementation.isWifiEnabled()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_bool__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_bool__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_bool__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_bool___(__resultCpp)
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
-      return bridge.create_Result_double_(__exceptionPtr)
+      return bridge.create_Result_std__shared_ptr_Promise_bool___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func requestWifiPermission() -> bridge.Result_std__shared_ptr_Promise_bool___ {
+    do {
+      let __result = try self.__implementation.requestWifiPermission()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_bool__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_bool__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_bool__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_bool___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_bool___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func scanNetworks(options: bridge.std__optional_ScanOptions_) -> bridge.Result_std__shared_ptr_Promise_std__vector_WifiNetwork____ {
+    do {
+      let __result = try self.__implementation.scanNetworks(options: options.value)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__vector_WifiNetwork___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__vector_WifiNetwork___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__vector_WifiNetwork___(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__vector_WifiNetwork_ in
+              var __vector = bridge.create_std__vector_WifiNetwork_(__result.count)
+              for __item in __result {
+                __vector.push_back(__item)
+              }
+              return __vector
+            }()) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_std__vector_WifiNetwork____(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_std__vector_WifiNetwork____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func startScan(options: bridge.std__optional_ScanOptions_) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.startScan(options: options.value)
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func stopScan() -> bridge.Result_void_ {
+    do {
+      try self.__implementation.stopScan()
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getSSIDs() -> bridge.Result_std__shared_ptr_Promise_std__vector_std__string____ {
+    do {
+      let __result = try self.__implementation.getSSIDs()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__vector_std__string___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__vector_std__string___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__vector_std__string___(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__vector_std__string_ in
+              var __vector = bridge.create_std__vector_std__string_(__result.count)
+              for __item in __result {
+                __vector.push_back(std.string(__item))
+              }
+              return __vector
+            }()) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_std__vector_std__string____(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_std__vector_std__string____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getWifiFingerprint() -> bridge.Result_std__shared_ptr_Promise_WifiFingerprint___ {
+    do {
+      let __result = try self.__implementation.getWifiFingerprint()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_WifiFingerprint__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_WifiFingerprint__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_WifiFingerprint__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_WifiFingerprint___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_WifiFingerprint___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getRSSI(ssid: std.string) -> bridge.Result_std__shared_ptr_Promise_std__variant_nitro__NullType__double____ {
+    do {
+      let __result = try self.__implementation.getRSSI(ssid: String(ssid))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__variant_nitro__NullType__double___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__variant_nitro__NullType__double___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__variant_nitro__NullType__double___(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__variant_nitro__NullType__double_ in
+              switch __result {
+                case .first(let __value):
+                  return bridge.create_std__variant_nitro__NullType__double_(margelo.nitro.NullType.null)
+                case .second(let __value):
+                  return bridge.create_std__variant_nitro__NullType__double_(__value)
+              }
+            }().variant) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__double____(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__double____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getBSSID(ssid: std.string) -> bridge.Result_std__shared_ptr_Promise_std__variant_nitro__NullType__std__string____ {
+    do {
+      let __result = try self.__implementation.getBSSID(ssid: String(ssid))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__variant_nitro__NullType__std__string___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__variant_nitro__NullType__std__string___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__variant_nitro__NullType__std__string___(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__variant_nitro__NullType__std__string_ in
+              switch __result {
+                case .first(let __value):
+                  return bridge.create_std__variant_nitro__NullType__std__string_(margelo.nitro.NullType.null)
+                case .second(let __value):
+                  return bridge.create_std__variant_nitro__NullType__std__string_(std.string(__value))
+              }
+            }().variant) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__std__string____(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__std__string____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getChannelInfo(ssid: std.string) -> bridge.Result_std__shared_ptr_Promise_std__variant_nitro__NullType__ChannelInfo____ {
+    do {
+      let __result = try self.__implementation.getChannelInfo(ssid: String(ssid))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__variant_nitro__NullType__ChannelInfo___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__variant_nitro__NullType__ChannelInfo___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__variant_nitro__NullType__ChannelInfo___(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__variant_nitro__NullType__ChannelInfo_ in
+              switch __result {
+                case .first(let __value):
+                  return bridge.create_std__variant_nitro__NullType__ChannelInfo_(margelo.nitro.NullType.null)
+                case .second(let __value):
+                  return bridge.create_std__variant_nitro__NullType__ChannelInfo_(__value)
+              }
+            }().variant) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__ChannelInfo____(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__ChannelInfo____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getNetworkInfo(ssid: std.string) -> bridge.Result_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork____ {
+    do {
+      let __result = try self.__implementation.getNetworkInfo(ssid: String(ssid))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork___ in
+        let __promise = bridge.create_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork___()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork___(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve({ () -> bridge.std__variant_nitro__NullType__WifiNetwork_ in
+              switch __result {
+                case .first(let __value):
+                  return bridge.create_std__variant_nitro__NullType__WifiNetwork_(margelo.nitro.NullType.null)
+                case .second(let __value):
+                  return bridge.create_std__variant_nitro__NullType__WifiNetwork_(__value)
+              }
+            }().variant) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork____(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__WifiNetwork____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func addListener(eventName: std.string) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.addListener(eventName: String(eventName))
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func removeListeners(count: Double) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.removeListeners(count: count)
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
     }
   }
 }

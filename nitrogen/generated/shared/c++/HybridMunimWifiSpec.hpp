@@ -13,9 +13,25 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
+// Forward declaration of `WifiNetwork` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `ScanOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `WifiFingerprint` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
+// Forward declaration of `ChannelInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 
-
-
+#include <NitroModules/Promise.hpp>
+#include "WifiNetwork.hpp"
+#include <vector>
+#include "ScanOptions.hpp"
+#include <optional>
+#include <string>
+#include "WifiFingerprint.hpp"
+#include <NitroModules/Null.hpp>
+#include <variant>
+#include "ChannelInfo.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -48,7 +64,19 @@ namespace margelo::nitro::munimwifi {
 
     public:
       // Methods
-      virtual double sum(double num1, double num2) = 0;
+      virtual std::shared_ptr<Promise<bool>> isWifiEnabled() = 0;
+      virtual std::shared_ptr<Promise<bool>> requestWifiPermission() = 0;
+      virtual std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) = 0;
+      virtual void startScan(const std::optional<ScanOptions>& options) = 0;
+      virtual void stopScan() = 0;
+      virtual std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() = 0;
+      virtual std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, double>>> getRSSI(const std::string& ssid) = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getBSSID(const std::string& ssid) = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, ChannelInfo>>> getChannelInfo(const std::string& ssid) = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) = 0;
+      virtual void addListener(const std::string& eventName) = 0;
+      virtual void removeListeners(double count) = 0;
 
     protected:
       // Hybrid Setup

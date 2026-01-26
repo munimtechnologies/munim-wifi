@@ -36,6 +36,10 @@ target_sources(
   ../nitrogen/generated/shared/c++/HybridMunimWifiSpec.cpp
   # Android-specific Nitrogen C++ sources
   ../nitrogen/generated/android/c++/JHybridMunimWifiSpec.cpp
+  ../nitrogen/generated/android/c++/JVariant_NullType_Double.cpp
+  ../nitrogen/generated/android/c++/JVariant_NullType_String.cpp
+  ../nitrogen/generated/android/c++/JVariant_NullType_ChannelInfo.cpp
+  ../nitrogen/generated/android/c++/JVariant_NullType_WifiNetwork.cpp
 )
 
 # From node_modules/react-native/ReactAndroid/cmake-utils/folly-flags.cmake

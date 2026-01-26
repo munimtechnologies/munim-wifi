@@ -14,7 +14,19 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   
 
   // Methods
-  func sum(num1: Double, num2: Double) throws -> Double
+  func isWifiEnabled() throws -> Promise<Bool>
+  func requestWifiPermission() throws -> Promise<Bool>
+  func scanNetworks(options: ScanOptions?) throws -> Promise<[WifiNetwork]>
+  func startScan(options: ScanOptions?) throws -> Void
+  func stopScan() throws -> Void
+  func getSSIDs() throws -> Promise<[String]>
+  func getWifiFingerprint() throws -> Promise<WifiFingerprint>
+  func getRSSI(ssid: String) throws -> Promise<Variant_NullType_Double>
+  func getBSSID(ssid: String) throws -> Promise<Variant_NullType_String>
+  func getChannelInfo(ssid: String) throws -> Promise<Variant_NullType_ChannelInfo>
+  func getNetworkInfo(ssid: String) throws -> Promise<Variant_NullType_WifiNetwork>
+  func addListener(eventName: String) throws -> Void
+  func removeListeners(count: Double) throws -> Void
 }
 
 public extension HybridMunimWifiSpec_protocol {

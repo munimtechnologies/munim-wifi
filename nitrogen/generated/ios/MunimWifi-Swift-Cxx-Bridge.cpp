@@ -14,6 +14,78 @@
 
 namespace margelo::nitro::munimwifi::bridge::swift {
 
+  // pragma MARK: std::function<void(bool /* result */)>
+  Func_void_bool create_Func_void_bool(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_bool::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](bool result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::exception_ptr& /* error */)>
+  Func_void_std__exception_ptr create_Func_void_std__exception_ptr(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__exception_ptr::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::exception_ptr& error) mutable -> void {
+      swiftClosure.call(error);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::vector<WifiNetwork>& /* result */)>
+  Func_void_std__vector_WifiNetwork_ create_Func_void_std__vector_WifiNetwork_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__vector_WifiNetwork_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::vector<WifiNetwork>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::vector<std::string>& /* result */)>
+  Func_void_std__vector_std__string_ create_Func_void_std__vector_std__string_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__vector_std__string_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::vector<std::string>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const WifiFingerprint& /* result */)>
+  Func_void_WifiFingerprint create_Func_void_WifiFingerprint(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_WifiFingerprint::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const WifiFingerprint& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, double>& /* result */)>
+  Func_void_std__variant_nitro__NullType__double_ create_Func_void_std__variant_nitro__NullType__double_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__variant_nitro__NullType__double_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::variant<nitro::NullType, double>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, std::string>& /* result */)>
+  Func_void_std__variant_nitro__NullType__std__string_ create_Func_void_std__variant_nitro__NullType__std__string_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__variant_nitro__NullType__std__string_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::variant<nitro::NullType, std::string>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, ChannelInfo>& /* result */)>
+  Func_void_std__variant_nitro__NullType__ChannelInfo_ create_Func_void_std__variant_nitro__NullType__ChannelInfo_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__variant_nitro__NullType__ChannelInfo_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::variant<nitro::NullType, ChannelInfo>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, WifiNetwork>& /* result */)>
+  Func_void_std__variant_nitro__NullType__WifiNetwork_ create_Func_void_std__variant_nitro__NullType__WifiNetwork_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__variant_nitro__NullType__WifiNetwork_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::variant<nitro::NullType, WifiNetwork>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
   // pragma MARK: std::shared_ptr<HybridMunimWifiSpec>
   std::shared_ptr<HybridMunimWifiSpec> create_std__shared_ptr_HybridMunimWifiSpec_(void* NON_NULL swiftUnsafePointer) noexcept {
     MunimWifi::HybridMunimWifiSpec_cxx swiftPart = MunimWifi::HybridMunimWifiSpec_cxx::fromUnsafe(swiftUnsafePointer);

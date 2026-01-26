@@ -12,9 +12,28 @@
 // Forward declaration of `HybridMunimWifiSpec_cxx` to properly resolve imports.
 namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 
+// Forward declaration of `WifiNetwork` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `ScanOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `WifiFingerprint` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
+// Forward declaration of `Location` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct Location; }
+// Forward declaration of `ChannelInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 
-
-
+#include <NitroModules/Promise.hpp>
+#include "WifiNetwork.hpp"
+#include <vector>
+#include <string>
+#include <optional>
+#include "ScanOptions.hpp"
+#include "WifiFingerprint.hpp"
+#include "Location.hpp"
+#include <NitroModules/Null.hpp>
+#include <variant>
+#include "ChannelInfo.hpp"
 
 #include "MunimWifi-Swift-Cxx-Umbrella.hpp"
 
@@ -66,13 +85,101 @@ namespace margelo::nitro::munimwifi {
 
   public:
     // Methods
-    inline double sum(double num1, double num2) override {
-      auto __result = _swiftPart.sum(std::forward<decltype(num1)>(num1), std::forward<decltype(num2)>(num2));
+    inline std::shared_ptr<Promise<bool>> isWifiEnabled() override {
+      auto __result = _swiftPart.isWifiEnabled();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
       auto __value = std::move(__result.value());
       return __value;
+    }
+    inline std::shared_ptr<Promise<bool>> requestWifiPermission() override {
+      auto __result = _swiftPart.requestWifiPermission();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) override {
+      auto __result = _swiftPart.scanNetworks(options);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline void startScan(const std::optional<ScanOptions>& options) override {
+      auto __result = _swiftPart.startScan(options);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void stopScan() override {
+      auto __result = _swiftPart.stopScan();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() override {
+      auto __result = _swiftPart.getSSIDs();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() override {
+      auto __result = _swiftPart.getWifiFingerprint();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, double>>> getRSSI(const std::string& ssid) override {
+      auto __result = _swiftPart.getRSSI(ssid);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getBSSID(const std::string& ssid) override {
+      auto __result = _swiftPart.getBSSID(ssid);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, ChannelInfo>>> getChannelInfo(const std::string& ssid) override {
+      auto __result = _swiftPart.getChannelInfo(ssid);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) override {
+      auto __result = _swiftPart.getNetworkInfo(ssid);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline void addListener(const std::string& eventName) override {
+      auto __result = _swiftPart.addListener(eventName);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void removeListeners(double count) override {
+      auto __result = _swiftPart.removeListeners(std::forward<decltype(count)>(count));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
     }
 
   private:
