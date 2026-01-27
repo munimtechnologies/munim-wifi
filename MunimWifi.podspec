@@ -34,11 +34,11 @@ Pod::Spec.new do |s|
   existing_xcconfig = s.attributes_hash['pod_target_xcconfig'] || {}
   current_user_header_paths = existing_xcconfig['USER_HEADER_SEARCH_PATHS'] || '$(inherited)'
   current_header_paths = existing_xcconfig['HEADER_SEARCH_PATHS'] || '$(inherited)'
-  # Use PODS_ROOT with pod name for reliable path resolution
-  # This works both for local development and when installed from npm
+  # Use SRCROOT which points to the pod's source directory
+  # This works regardless of whether the pod is in node_modules or Pods/
   # This path is needed because iOS bridge files in nitrogen/generated/ios/
   # include headers from nitrogen/generated/shared/c++/ using quoted includes
-  shared_header_path = '$(PODS_ROOT)/MunimWifi/nitrogen/generated/shared/c++'
+  shared_header_path = '$(SRCROOT)/nitrogen/generated/shared/c++'
   s.pod_target_xcconfig = existing_xcconfig.merge({
     "USER_HEADER_SEARCH_PATHS" => "#{current_user_header_paths} \"#{shared_header_path}\"",
     "HEADER_SEARCH_PATHS" => "#{current_header_paths} \"#{shared_header_path}\""
