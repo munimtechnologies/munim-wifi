@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
   # Use USER_HEADER_SEARCH_PATHS for quoted includes (user headers)
   # Also add HEADER_SEARCH_PATHS as a fallback
   # Get the xcconfig that was set by add_nitrogen_files
-  existing_xcconfig = s.pod_target_xcconfig || {}
+  existing_xcconfig = s.attributes_hash['pod_target_xcconfig'] || {}
   current_user_header_paths = existing_xcconfig['USER_HEADER_SEARCH_PATHS'] || '$(inherited)'
   current_header_paths = existing_xcconfig['HEADER_SEARCH_PATHS'] || '$(inherited)'
   # Use PODS_TARGET_SRCROOT which points to the pod's source directory
