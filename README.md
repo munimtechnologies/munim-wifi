@@ -545,6 +545,12 @@ npm pack --dry-run
 
 Do not edit files in `nitrogen/generated` directly. Change `src/specs/munim-wifi.nitro.ts` and rerun `npm run codegen`.
 
+### Local release (maintainers)
+
+Releases run locally and do not require GitHub Actions. On the configured maintainer Mac, `npm run release:local` reads the npm publishing token from macOS Keychain and the GitHub token from the authenticated GitHub CLI session, then runs semantic-release. The credentials are never stored in this repository.
+
+Use `npm run release:local -- --dry-run` to verify the next release without publishing it.
+
 ## 📄 License
 
 MIT License. See [LICENSE](./LICENSE).
