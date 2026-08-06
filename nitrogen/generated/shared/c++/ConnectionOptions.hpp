@@ -43,10 +43,13 @@ namespace margelo::nitro::munimwifi {
     std::string ssid     SWIFT_PRIVATE;
     std::optional<std::string> password     SWIFT_PRIVATE;
     std::optional<bool> isWEP     SWIFT_PRIVATE;
+    std::optional<std::string> bssid     SWIFT_PRIVATE;
+    std::optional<bool> joinOnce     SWIFT_PRIVATE;
+    std::optional<double> timeout     SWIFT_PRIVATE;
 
   public:
     ConnectionOptions() = default;
-    explicit ConnectionOptions(std::string ssid, std::optional<std::string> password, std::optional<bool> isWEP): ssid(ssid), password(password), isWEP(isWEP) {}
+    explicit ConnectionOptions(std::string ssid, std::optional<std::string> password, std::optional<bool> isWEP, std::optional<std::string> bssid, std::optional<bool> joinOnce, std::optional<double> timeout): ssid(ssid), password(password), isWEP(isWEP), bssid(bssid), joinOnce(joinOnce), timeout(timeout) {}
 
   public:
     friend bool operator==(const ConnectionOptions& lhs, const ConnectionOptions& rhs) = default;
@@ -64,7 +67,10 @@ namespace margelo::nitro {
       return margelo::nitro::munimwifi::ConnectionOptions(
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "password"))),
-        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isWEP")))
+        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isWEP"))),
+        JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid"))),
+        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "joinOnce"))),
+        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::munimwifi::ConnectionOptions& arg) {
@@ -72,6 +78,9 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "ssid"), JSIConverter<std::string>::toJSI(runtime, arg.ssid));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "password"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.password));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "isWEP"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isWEP));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "bssid"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.bssid));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "joinOnce"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.joinOnce));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "timeout"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.timeout));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -85,6 +94,9 @@ namespace margelo::nitro {
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "password")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isWEP")))) return false;
+      if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid")))) return false;
+      if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "joinOnce")))) return false;
+      if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))) return false;
       return true;
     }
   };

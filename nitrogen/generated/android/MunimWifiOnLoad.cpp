@@ -16,29 +16,43 @@
 #include <NitroModules/HybridObjectRegistry.hpp>
 
 #include "JHybridMunimWifiSpec.hpp"
+#include "JFunc_void_std__vector_WifiNetwork_.hpp"
+#include "JFunc_void_std__string.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
 
 namespace margelo::nitro::munimwifi {
 
 int initialize(JavaVM* vm) {
+  return facebook::jni::initialize(vm, []() {
+    ::margelo::nitro::munimwifi::registerAllNatives();
+  });
+}
+
+struct JHybridMunimWifiSpecImpl: public jni::JavaClass<JHybridMunimWifiSpecImpl, JHybridMunimWifiSpec::JavaPart> {
+  static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/HybridMunimWifi;";
+  static std::shared_ptr<JHybridMunimWifiSpec> create() {
+    static const auto constructorFn = javaClassStatic()->getConstructor<JHybridMunimWifiSpecImpl::javaobject()>();
+    jni::local_ref<JHybridMunimWifiSpec::JavaPart> javaPart = javaClassStatic()->newObject(constructorFn);
+    return javaPart->getJHybridMunimWifiSpec();
+  }
+};
+
+void registerAllNatives() {
   using namespace margelo::nitro;
   using namespace margelo::nitro::munimwifi;
-  using namespace facebook;
 
-  return facebook::jni::initialize(vm, [] {
-    // Register native JNI methods
-    margelo::nitro::munimwifi::JHybridMunimWifiSpec::registerNatives();
+  // Register native JNI methods
+  margelo::nitro::munimwifi::JHybridMunimWifiSpec::CxxPart::registerNatives();
+  margelo::nitro::munimwifi::JFunc_void_std__vector_WifiNetwork__cxx::registerNatives();
+  margelo::nitro::munimwifi::JFunc_void_std__string_cxx::registerNatives();
 
-    // Register Nitro Hybrid Objects
-    HybridObjectRegistry::registerHybridObjectConstructor(
-      "MunimWifi",
-      []() -> std::shared_ptr<HybridObject> {
-        static DefaultConstructableObject<JHybridMunimWifiSpec::javaobject> object("com/margelo/nitro/munimwifi/HybridMunimWifi");
-        auto instance = object.create();
-        return instance->cthis()->shared();
-      }
-    );
-  });
+  // Register Nitro Hybrid Objects
+  HybridObjectRegistry::registerHybridObjectConstructor(
+    "MunimWifi",
+    []() -> std::shared_ptr<HybridObject> {
+      return JHybridMunimWifiSpecImpl::create();
+    }
+  );
 }
 
 } // namespace margelo::nitro::munimwifi

@@ -5,7 +5,6 @@
 /// Copyright © Marc Rousavy @ Margelo
 ///
 
-import Foundation
 import NitroModules
 
 /**
@@ -37,11 +36,25 @@ public extension Location {
 
   @inline(__always)
   var latitude: Double? {
-    return self.__latitude.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__latitude) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__latitude)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
   
   @inline(__always)
   var longitude: Double? {
-    return self.__longitude.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__longitude) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__longitude)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
 }

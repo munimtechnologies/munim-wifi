@@ -1,248 +1,160 @@
+import { PermissionsAndroid, Platform } from 'react-native'
 import { NitroModules } from 'react-native-nitro-modules'
-import { NativeEventEmitter, NativeModules } from 'react-native'
 import type {
-  MunimWifi as MunimWifiSpec,
-  WifiNetwork,
-  WifiFingerprint,
-  ScanOptions,
   ChannelInfo,
-  Location,
-  CurrentNetworkInfo,
   ConnectionOptions,
+  CurrentNetworkInfo,
+  Location,
+  MunimWifi as MunimWifiSpec,
+  ScanOptions,
+  WifiFingerprint,
+  WifiNetwork,
 } from './specs/munim-wifi.nitro'
 
-const MunimWifi =
+export const MunimWifi =
   NitroModules.createHybridObject<MunimWifiSpec>('MunimWifi')
 
-// Event Emitter for Wi-Fi events
-const { MunimWifiEventEmitter } = NativeModules
+type NetworkListener = (network: WifiNetwork) => void
+type NetworksListener = (networks: WifiNetwork[]) => void
+type ErrorListener = (message: string) => void
 
-let eventEmitter: NativeEventEmitter | null = null
+const networkListeners = new Set<NetworkListener>()
+const networksListeners = new Set<NetworksListener>()
+const errorListeners = new Set<ErrorListener>()
 
-if (MunimWifiEventEmitter) {
-  try {
-    eventEmitter = new NativeEventEmitter(MunimWifiEventEmitter)
-  } catch (error) {
-    console.error(
-      '[munim-wifi] Failed to initialize event emitter:',
-      error
-    )
-  }
-}
-
-// ========== Wi-Fi Functions ==========
-
-/**
- * Check if Wi-Fi is enabled on the device.
- *
- * @returns Promise resolving to true if Wi-Fi is enabled, false otherwise.
- */
 export function isWifiEnabled(): Promise<boolean> {
   return MunimWifi.isWifiEnabled()
 }
 
-/**
- * Request Wi-Fi permissions (Android) or check authorization status (iOS).
- * On Android, this requests location permission which is required for Wi-Fi scanning.
- * On iOS, this checks location authorization status.
- *
- * @returns Promise resolving to true if permissions are granted, false otherwise.
- */
-export function requestWifiPermission(): Promise<boolean> {
-  return MunimWifi.requestWifiPermission()
+export async function requestWifiPermission(): Promise<boolean> {
+  if (Platform.OS !== 'android') {
+    return MunimWifi.requestWifiPermission()
+  }
+
+  const permissions: Array<(typeof PermissionsAndroid.PERMISSIONS)[keyof typeof PermissionsAndroid.PERMISSIONS]> = [
+    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+  ]
+
+  if (Platform.Version >= 33) {
+    permissions.push(PermissionsAndroid.PERMISSIONS.NEARBY_WIFI_DEVICES)
+  }
+
+  const results = await PermissionsAndroid.requestMultiple(permissions)
+  return permissions.every(
+    (permission) => results[permission] === PermissionsAndroid.RESULTS.GRANTED
+  )
 }
 
-/**
- * Scan for nearby Wi-Fi networks.
- *
- * @param options - Optional scan configuration including max results and timeout.
- * @returns Promise resolving to array of discovered Wi-Fi networks.
- */
 export function scanNetworks(options?: ScanOptions): Promise<WifiNetwork[]> {
   return MunimWifi.scanNetworks(options)
 }
 
-/**
- * Start continuous Wi-Fi scanning. Results will be emitted via events.
- *
- * @param options - Optional scan configuration.
- */
 export function startScan(options?: ScanOptions): void {
-  return MunimWifi.startScan(options)
+  MunimWifi.startScan(
+    options,
+    (networks) => {
+      networksListeners.forEach((listener) => listener(networks))
+      networks.forEach((network) => {
+        networkListeners.forEach((listener) => listener(network))
+      })
+    },
+    (message) => errorListeners.forEach((listener) => listener(message))
+  )
 }
 
-/**
- * Stop continuous Wi-Fi scanning.
- */
 export function stopScan(): void {
-  return MunimWifi.stopScan()
+  MunimWifi.stopScan()
 }
 
-/**
- * Get list of SSIDs (network names) from the last scan.
- *
- * @returns Promise resolving to array of SSID strings.
- */
 export function getSSIDs(): Promise<string[]> {
   return MunimWifi.getSSIDs()
 }
 
-/**
- * Get Wi-Fi fingerprint containing all network information.
- * This includes SSIDs, BSSIDs, RSSI, channels, and frequencies.
- *
- * @returns Promise resolving to Wi-Fi fingerprint data.
- */
 export function getWifiFingerprint(): Promise<WifiFingerprint> {
   return MunimWifi.getWifiFingerprint()
 }
 
-/**
- * Get RSSI (signal strength) for a specific network by SSID.
- *
- * @param ssid - The SSID of the network.
- * @returns Promise resolving to RSSI value in dBm, or null if network not found.
- */
 export function getRSSI(ssid: string): Promise<number | null> {
   return MunimWifi.getRSSI(ssid)
 }
 
-/**
- * Get BSSID (MAC address) for a specific network by SSID.
- *
- * @param ssid - The SSID of the network.
- * @returns Promise resolving to BSSID string, or null if network not found.
- */
 export function getBSSID(ssid: string): Promise<string | null> {
   return MunimWifi.getBSSID(ssid)
 }
 
-/**
- * Get channel and frequency information for a specific network by SSID.
- *
- * @param ssid - The SSID of the network.
- * @returns Promise resolving to object with channel and frequency, or null if network not found.
- */
 export function getChannelInfo(ssid: string): Promise<ChannelInfo | null> {
   return MunimWifi.getChannelInfo(ssid)
 }
 
-/**
- * Get all available information for a specific network by SSID.
- * Note: On iOS, RSSI, channel, and frequency will be undefined.
- *
- * @param ssid - The SSID of the network.
- * @returns Promise resolving to WifiNetwork object, or null if network not found.
- */
 export function getNetworkInfo(ssid: string): Promise<WifiNetwork | null> {
   return MunimWifi.getNetworkInfo(ssid)
 }
 
-/**
- * Get information about the currently connected Wi-Fi network.
- *
- * @returns Promise resolving to current network info, or null if not connected.
- */
 export function getCurrentNetwork(): Promise<CurrentNetworkInfo | null> {
   return MunimWifi.getCurrentNetwork()
 }
 
-/**
- * Connect to a Wi-Fi network.
- * Note: Requires appropriate permissions and capabilities on both platforms.
- *
- * @param options - Connection options including SSID and password.
- * @returns Promise resolving when connection is attempted.
- */
 export function connectToNetwork(options: ConnectionOptions): Promise<void> {
   return MunimWifi.connectToNetwork(options)
 }
 
-/**
- * Disconnect from the current Wi-Fi network.
- *
- * @returns Promise resolving when disconnection is complete.
- */
 export function disconnect(): Promise<void> {
   return MunimWifi.disconnect()
 }
 
-/**
- * Get IP address information for the current Wi-Fi connection.
- *
- * @returns Promise resolving to IP address string, or null if not connected.
- */
 export function getIPAddress(): Promise<string | null> {
   return MunimWifi.getIPAddress()
 }
 
-// ========== Event Management ==========
-
-/**
- * Add a network found event listener (for continuous scanning).
- *
- * @param callback - Function to call when a network is found
- * @returns A function to remove the listener
- */
-export function addNetworkFoundListener(
-  callback: (network: WifiNetwork) => void
-): () => void {
-  if (!eventEmitter) {
-    console.warn(
-      '[munim-wifi] Cannot add listener - event emitter not available'
-    )
-    return () => {}
-  }
-
-  const subscription = eventEmitter.addListener('networkFound', callback)
-  return () => subscription.remove()
+export function addNetworkFoundListener(callback: NetworkListener): () => void {
+  networkListeners.add(callback)
+  return () => networkListeners.delete(callback)
 }
 
-/**
- * Add an event listener.
- *
- * @param eventName - The name of the event to listen for.
- * @param callback - The callback to invoke when the event occurs.
- * @returns A function to remove the listener
- */
+export function addNetworksFoundListener(callback: NetworksListener): () => void {
+  networksListeners.add(callback)
+  return () => networksListeners.delete(callback)
+}
+
+export function addScanErrorListener(callback: ErrorListener): () => void {
+  errorListeners.add(callback)
+  return () => errorListeners.delete(callback)
+}
+
 export function addEventListener(
-  eventName: string,
-  callback: (data: any) => void
+  eventName: 'networkFound' | 'networksFound' | 'scanError',
+  callback: NetworkListener | NetworksListener | ErrorListener
 ): () => void {
-  if (!eventEmitter) {
-    console.warn(
-      '[munim-wifi] Cannot add listener - event emitter not available'
-    )
-    return () => {}
+  if (eventName === 'networkFound') {
+    return addNetworkFoundListener(callback as NetworkListener)
   }
-
-  const subscription = eventEmitter.addListener(eventName, callback)
-  return () => subscription.remove()
+  if (eventName === 'networksFound') {
+    return addNetworksFoundListener(callback as NetworksListener)
+  }
+  return addScanErrorListener(callback as ErrorListener)
 }
 
-/**
- * Add an event listener (legacy method).
- *
- * @param eventName - The name of the event to listen for.
- */
+/** @deprecated Subscribe with addNetworkFoundListener instead. */
 export function addListener(eventName: string): void {
-  return MunimWifi.addListener(eventName)
+  MunimWifi.addListener(eventName)
 }
 
-/**
- * Remove event listeners.
- *
- * @param count - Number of listeners to remove.
- */
+/** @deprecated Remove the function returned by addNetworkFoundListener instead. */
 export function removeListeners(count: number): void {
-  return MunimWifi.removeListeners(count)
+  MunimWifi.removeListeners(count)
 }
 
-// ========== Type Exports ==========
+export type {
+  ChannelInfo,
+  ConnectionOptions,
+  CurrentNetworkInfo,
+  Location,
+  MunimWifiSpec,
+  ScanOptions,
+  WifiFingerprint,
+  WifiNetwork,
+}
 
-export type { WifiNetwork, WifiFingerprint, ScanOptions, ChannelInfo, Location }
-
-// Default export for convenience
 export default {
   isWifiEnabled,
   requestWifiPermission,
@@ -260,6 +172,8 @@ export default {
   disconnect,
   getIPAddress,
   addNetworkFoundListener,
+  addNetworksFoundListener,
+  addScanErrorListener,
   addEventListener,
   addListener,
   removeListeners,

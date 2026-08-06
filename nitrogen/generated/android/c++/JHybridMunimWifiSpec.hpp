@@ -18,34 +18,33 @@ namespace margelo::nitro::munimwifi {
 
   using namespace facebook;
 
-  class JHybridMunimWifiSpec: public jni::HybridClass<JHybridMunimWifiSpec, JHybridObject>,
-                              public virtual HybridMunimWifiSpec {
+  class JHybridMunimWifiSpec: public virtual HybridMunimWifiSpec, public virtual JHybridObject {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/HybridMunimWifiSpec;";
-    static jni::local_ref<jhybriddata> initHybrid(jni::alias_ref<jhybridobject> jThis);
-    static void registerNatives();
+    struct JavaPart: public jni::JavaClass<JavaPart, JHybridObject::JavaPart> {
+      static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/HybridMunimWifiSpec;";
+      std::shared_ptr<JHybridMunimWifiSpec> getJHybridMunimWifiSpec();
+    };
+    struct CxxPart: public jni::HybridClass<CxxPart, JHybridObject::CxxPart> {
+      static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/HybridMunimWifiSpec$CxxPart;";
+      static jni::local_ref<jhybriddata> initHybrid(jni::alias_ref<jhybridobject> jThis);
+      static void registerNatives();
+      using HybridBase::HybridBase;
+    protected:
+      std::shared_ptr<JHybridObject> createHybridObject(const jni::local_ref<JHybridObject::JavaPart>& javaPart) override;
+    };
 
-  protected:
-    // C++ constructor (called from Java via `initHybrid()`)
-    explicit JHybridMunimWifiSpec(jni::alias_ref<jhybridobject> jThis) :
+  public:
+    explicit JHybridMunimWifiSpec(const jni::local_ref<JHybridMunimWifiSpec::JavaPart>& javaPart):
       HybridObject(HybridMunimWifiSpec::TAG),
-      HybridBase(jThis),
-      _javaPart(jni::make_global(jThis)) {}
-
-  public:
+      JHybridObject(javaPart),
+      _javaPart(jni::make_global(javaPart)) {}
     ~JHybridMunimWifiSpec() override {
       // Hermes GC can destroy JS objects on a non-JNI Thread.
       jni::ThreadScope::WithClassLoader([&] { _javaPart.reset(); });
     }
 
   public:
-    size_t getExternalMemorySize() noexcept override;
-    bool equals(const std::shared_ptr<HybridObject>& other) override;
-    void dispose() noexcept override;
-    std::string toString() override;
-
-  public:
-    inline const jni::global_ref<JHybridMunimWifiSpec::javaobject>& getJavaPart() const noexcept {
+    inline const jni::global_ref<JHybridMunimWifiSpec::JavaPart>& getJavaPart() const noexcept {
       return _javaPart;
     }
 
@@ -58,7 +57,7 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<bool>> isWifiEnabled() override;
     std::shared_ptr<Promise<bool>> requestWifiPermission() override;
     std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) override;
-    void startScan(const std::optional<ScanOptions>& options) override;
+    void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
     void stopScan() override;
     std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() override;
     std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() override;
@@ -74,9 +73,7 @@ namespace margelo::nitro::munimwifi {
     void removeListeners(double count) override;
 
   private:
-    friend HybridBase;
-    using HybridBase::HybridBase;
-    jni::global_ref<JHybridMunimWifiSpec::javaobject> _javaPart;
+    jni::global_ref<JHybridMunimWifiSpec::JavaPart> _javaPart;
   };
 
 } // namespace margelo::nitro::munimwifi

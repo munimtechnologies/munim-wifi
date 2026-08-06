@@ -21,10 +21,20 @@ sealed class Variant_NullType_ChannelInfo {
   @DoNotStrip
   data class Second(@DoNotStrip val value: ChannelInfo): Variant_NullType_ChannelInfo()
 
-  @Deprecated("getAs() is not type-safe. Use fold/asFirstOrNull/asSecondOrNull instead.", level = DeprecationLevel.ERROR)
-  inline fun <reified T> getAs(): T? = when (this) {
-    is First -> value as? T
-    is Second -> value as? T
+  inline fun <reified T> asType(): T? {
+    return when (this) {
+      is First -> (value) as? T
+      is Second -> (value) as? T
+    }
+  }
+  inline fun <reified T> isType(): Boolean {
+    return asType<T>() != null
+  }
+  inline fun <R> match(first: (NullType) -> R, second: (ChannelInfo) -> R): R {
+    return when (this) {
+      is First -> first(value)
+      is Second -> second(value)
+    }
   }
 
   val isFirst: Boolean
@@ -39,13 +49,6 @@ sealed class Variant_NullType_ChannelInfo {
   fun asSecondOrNull(): ChannelInfo? {
     val value = (this as? Second)?.value ?: return null
     return value
-  }
-
-  inline fun <R> match(first: (NullType) -> R, second: (ChannelInfo) -> R): R {
-    return when (this) {
-      is First -> first(value)
-      is Second -> second(value)
-    }
   }
 
   companion object {

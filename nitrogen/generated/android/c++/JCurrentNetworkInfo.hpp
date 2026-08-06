@@ -19,11 +19,11 @@ namespace margelo::nitro::munimwifi {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "CurrentNetworkInfo" and the the Kotlin data class "CurrentNetworkInfo".
+   * The C++ JNI bridge between the C++ struct "CurrentNetworkInfo" and the Kotlin data class "CurrentNetworkInfo".
    */
   struct JCurrentNetworkInfo final: public jni::JavaClass<JCurrentNetworkInfo> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/CurrentNetworkInfo;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/CurrentNetworkInfo;";
 
   public:
     /**
@@ -51,16 +51,16 @@ namespace margelo::nitro::munimwifi {
         ipAddress != nullptr ? std::make_optional(ipAddress->toStdString()) : std::nullopt,
         subnetMask != nullptr ? std::make_optional(subnetMask->toStdString()) : std::nullopt,
         gateway != nullptr ? std::make_optional(gateway->toStdString()) : std::nullopt,
-        dnsServers != nullptr ? std::make_optional([&]() {
-          size_t __size = dnsServers->size();
+        dnsServers != nullptr ? std::make_optional([&](auto&& __input) {
+          size_t __size = __input->size();
           std::vector<std::string> __vector;
           __vector.reserve(__size);
           for (size_t __i = 0; __i < __size; __i++) {
-            auto __element = dnsServers->getElement(__i);
+            auto __element = __input->getElement(__i);
             __vector.push_back(__element->toStdString());
           }
           return __vector;
-        }()) : std::nullopt
+        }(dnsServers)) : std::nullopt
       );
     }
 
@@ -80,16 +80,16 @@ namespace margelo::nitro::munimwifi {
         value.ipAddress.has_value() ? jni::make_jstring(value.ipAddress.value()) : nullptr,
         value.subnetMask.has_value() ? jni::make_jstring(value.subnetMask.value()) : nullptr,
         value.gateway.has_value() ? jni::make_jstring(value.gateway.value()) : nullptr,
-        value.dnsServers.has_value() ? [&]() {
-          size_t __size = value.dnsServers.value().size();
+        value.dnsServers.has_value() ? [&](auto&& __input) {
+          size_t __size = __input.size();
           jni::local_ref<jni::JArrayClass<jni::JString>> __array = jni::JArrayClass<jni::JString>::newArray(__size);
           for (size_t __i = 0; __i < __size; __i++) {
-            const auto& __element = value.dnsServers.value()[__i];
+            const auto& __element = __input[__i];
             auto __elementJni = jni::make_jstring(__element);
             __array->setElement(__i, *__elementJni);
           }
           return __array;
-        }() : nullptr
+        }(value.dnsServers.value()) : nullptr
       );
     }
   };

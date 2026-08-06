@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -43,6 +44,32 @@ data class WifiNetwork(
   val timestamp: Double?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is WifiNetwork) return false
+    return Objects.deepEquals(this.ssid, other.ssid)
+      && Objects.deepEquals(this.bssid, other.bssid)
+      && Objects.deepEquals(this.rssi, other.rssi)
+      && Objects.deepEquals(this.frequency, other.frequency)
+      && Objects.deepEquals(this.channel, other.channel)
+      && Objects.deepEquals(this.capabilities, other.capabilities)
+      && Objects.deepEquals(this.isSecure, other.isSecure)
+      && Objects.deepEquals(this.timestamp, other.timestamp)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      ssid,
+      bssid,
+      rssi,
+      frequency,
+      channel,
+      capabilities,
+      isSecure,
+      timestamp
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

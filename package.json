@@ -1,7 +1,7 @@
 {
   "name": "munim-wifi",
   "version": "0.1.11",
-  "description": "munim-wifi is a react native package built with Nitro",
+  "description": "Fast Wi-Fi scanning, connection, and network information for Expo and React Native, powered by Nitro Modules",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",
   "types": "./lib/typescript/src/index.d.ts",
@@ -12,11 +12,22 @@
     "clean": "git clean -dfX",
     "release": "semantic-release",
     "build": "npm run typecheck && bob build",
-    "codegen": "nitrogen --logLevel=\"debug\" && npm run build && node post-script.js"
+    "codegen": "nitrogen --logLevel=\"debug\"",
+    "typecheck:example": "tsc --noEmit -p example/tsconfig.json",
+    "prepack": "npm run build"
   },
   "keywords": [
     "react-native",
-    "munim-wifi"
+    "munim-wifi",
+    "wifi",
+    "expo",
+    "ios",
+    "android",
+    "typescript",
+    "nitro",
+    "nitro-modules",
+    "network-scanning",
+    "munim-technologies"
   ],
   "files": [
     "src",
@@ -37,13 +48,19 @@
     "ios/**/*.swift",
     "app.plugin.js",
     "*.podspec",
-    "README.md"
+    "README.md",
+    "CONTRIBUTING.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "workspaces": [
     "example"
   ],
-  "repository": "https://github.com/munimtechnologies/munim-wifi.git",
-  "author": "sheehanmunim",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/munimtechnologies/munim-wifi.git"
+  },
+  "author": "sheehanmunim <support@munimtech.com> (https://github.com/sheehanmunim)",
   "license": "MIT",
   "bugs": "https://github.com/munimtechnologies/munim-wifi/issues",
   "homepage": "https://github.com/munimtechnologies/munim-wifi#readme",
@@ -51,25 +68,39 @@
     "access": "public",
     "registry": "https://registry.npmjs.org/"
   },
+  "expo": {
+    "name": "munim-wifi",
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  },
   "devDependencies": {
+    "@expo/config-plugins": "^57.0.7",
     "@jamesacarr/eslint-formatter-github-actions": "^0.2.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/jest": "^29.5.12",
     "@types/react": "19.2.0",
-    "nitrogen": "0.33.2",
-    "react": "19.2.0",
-    "react-native": "0.83",
+    "nitrogen": "0.36.5",
+    "react": "19.2.3",
+    "react-native": "0.86.2",
     "react-native-builder-bob": "^0.40.17",
-    "react-native-nitro-modules": "0.33.2",
+    "react-native-nitro-modules": "0.36.5",
     "conventional-changelog-conventionalcommits": "^9.1.0",
     "semantic-release": "^25.0.2",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
+    "@expo/config-plugins": ">=10 <58",
     "react": "*",
     "react-native": "*",
-    "react-native-nitro-modules": "*"
+    "react-native-nitro-modules": ">=0.36.5 <1"
+  },
+  "peerDependenciesMeta": {
+    "@expo/config-plugins": {
+      "optional": true
+    }
   },
   "eslintConfig": {
     "root": true,

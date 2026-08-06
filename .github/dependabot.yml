@@ -20,18 +20,8 @@ updates:
       - 'dependencies'
       - 'kotlin'
 
-  - package-ecosystem: 'bundler'
-    directory: '/example/'
-    schedule:
-      interval: 'daily'
-    labels:
-      - 'dependencies'
-      - 'ruby'
-
   - package-ecosystem: 'npm'
-    directories:
-      - '/example/'
-      - '/'
+    directory: '/'
     schedule:
       interval: 'daily'
     labels:

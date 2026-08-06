@@ -17,11 +17,11 @@ namespace margelo::nitro::munimwifi {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "Location" and the the Kotlin data class "Location".
+   * The C++ JNI bridge between the C++ struct "Location" and the Kotlin data class "Location".
    */
   struct JLocation final: public jni::JavaClass<JLocation> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Location;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Location;";
 
   public:
     /**

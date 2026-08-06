@@ -27,7 +27,7 @@ namespace margelo::nitro::munimwifi {
    */
   class JVariant_NullType_WifiNetwork: public jni::JavaClass<JVariant_NullType_WifiNetwork> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Variant_NullType_WifiNetwork;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Variant_NullType_WifiNetwork;";
 
     static jni::local_ref<JVariant_NullType_WifiNetwork> create_0(jni::alias_ref<JNull> value) {
       static const auto method = javaClassStatic()->getStaticMethod<JVariant_NullType_WifiNetwork(jni::alias_ref<JNull>)>("create");
@@ -52,7 +52,7 @@ namespace margelo::nitro::munimwifi {
   namespace JVariant_NullType_WifiNetwork_impl {
     class First final: public jni::JavaClass<First, JVariant_NullType_WifiNetwork> {
     public:
-      static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Variant_NullType_WifiNetwork$First;";
+      static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Variant_NullType_WifiNetwork$First;";
     
       [[nodiscard]] jni::local_ref<JNull> getValue() const {
         static const auto field = javaClassStatic()->getField<JNull>("value");
@@ -62,7 +62,7 @@ namespace margelo::nitro::munimwifi {
     
     class Second final: public jni::JavaClass<Second, JVariant_NullType_WifiNetwork> {
     public:
-      static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Variant_NullType_WifiNetwork$Second;";
+      static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/Variant_NullType_WifiNetwork$Second;";
     
       [[nodiscard]] jni::local_ref<JWifiNetwork> getValue() const {
         static const auto field = javaClassStatic()->getField<JWifiNetwork>("value");

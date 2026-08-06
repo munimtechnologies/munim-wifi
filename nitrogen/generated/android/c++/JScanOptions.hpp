@@ -17,11 +17,11 @@ namespace margelo::nitro::munimwifi {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "ScanOptions" and the the Kotlin data class "ScanOptions".
+   * The C++ JNI bridge between the C++ struct "ScanOptions" and the Kotlin data class "ScanOptions".
    */
   struct JScanOptions final: public jni::JavaClass<JScanOptions> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/ScanOptions;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/ScanOptions;";
 
   public:
     /**
@@ -35,9 +35,12 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JDouble> maxResults = this->getFieldValue(fieldMaxResults);
       static const auto fieldTimeout = clazz->getField<jni::JDouble>("timeout");
       jni::local_ref<jni::JDouble> timeout = this->getFieldValue(fieldTimeout);
+      static const auto fieldInterval = clazz->getField<jni::JDouble>("interval");
+      jni::local_ref<jni::JDouble> interval = this->getFieldValue(fieldInterval);
       return ScanOptions(
         maxResults != nullptr ? std::make_optional(maxResults->value()) : std::nullopt,
-        timeout != nullptr ? std::make_optional(timeout->value()) : std::nullopt
+        timeout != nullptr ? std::make_optional(timeout->value()) : std::nullopt,
+        interval != nullptr ? std::make_optional(interval->value()) : std::nullopt
       );
     }
 
@@ -47,13 +50,14 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JScanOptions::javaobject> fromCpp(const ScanOptions& value) {
-      using JSignature = JScanOptions(jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>);
+      using JSignature = JScanOptions(jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         value.maxResults.has_value() ? jni::JDouble::valueOf(value.maxResults.value()) : nullptr,
-        value.timeout.has_value() ? jni::JDouble::valueOf(value.timeout.value()) : nullptr
+        value.timeout.has_value() ? jni::JDouble::valueOf(value.timeout.value()) : nullptr,
+        value.interval.has_value() ? jni::JDouble::valueOf(value.interval.value()) : nullptr
       );
     }
   };

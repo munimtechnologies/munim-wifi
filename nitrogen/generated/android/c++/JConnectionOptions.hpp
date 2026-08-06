@@ -18,11 +18,11 @@ namespace margelo::nitro::munimwifi {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "ConnectionOptions" and the the Kotlin data class "ConnectionOptions".
+   * The C++ JNI bridge between the C++ struct "ConnectionOptions" and the Kotlin data class "ConnectionOptions".
    */
   struct JConnectionOptions final: public jni::JavaClass<JConnectionOptions> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/ConnectionOptions;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/ConnectionOptions;";
 
   public:
     /**
@@ -38,10 +38,19 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JString> password = this->getFieldValue(fieldPassword);
       static const auto fieldIsWEP = clazz->getField<jni::JBoolean>("isWEP");
       jni::local_ref<jni::JBoolean> isWEP = this->getFieldValue(fieldIsWEP);
+      static const auto fieldBssid = clazz->getField<jni::JString>("bssid");
+      jni::local_ref<jni::JString> bssid = this->getFieldValue(fieldBssid);
+      static const auto fieldJoinOnce = clazz->getField<jni::JBoolean>("joinOnce");
+      jni::local_ref<jni::JBoolean> joinOnce = this->getFieldValue(fieldJoinOnce);
+      static const auto fieldTimeout = clazz->getField<jni::JDouble>("timeout");
+      jni::local_ref<jni::JDouble> timeout = this->getFieldValue(fieldTimeout);
       return ConnectionOptions(
         ssid->toStdString(),
         password != nullptr ? std::make_optional(password->toStdString()) : std::nullopt,
-        isWEP != nullptr ? std::make_optional(static_cast<bool>(isWEP->value())) : std::nullopt
+        isWEP != nullptr ? std::make_optional(static_cast<bool>(isWEP->value())) : std::nullopt,
+        bssid != nullptr ? std::make_optional(bssid->toStdString()) : std::nullopt,
+        joinOnce != nullptr ? std::make_optional(static_cast<bool>(joinOnce->value())) : std::nullopt,
+        timeout != nullptr ? std::make_optional(timeout->value()) : std::nullopt
       );
     }
 
@@ -51,14 +60,17 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JConnectionOptions::javaobject> fromCpp(const ConnectionOptions& value) {
-      using JSignature = JConnectionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>);
+      using JSignature = JConnectionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.ssid),
         value.password.has_value() ? jni::make_jstring(value.password.value()) : nullptr,
-        value.isWEP.has_value() ? jni::JBoolean::valueOf(value.isWEP.value()) : nullptr
+        value.isWEP.has_value() ? jni::JBoolean::valueOf(value.isWEP.value()) : nullptr,
+        value.bssid.has_value() ? jni::make_jstring(value.bssid.value()) : nullptr,
+        value.joinOnce.has_value() ? jni::JBoolean::valueOf(value.joinOnce.value()) : nullptr,
+        value.timeout.has_value() ? jni::JDouble::valueOf(value.timeout.value()) : nullptr
       );
     }
   };

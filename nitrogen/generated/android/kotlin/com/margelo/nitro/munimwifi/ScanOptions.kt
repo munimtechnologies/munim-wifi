@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -22,9 +23,28 @@ data class ScanOptions(
   val maxResults: Double?,
   @DoNotStrip
   @Keep
-  val timeout: Double?
+  val timeout: Double?,
+  @DoNotStrip
+  @Keep
+  val interval: Double?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is ScanOptions) return false
+    return Objects.deepEquals(this.maxResults, other.maxResults)
+      && Objects.deepEquals(this.timeout, other.timeout)
+      && Objects.deepEquals(this.interval, other.interval)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      maxResults,
+      timeout,
+      interval
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**
@@ -34,8 +54,8 @@ data class ScanOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(maxResults: Double?, timeout: Double?): ScanOptions {
-      return ScanOptions(maxResults, timeout)
+    private fun fromCpp(maxResults: Double?, timeout: Double?, interval: Double?): ScanOptions {
+      return ScanOptions(maxResults, timeout, interval)
     }
   }
 }

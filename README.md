@@ -8,56 +8,61 @@
 </p>
 
 <p align="center">
-   <a aria-label="Package version" href="https://www.npmjs.com/package/munim-wifi" target="_blank">
+  <a aria-label="Package version" href="https://www.npmjs.com/package/munim-wifi" target="_blank">
     <img alt="Package version" src="https://img.shields.io/npm/v/munim-wifi.svg?style=flat-square&label=Version&labelColor=000000&color=0066CC" />
   </a>
-  <a aria-label="Package is free to use" href="https://github.com/munimtechnologies/munim-wifi/blob/main/LICENSE" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=flat-square&color=33CC12" target="_blank" />
+  <a aria-label="Package is free to use" href="https://github.com/munimtechnologies/munim-wifi/blob/master/LICENSE" target="_blank">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=flat-square&color=33CC12" />
   </a>
-  <a aria-label="package downloads" href="https://www.npmtrends.com/munim-wifi" target="_blank">
-    <img alt="Downloads" src="https://img.shields.io/npm/dm/munim-wifi.svg?style=flat-square&labelColor=gray&color=33CC12&label=Downloads" />
+  <a aria-label="Monthly downloads" href="https://www.npmtrends.com/munim-wifi" target="_blank">
+    <img alt="Monthly downloads" src="https://img.shields.io/npm/dm/munim-wifi.svg?style=flat-square&labelColor=gray&color=33CC12&label=Downloads" />
   </a>
-  <a aria-label="total package downloads" href="https://www.npmjs.com/package/munim-wifi" target="_blank">
-    <img alt="Total Downloads" src="https://img.shields.io/npm/dt/munim-wifi.svg?style=flat-square&labelColor=gray&color=0066CC&label=Total%20Downloads" />
+  <a aria-label="Total downloads" href="https://www.npmjs.com/package/munim-wifi" target="_blank">
+    <img alt="Total downloads" src="https://img.shields.io/npm/dt/munim-wifi.svg?style=flat-square&labelColor=gray&color=0066CC&label=Total%20Downloads" />
+  </a>
+  <a aria-label="Continuous integration" href="https://github.com/munimtechnologies/munim-wifi/actions/workflows/ci.yml" target="_blank">
+    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/munimtechnologies/munim-wifi/ci.yml?branch=master&style=flat-square&label=CI" />
   </a>
 </p>
 
 <p align="center">
-  <a aria-label="try with expo" href="https://docs.expo.dev/"><b>Works with Expo</b></a>
-&ensp;•&ensp;
-  <a aria-label="documentation" href="https://github.com/munimtechnologies/munim-wifi#readme">Read the Documentation</a>
-&ensp;•&ensp;
-  <a aria-label="report issues" href="https://github.com/munimtechnologies/munim-wifi/issues">Report Issues</a>
+  <a aria-label="Works with Expo" href="https://docs.expo.dev/"><b>Works with Expo</b></a>
+  &ensp;•&ensp;
+  <a aria-label="Documentation" href="https://github.com/munimtechnologies/munim-wifi#readme">Read the Documentation</a>
+  &ensp;•&ensp;
+  <a aria-label="Report issues" href="https://github.com/munimtechnologies/munim-wifi/issues">Report Issues</a>
 </p>
 
 <h6 align="center">Follow Munim Technologies</h6>
 <p align="center">
-  <a aria-label="Follow Munim Technologies on GitHub" href="https://github.com/munimtechnologies" target="_blank">
-    <img alt="Munim Technologies on GitHub" src="https://img.shields.io/badge/GitHub-222222?style=for-the-badge&logo=github&logoColor=white" target="_blank" />
+  <a aria-label="Munim Technologies on GitHub" href="https://github.com/munimtechnologies" target="_blank">
+    <img alt="Munim Technologies on GitHub" src="https://img.shields.io/badge/GitHub-222222?style=for-the-badge&logo=github&logoColor=white" />
   </a>&nbsp;
-  <a aria-label="Follow Munim Technologies on LinkedIn" href="https://linkedin.com/in/sheehanmunim" target="_blank">
-    <img alt="Munim Technologies on LinkedIn" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" target="_blank" />
+  <a aria-label="Munim Technologies on LinkedIn" href="https://linkedin.com/in/sheehanmunim" target="_blank">
+    <img alt="Munim Technologies on LinkedIn" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" />
   </a>&nbsp;
-  <a aria-label="Visit Munim Technologies Website" href="https://munimtech.com" target="_blank">
-    <img alt="Munim Technologies Website" src="https://img.shields.io/badge/Website-0066CC?style=for-the-badge&logo=globe&logoColor=white" target="_blank" />
+  <a aria-label="Munim Technologies website" href="https://munimtech.com" target="_blank">
+    <img alt="Munim Technologies website" src="https://img.shields.io/badge/Website-0066CC?style=for-the-badge&logo=globe&logoColor=white" />
   </a>
 </p>
 
 ## Introduction
 
-**munim-wifi** is a comprehensive React Native library for Wi-Fi network scanning and analysis. This library allows your React Native app to scan for nearby Wi-Fi networks, retrieve detailed network information including SSIDs, BSSIDs (MAC addresses), RSSI (signal strength), channels, frequencies, and perform Wi-Fi fingerprinting for location-based services.
+**munim-wifi** is a comprehensive React Native Wi-Fi library for nearby-network discovery, current-network information, connection flows, and Wi-Fi fingerprinting. It exposes SSIDs, BSSIDs, signal strength, frequencies, channels, security information, local IP data, and platform-native connect/disconnect behavior where the operating system permits it.
 
-**Fully compatible with Expo!** Works seamlessly with both Expo managed and bare workflows.
+**Fully compatible with Expo!** It includes an Expo config plugin and a managed Expo example app. Because the package contains native code, Expo projects must use a development build rather than Expo Go.
 
-**Built with React Native's Nitro modules architecture** for high performance and reliability.
+**Built with React Native's Nitro Modules architecture** using Swift on iOS, Kotlin on Android, generated native bindings, and callback-based continuous results without a legacy React Native event bridge.
 
-**Note**: This library focuses on reliability and platform compatibility. It supports core Wi-Fi scanning features that work consistently across both Android and iOS platforms.
+**Note:** Wi-Fi is heavily platform-gated. Android exposes nearby scans but throttles their frequency. Ordinary iOS apps cannot perform general Wi-Fi scans, so iOS returns the current network when Apple allows access. Unsupported data is returned as `null` instead of being fabricated.
 
 ## Table of contents
 
 - [📚 Documentation](#-documentation)
 - [🚀 Features](#-features)
+- [Platform Support Matrix](#platform-support-matrix)
 - [📦 Installation](#-installation)
+- [Permissions and OS Behavior](#permissions-and-os-behavior)
 - [⚡ Quick Start](#-quick-start)
 - [🔧 API Reference](#-api-reference)
 - [📖 Usage Examples](#-usage-examples)
@@ -67,98 +72,57 @@
 
 ## 📚 Documentation
 
-<p>Learn about building Wi-Fi scanning apps <a aria-label="documentation" href="https://github.com/munimtechnologies/munim-wifi#readme">in our documentation!</a></p>
+<p>Learn about building Wi-Fi-aware apps <a aria-label="Documentation" href="https://github.com/munimtechnologies/munim-wifi#readme">in our documentation!</a></p>
 
 - [Getting Started](#-installation)
+- [Platform Support](#platform-support-matrix)
 - [API Reference](#-api-reference)
 - [Usage Examples](#-usage-examples)
 - [Troubleshooting](#-troubleshooting)
 
 ## 🚀 Features
 
-### Wi-Fi Scanning
+### Wi-Fi Discovery
 
-- 📡 **Network Scanning**: Scan for nearby Wi-Fi networks with detailed information
-- 📶 **Signal Strength**: Get RSSI (signal strength) values for all networks (Android only)
-- 🔍 **Network Details**: Retrieve SSIDs, BSSIDs (MAC addresses), channels, and frequencies (Android only)
-- 📊 **Wi-Fi Fingerprinting**: Create comprehensive Wi-Fi fingerprints for location services
-- 🔄 **Continuous Scanning**: Support for continuous scanning with event-based updates (Android only)
-- 📱 **Cross-platform**: Works on both iOS and Android
+- 📡 **Nearby Network Scanning:** Retrieve Android scan results without blocking a native thread.
+- 📶 **Signal Information:** Read RSSI, frequency, and calculated 2.4/5/6/60 GHz channel information on Android.
+- 🔐 **Security Details:** Read capabilities and an easy-to-use secure/open flag.
+- 🔄 **Continuous Results:** Subscribe to result batches or individual networks through Nitro callbacks.
+- 🧭 **Wi-Fi Fingerprinting:** Capture visible networks with a millisecond timestamp.
 
 ### Network Management
 
-- 🔌 **Connect to Networks**: Programmatically connect to Wi-Fi networks
-- 🔌 **Disconnect**: Disconnect from current Wi-Fi network
-- 📱 **Current Network Info**: Get information about currently connected network
-- 🌐 **IP Address**: Retrieve IP address information for current connection
+- 🔌 **Native Connection Flows:** Android `WifiNetworkSpecifier` and iOS `NEHotspotConfiguration`.
+- 📱 **Current Network Information:** Read SSID, BSSID, IP address, gateway, DNS, and subnet data where available.
+- 🌐 **Local Routing:** Android 10+ binds the app process to the approved requested network until `disconnect()`.
+- ✅ **Explicit Failures:** Invalid options, missing permissions, disabled Wi-Fi, timeouts, and unsupported WEP flows reject clearly.
 
 ### Additional Features
 
-- 📱 **Cross-platform**: Works on both iOS and Android (with platform-specific limitations)
-- 🎯 **TypeScript Support**: Full TypeScript definitions included
-- ⚡ **High Performance**: Built with React Native's Nitro modules architecture
-- 🚀 **Expo Compatible**: Works seamlessly with Expo managed and bare workflows
-- 🔐 **Permission Handling**: Built-in permission request helpers
+- 📱 **Cross-platform:** One TypeScript API with honest platform-specific results.
+- 🎯 **TypeScript Support:** Full result, option, callback, and HybridObject types.
+- ⚡ **High Performance:** Nitro Modules with generated Swift/Kotlin/C++ bindings.
+- 🚀 **Expo Compatible:** Managed config plugin and Expo 57 example project.
+- 🔐 **Permission Handling:** Android runtime permission requests and real iOS location authorization.
+- 🧪 **Release Verification:** Package, example, iOS, and Android CI workflows.
 
-### ⚠️ Platform Limitations
+## Platform Support Matrix
 
-#### iOS Limitations
+| Capability | iOS | Android | Notes |
+| --- | --- | --- | --- |
+| Nearby-network scan | ⚠️ Current network only | ✅ Full | Ordinary iOS apps cannot enumerate nearby Wi-Fi networks. |
+| SSID and BSSID | ✅ | ✅ | iOS requires the Wi-Fi Information entitlement plus an Apple access criterion. |
+| RSSI | ❌ | ✅ | Android returns dBm. |
+| Frequency and channel | ❌ | ✅ | Android covers 2.4, 5, 6, and 60 GHz channel calculations. |
+| Capabilities/security | ⚠️ Security state only | ✅ | iOS does not expose Android-style capability strings. |
+| Current network | ✅ | ✅ | Values can be hidden by permissions or OS privacy behavior. |
+| Local IPv4 address | ✅ | ✅ | Returns `null` when no Wi-Fi interface is available. |
+| Connect | ✅ | ✅ | Both platforms use system-controlled user-consent flows. |
+| Disconnect | ⚠️ Removes app configuration | ✅ | iOS cannot force-disconnect arbitrary saved networks. |
+| Continuous scan | ⚠️ One current-network result | ✅ | Android scan throttling still applies. |
+| Wi-Fi fingerprint | ⚠️ Current network only | ✅ | No location is inferred by the library. |
 
-**Critical: CoreWLAN is macOS Only**
-CoreWLAN framework is NOT available on iOS - it only works on macOS. The iOS implementation uses `NEHotspotNetwork` and `NEHotspotConfiguration` APIs.
-
-**iOS Wi-Fi Scanning Capabilities:**
-iOS has very limited Wi-Fi scanning capabilities:
-
-✅ **Available on iOS:**
-- Get SSID (network name) - via `NEHotspotNetwork.fetchCurrent()`
-- Get BSSID (MAC address) - via `NEHotspotNetwork.fetchCurrent()`
-- Connect to Wi-Fi networks - via `NEHotspotConfiguration`
-- Disconnect from Wi-Fi - via `NEHotspotConfiguration`
-- Get current connected network info
-
-❌ **NOT Available on iOS:**
-- RSSI (signal strength) - Cannot be retrieved for scanned networks
-- Channel information - Not available
-- Frequency information - Not available
-- General network scanning - Only works for hotspot networks via NEHotspotHelper (requires special entitlement)
-
-**iOS Requirements:**
-- Location permission (precise location) required
-- "Access Wi-Fi Information" entitlement in Xcode
-- "Hotspot Configuration" capability for connecting to networks
-- iOS 13+ requires location permission
-
-#### Android Limitations
-
-**Scanning Restrictions:**
-- `WifiManager.startScan()` is deprecated in Android P (API 28) but still works
-- **Throttling limits:**
-  - Foreground apps: 4 scans every 2 minutes
-  - Background apps: More restrictive
-- Requires location permission (Android 6.0+)
-- Passive listening available on Android 10+ (API 29)
-
-✅ **Available on Android:**
-- Full network scanning with SSID, BSSID, RSSI, channel, frequency
-- Connect/disconnect to networks
-- Get current network info
-- All features work, but with throttling limits
-
-#### Feature Support Matrix
-
-| Feature | iOS | Android | Notes |
-|---------|-----|---------|-------|
-| Scan networks | ⚠️ Limited | ✅ Full | iOS: SSID/BSSID only, no RSSI/channel/frequency |
-| Get SSID | ✅ | ✅ | Both platforms |
-| Get BSSID | ✅ | ✅ | Both platforms |
-| Get RSSI | ❌ | ✅ | iOS: Not available for scanned networks |
-| Get Channel | ❌ | ✅ | iOS: Not available |
-| Get Frequency | ❌ | ✅ | iOS: Not available |
-| Connect to network | ✅ | ✅ | Both platforms (requires entitlements/capabilities) |
-| Disconnect | ✅ | ✅ | Both platforms |
-| Get current network | ✅ | ✅ | Both platforms |
-| Wi-Fi fingerprinting | ⚠️ Limited | ✅ Full | iOS: Limited to SSID/BSSID only |
+Platform support can vary by OS version, hardware, permission state, foreground/background state, and device-management policy.
 
 ## 📦 Installation
 
@@ -176,335 +140,282 @@ yarn add munim-wifi react-native-nitro-modules
 npx expo install munim-wifi react-native-nitro-modules
 ```
 
-> **Note**: This library requires Expo SDK 50+ and works with both managed and bare workflows. To support Nitro modules, you need React Native version v0.78.0 or higher.
+> **Important:** This package requires a native Expo development build and does not work in Expo Go. After installing, run `npx expo run:ios`, `npx expo run:android`, or create a development build with EAS.
 
-### iOS Setup
-
-For iOS, the library is automatically linked. However, you need to add the following to your `Info.plist`:
-
-```xml
-<key>NSLocationWhenInUseUsageDescription</key>
-<string>This app uses location services to scan for nearby Wi-Fi networks</string>
-<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-<string>This app uses location services to scan for nearby Wi-Fi networks</string>
-```
-
-**For Expo projects**, add these permissions to your `app.json`:
+Add the included config plugin to `app.json`:
 
 ```json
 {
   "expo": {
-    "ios": {
-      "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses location services to scan for nearby Wi-Fi networks",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app uses location services to scan for nearby Wi-Fi networks"
-      }
-    }
+    "plugins": [
+      [
+        "munim-wifi",
+        {
+          "locationPermission": "Allow this app to find nearby Wi-Fi networks."
+        }
+      ]
+    ]
   }
 }
 ```
 
+The plugin adds the Android Wi-Fi, location, and Nearby Wi-Fi Devices permissions; the iOS location description; and the iOS Access Wi-Fi Information and Hotspot Configuration entitlements.
+
+Generate or rebuild native projects after changing the plugin configuration:
+
+```bash
+npx expo prebuild
+npx expo run:ios
+# or
+npx expo run:android
+```
+
+### iOS Setup
+
+Bare React Native apps must enable these capabilities in Xcode:
+
+- Access Wi-Fi Information
+- Hotspot Configuration
+
+Add a location usage message to `Info.plist`:
+
+```xml
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app uses location permission to access Wi-Fi information.</string>
+```
+
 ### Android Setup
 
-For Android, add the following permissions to your `AndroidManifest.xml`:
+Bare React Native apps should merge these permissions into the application manifest:
 
 ```xml
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
 ```
 
-**For Expo projects**, add these permissions to your `app.json`:
+The Expo config plugin adds them automatically.
 
-```json
-{
-  "expo": {
-    "android": {
-      "permissions": [
-        "android.permission.ACCESS_WIFI_STATE",
-        "android.permission.CHANGE_WIFI_STATE",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION"
-      ]
-    }
-  }
-}
-```
+## Permissions and OS Behavior
+
+### iOS current-network access
+
+Apple's `NEHotspotNetwork.fetchCurrent()` returns a network only when the app has the Access Wi-Fi Information entitlement and meets at least one qualifying condition, such as precise-location authorization, a network configured by the app, an active VPN configuration, or an active DNS settings configuration. See [Apple's `fetchCurrent` documentation](https://developer.apple.com/documentation/networkextension/nehotspotnetwork/fetchcurrent(completionhandler:)).
+
+`disconnect()` can remove only a Wi-Fi configuration created by the app. It cannot remove or force-disconnect a network configured by the user or another app.
+
+### Android scan and connection access
+
+Wi-Fi scans and scan results require precise-location permission. Android 13+ connection management also uses the Nearby Wi-Fi Devices runtime permission. See [Android Wi-Fi permissions](https://developer.android.com/develop/connectivity/wifi/wifi-permissions).
+
+Android throttles `WifiManager.startScan()`. Foreground apps can still receive cached results when the OS declines a fresh scan, so the `timestamp` field records when this package converted the result, not when the radio last observed it.
+
+Android 10+ connections use `WifiNetworkSpecifier`. The OS presents a system approval flow and may create a local-only connection. The library binds the app process to the approved network until `disconnect()` so app traffic can reach that network.
 
 ## ⚡ Quick Start
 
 ### Basic Usage - Scan Networks
 
 ```typescript
-import { scanNetworks, requestWifiPermission, isWifiEnabled } from 'munim-wifi'
+import {
+  getCurrentNetwork,
+  isWifiEnabled,
+  requestWifiPermission,
+  scanNetworks,
+} from 'munim-wifi'
 
-// Check if Wi-Fi is enabled
-const wifiEnabled = await isWifiEnabled()
-if (!wifiEnabled) {
-  console.log('Wi-Fi is not enabled')
-  return
-}
+const enabled = await isWifiEnabled()
+if (!enabled) throw new Error('Wi-Fi is unavailable')
 
-// Request permissions (required for scanning)
 const hasPermission = await requestWifiPermission()
-if (!hasPermission) {
-  console.log('Location permission not granted')
-  return
-}
+if (!hasPermission) throw new Error('Wi-Fi permission was not granted')
 
-// Scan for networks
-const networks = await scanNetworks()
-console.log(`Found ${networks.length} networks`)
+const [current, networks] = await Promise.all([
+  getCurrentNetwork(),
+  scanNetworks({ maxResults: 30, timeout: 10_000 }),
+])
 
-networks.forEach(network => {
-  console.log(`SSID: ${network.ssid}`)
-  console.log(`BSSID: ${network.bssid}`)
-  console.log(`RSSI: ${network.rssi} dBm`)
-  console.log(`Channel: ${network.channel}`)
-  console.log(`Frequency: ${network.frequency} MHz`)
-  console.log(`Secure: ${network.isSecure}`)
-})
-```
-
-### Get Specific Network Information
-
-```typescript
-import { getSSIDs, getRSSI, getBSSID, getChannelInfo, getNetworkInfo } from 'munim-wifi'
-
-// Get all SSIDs
-const ssids = await getSSIDs()
-console.log('Available networks:', ssids)
-
-// Get RSSI for a specific network
-const rssi = await getRSSI('MyNetwork')
-console.log('Signal strength:', rssi, 'dBm')
-
-// Get BSSID (MAC address) for a network
-const bssid = await getBSSID('MyNetwork')
-console.log('BSSID:', bssid)
-
-// Get channel information
-const channelInfo = await getChannelInfo('MyNetwork')
-if (channelInfo) {
-  console.log('Channel:', channelInfo.channel)
-  console.log('Frequency:', channelInfo.frequency, 'MHz')
-}
-
-// Get all information for a network
-const networkInfo = await getNetworkInfo('MyNetwork')
-if (networkInfo) {
-  console.log('Full network info:', networkInfo)
-}
-```
-
-### Wi-Fi Fingerprinting
-
-```typescript
-import { getWifiFingerprint } from 'munim-wifi'
-
-// Get Wi-Fi fingerprint (useful for location services)
-const fingerprint = await getWifiFingerprint()
-console.log('Fingerprint timestamp:', fingerprint.timestamp)
-console.log('Networks found:', fingerprint.networks.length)
-
-fingerprint.networks.forEach(network => {
-  console.log(`${network.ssid}: ${network.rssi} dBm on channel ${network.channel}`)
+console.log('Current network:', current)
+networks.forEach((network) => {
+  console.log(network.ssid, network.bssid, network.rssi, network.channel)
 })
 ```
 
 ### Continuous Scanning
 
 ```typescript
-import { startScan, stopScan, addNetworkFoundListener } from 'munim-wifi'
+import {
+  addNetworksFoundListener,
+  addScanErrorListener,
+  startScan,
+  stopScan,
+} from 'munim-wifi'
 
-// Start continuous scanning
-startScan()
+const removeResults = addNetworksFoundListener((networks) => {
+  console.log('Updated networks:', networks)
+})
+const removeError = addScanErrorListener(console.warn)
 
-// Listen for discovered networks
-const unsubscribe = addNetworkFoundListener((network) => {
-  console.log('Network found:', network.ssid, network.rssi, 'dBm')
+startScan({ interval: 30_000, maxResults: 30 })
+
+// Later:
+stopScan()
+removeResults()
+removeError()
+```
+
+### Connect to a Network
+
+```typescript
+import { connectToNetwork, disconnect } from 'munim-wifi'
+
+await connectToNetwork({
+  ssid: 'Workshop Wi-Fi',
+  password: 'correct-horse-battery-staple',
+  timeout: 30_000,
 })
 
-// Stop scanning when done
-// stopScan()
-// unsubscribe()
+// Release/remove the app-managed connection later.
+await disconnect()
 ```
+
+Android 10+ and iOS both show system-controlled approval UI. WEP is unsupported on Android 10+.
 
 ## 🔧 API Reference
 
-### Core Functions
+### Discovery Functions
 
 #### `isWifiEnabled()`
 
-Checks if Wi-Fi is enabled on the device.
+Checks whether Wi-Fi appears available to the app.
 
-**Returns:** Promise<boolean>
+**Returns:** `Promise<boolean>`
+
+On iOS this is inferred from current-network access because Apple does not expose a public Wi-Fi enabled-state API.
 
 #### `requestWifiPermission()`
 
-Requests Wi-Fi permissions (Android) or checks authorization status (iOS).
-On Android, this requests location permission which is required for Wi-Fi scanning.
-On iOS, this checks location authorization status.
+Requests precise-location and Nearby Wi-Fi Devices permissions on supported Android versions. On iOS, requests When In Use location authorization when it has not been determined.
 
-**Returns:** Promise<boolean>
+**Returns:** `Promise<boolean>`
 
 #### `scanNetworks(options?)`
 
-Scans for nearby Wi-Fi networks.
+Runs one Android scan or one iOS current-network lookup.
 
 **Parameters:**
 
-- `options?` (object):
-  - `maxResults?` (number): Maximum number of results to return
-  - `timeout?` (number): Timeout in milliseconds (default: 10000)
+- `maxResults?` (`number`): Positive integer result limit.
+- `timeout?` (`number`): Android timeout from 250 to 30,000 milliseconds.
 
-**Returns:** Promise<WifiNetwork[]>
+**Returns:** `Promise<WifiNetwork[]>`
 
 #### `startScan(options?)`
 
-Starts continuous Wi-Fi scanning. Results will be emitted via events.
+Starts repeated Android scans. On iOS, emits one current-network result because general scanning is unavailable.
 
 **Parameters:**
 
-- `options?` (object):
-  - `maxResults?` (number): Maximum number of results to return
-  - `timeout?` (number): Timeout in milliseconds
+- `maxResults?` (`number`): Positive integer result limit.
+- `interval?` (`number`): 10,000 to 600,000 milliseconds. Defaults to 30,000.
+- `timeout?` (`number`): Validation-compatible one-shot timeout value.
+
+Use `addNetworksFoundListener()`, `addNetworkFoundListener()`, or `addScanErrorListener()` before starting.
 
 #### `stopScan()`
 
-Stops continuous Wi-Fi scanning.
+Stops continuous Android scanning and releases its broadcast receiver.
 
 #### `getSSIDs()`
 
-Gets list of SSIDs (network names) from the last scan.
+Returns visible SSIDs from the current scan information.
 
-**Returns:** Promise<string[]>
+**Returns:** `Promise<string[]>`
 
 #### `getWifiFingerprint()`
 
-Gets Wi-Fi fingerprint containing all network information.
-This includes SSIDs, BSSIDs, RSSI, channels, and frequencies.
+Returns visible/current networks and a millisecond timestamp.
 
-**Returns:** Promise<WifiFingerprint>
+**Returns:** `Promise<WifiFingerprint>`
+
+### Network Information Functions
 
 #### `getRSSI(ssid)`
 
-Gets RSSI (signal strength) for a specific network by SSID.
-
-**Parameters:**
-
-- `ssid` (string): The SSID of the network
-
-**Returns:** Promise<number | null>
+Returns Android signal strength in dBm or `null`. iOS returns `null`.
 
 #### `getBSSID(ssid)`
 
-Gets BSSID (MAC address) for a specific network by SSID.
-
-**Parameters:**
-
-- `ssid` (string): The SSID of the network
-
-**Returns:** Promise<string | null>
+Returns the BSSID matching an SSID or `null`.
 
 #### `getChannelInfo(ssid)`
 
-Gets channel and frequency information for a specific network by SSID.
-**Note: Not available on iOS - returns null.**
-
-**Parameters:**
-
-- `ssid` (string): The SSID of the network
-
-**Returns:** Promise<ChannelInfo | null>
+Returns Android `{ channel, frequency }` data or `null`. iOS returns `null`.
 
 #### `getNetworkInfo(ssid)`
 
-Gets all available information for a specific network by SSID.
-**Note: On iOS, RSSI, channel, and frequency will be undefined.**
-
-**Parameters:**
-
-- `ssid` (string): The SSID of the network
-
-**Returns:** Promise<WifiNetwork | null>
+Returns complete information for the first matching SSID or `null`.
 
 #### `getCurrentNetwork()`
 
-Gets information about the currently connected Wi-Fi network.
-
-**Returns:** Promise<CurrentNetworkInfo | null>
-
-#### `connectToNetwork(options)`
-
-Connects to a Wi-Fi network.
-**Note: Requires appropriate permissions and capabilities on both platforms.**
-
-**Parameters:**
-
-- `options` (ConnectionOptions):
-  - `ssid` (string): The SSID of the network
-  - `password?` (string): Optional password for secured networks
-  - `isWEP?` (boolean): Whether the network uses WEP encryption
-
-**Returns:** Promise<void>
-
-#### `disconnect()`
-
-Disconnects from the current Wi-Fi network.
-
-**Returns:** Promise<void>
+Returns `CurrentNetworkInfo` or `null`. Depending on the platform, it can contain SSID, BSSID, IP address, subnet mask, gateway, and DNS servers.
 
 #### `getIPAddress()`
 
-Gets IP address information for the current Wi-Fi connection.
+Returns the current Wi-Fi interface's local IPv4 address or `null`.
 
-**Returns:** Promise<string | null>
+### Connection Functions
 
-### Event Management
+#### `connectToNetwork(options)`
 
-#### `addNetworkFoundListener(callback)`
-
-Adds a network found event listener (for continuous scanning).
+Starts the native connection flow.
 
 **Parameters:**
 
-- `callback` (function): Function to call when a network is found
+- `ssid` (`string`): Required network name.
+- `password?` (`string`): WPA/WPA2 or WEP password.
+- `isWEP?` (`boolean`): Legacy WEP mode; unsupported on Android 10+.
+- `bssid?` (`string`): Optional Android 10+ BSSID constraint.
+- `joinOnce?` (`boolean`): iOS `NEHotspotConfiguration.joinOnce` value.
+- `timeout?` (`number`): Android timeout from 5,000 to 120,000 milliseconds.
 
-**Returns:** Function to remove the listener
+**Returns:** `Promise<void>`
 
-#### `addEventListener(eventName, callback)`
+#### `disconnect()`
 
-Adds an event listener.
+Android releases the requested network and clears process binding. iOS removes the app-created configuration for the current SSID.
 
-**Parameters:**
+**Returns:** `Promise<void>`
 
-- `eventName` (string): The name of the event to listen for
-- `callback` (function): The callback to invoke when the event occurs
+### Events
 
-**Returns:** Function to remove the listener
+| API/event | Payload | Notes |
+| --- | --- | --- |
+| `addNetworkFoundListener(callback)` | `WifiNetwork` | Called once for every network in a result batch. |
+| `addNetworksFoundListener(callback)` | `WifiNetwork[]` | Called once per continuous result batch. |
+| `addScanErrorListener(callback)` | `string` | Continuous-scan error message. |
+| `addEventListener('networkFound', callback)` | `WifiNetwork` | Generic listener alias. |
+| `addEventListener('networksFound', callback)` | `WifiNetwork[]` | Generic listener alias. |
+| `addEventListener('scanError', callback)` | `string` | Generic listener alias. |
+
+Each listener function returns a cleanup function. `addListener()` and `removeListeners()` remain deprecated compatibility shims.
 
 ### Types
-
-#### `WifiNetwork`
 
 ```typescript
 interface WifiNetwork {
   ssid: string
   bssid: string
-  rssi?: number // Not available on iOS
-  frequency?: number // Not available on iOS
-  channel?: number // Not available on iOS
+  rssi?: number
+  frequency?: number
+  channel?: number
   capabilities?: string
   isSecure?: boolean
   timestamp?: number
 }
-```
 
-#### `CurrentNetworkInfo`
-
-```typescript
 interface CurrentNetworkInfo {
   ssid: string
   bssid: string
@@ -513,101 +424,71 @@ interface CurrentNetworkInfo {
   gateway?: string
   dnsServers?: string[]
 }
-```
 
-#### `ConnectionOptions`
-
-```typescript
-interface ConnectionOptions {
-  ssid: string
-  password?: string
-  isWEP?: boolean
-}
-```
-
-#### `WifiFingerprint`
-
-```typescript
 interface WifiFingerprint {
   networks: WifiNetwork[]
   timestamp: number
-  location?: {
-    latitude?: number
-    longitude?: number
-  }
+  location?: { latitude?: number; longitude?: number }
 }
 ```
 
-#### `ScanOptions`
-
-```typescript
-interface ScanOptions {
-  maxResults?: number
-  timeout?: number
-}
-```
+All public result, option, callback, and HybridObject types are exported from the package.
 
 ## 📖 Usage Examples
 
-### Network Scanner Component
+### Wi-Fi Fingerprint
 
 ```typescript
-import React, { useState, useEffect } from 'react'
-import { View, Text, FlatList, Button } from 'react-native'
+import { getWifiFingerprint, requestWifiPermission } from 'munim-wifi'
+
+if (await requestWifiPermission()) {
+  const fingerprint = await getWifiFingerprint()
+  console.log('Captured at', new Date(fingerprint.timestamp))
+  fingerprint.networks.forEach(({ ssid, bssid, rssi }) => {
+    console.log(ssid, bssid, rssi)
+  })
+}
+```
+
+### React Network Scanner
+
+```tsx
+import { useEffect, useState } from 'react'
+import { Button, FlatList, Text, View } from 'react-native'
 import {
-  scanNetworks,
   requestWifiPermission,
-  isWifiEnabled,
+  scanNetworks,
   type WifiNetwork,
 } from 'munim-wifi'
 
-const NetworkScanner = () => {
+export function NetworkScanner() {
   const [networks, setNetworks] = useState<WifiNetwork[]>([])
-  const [scanning, setScanning] = useState(false)
+  const [message, setMessage] = useState('Ready')
 
-  const handleScan = async () => {
-    setScanning(true)
-    
-    // Check Wi-Fi status
-    const wifiEnabled = await isWifiEnabled()
-    if (!wifiEnabled) {
-      alert('Please enable Wi-Fi')
-      setScanning(false)
-      return
+  const scan = async () => {
+    try {
+      if (!(await requestWifiPermission())) {
+        setMessage('Permission denied')
+        return
+      }
+      setNetworks(await scanNetworks({ maxResults: 50, timeout: 10_000 }))
+      setMessage('Scan complete')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error))
     }
-
-    // Request permissions
-    const hasPermission = await requestWifiPermission()
-    if (!hasPermission) {
-      alert('Location permission is required for Wi-Fi scanning')
-      setScanning(false)
-      return
-    }
-
-    // Scan networks
-    const results = await scanNetworks({ maxResults: 20 })
-    setNetworks(results)
-    setScanning(false)
   }
+
+  useEffect(() => () => setNetworks([]), [])
 
   return (
     <View>
-      <Button
-        title={scanning ? 'Scanning...' : 'Scan Networks'}
-        onPress={handleScan}
-        disabled={scanning}
-      />
+      <Button title="Scan Wi-Fi" onPress={scan} />
+      <Text>{message}</Text>
       <FlatList
         data={networks}
-        keyExtractor={(item) => item.bssid}
+        keyExtractor={(network) => network.bssid || network.ssid}
         renderItem={({ item }) => (
-          <View>
-            <Text>{item.ssid}</Text>
-            <Text>Signal: {item.rssi} dBm</Text>
-            <Text>Channel: {item.channel}</Text>
-            <Text>BSSID: {item.bssid}</Text>
-            <Text>Secure: {item.isSecure ? 'Yes' : 'No'}</Text>
-          </View>
+          <Text>{item.ssid}: {item.rssi ?? '—'} dBm</Text>
         )}
       />
     </View>
@@ -615,101 +496,50 @@ const NetworkScanner = () => {
 }
 ```
 
-### Wi-Fi Fingerprinting for Location
-
-```typescript
-import { getWifiFingerprint } from 'munim-wifi'
-
-const collectFingerprint = async () => {
-  const fingerprint = await getWifiFingerprint()
-  
-  // Send fingerprint to your backend for location matching
-  await fetch('https://your-api.com/location', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      fingerprint: fingerprint.networks.map(n => ({
-        bssid: n.bssid,
-        rssi: n.rssi,
-        channel: n.channel,
-      })),
-      timestamp: fingerprint.timestamp,
-    }),
-  })
-}
-```
-
-### Signal Strength Monitor
-
-```typescript
-import { startScan, addNetworkFoundListener, stopScan } from 'munim-wifi'
-
-const monitorSignalStrength = (targetSSID: string) => {
-  const rssiHistory: number[] = []
-  
-  const unsubscribe = addNetworkFoundListener((network) => {
-    if (network.ssid === targetSSID) {
-      rssiHistory.push(network.rssi)
-      console.log(`Current RSSI: ${network.rssi} dBm`)
-      console.log(`Average RSSI: ${rssiHistory.reduce((a, b) => a + b, 0) / rssiHistory.length} dBm`)
-    }
-  })
-  
-  startScan()
-  
-  // Stop after 30 seconds
-  setTimeout(() => {
-    stopScan()
-    unsubscribe()
-  }, 30000)
-}
-```
-
 ## 🔍 Troubleshooting
 
 ### Common Issues
 
-1. **Permission Denied**: Ensure you have the necessary location permissions in your app. On Android 6.0+, location permission is required for Wi-Fi scanning.
-
-2. **No Networks Found**: 
-   - Verify Wi-Fi is enabled on the device
-   - Check that location permissions are granted
-   - On iOS, ensure location services are enabled in Settings
-
-3. **Scan Timeout**: Increase the timeout value in scan options or check network connectivity
-
-4. **Empty Results**: Make sure you've called `scanNetworks()` or `startScan()` before calling `getSSIDs()` or other getter methods
+- **The scan returns no Android networks:** Confirm Wi-Fi is enabled, precise-location permission is granted, and device Location Services are enabled. Android can also throttle repeated scans.
+- **Android 13+ connection throws a permission error:** Request Nearby Wi-Fi Devices permission with `requestWifiPermission()` before connecting.
+- **iOS returns `null` for the current network:** Verify the Access Wi-Fi Information entitlement, precise-location authorization, and Apple's `fetchCurrent()` eligibility conditions.
+- **iOS returns no RSSI/channel/frequency:** Those values are not exposed to ordinary iOS apps. This is expected.
+- **The Android connection cannot reach a local device:** Keep the connection active and do not call `disconnect()` until local traffic is finished; the package binds the app process to the approved network.
+- **WEP fails on modern Android:** `WifiNetworkSpecifier` does not support WEP. Use WPA2/WPA3 or an open network.
 
 ### Expo-Specific Issues
 
-1. **Development Build Required**: This library requires a development build in Expo. Use `npx expo run:ios` or `npx expo run:android`
+- This package does not work in Expo Go; create a development build.
+- Run `npx expo prebuild --clean` after changing plugin options or upgrading the package.
+- If iOS capabilities are missing, inspect the generated `.entitlements` file after prebuild.
+- If Android permissions are missing, inspect the merged application manifest rather than only the library manifest.
 
-2. **Permissions Not Working**: Make sure you've added the permissions to your `app.json` as shown in the setup section
+### Debug Mode
 
-3. **Build Errors**: Ensure you're using Expo SDK 50+ and have the latest Expo CLI
+The example app in [`example/`](./example) requests permission, displays current-network information, scans, and renders native result fields. Run it with:
 
-4. **Nitro Modules**: Make sure you have `react-native-nitro-modules` installed and configured
-
-### Platform-Specific Notes
-
-**Android:**
-- Requires `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION` permission
-- Wi-Fi scanning may be limited on some devices
-- Background scanning has restrictions on Android 8.0+
-
-**iOS:**
-- Requires location permission for Wi-Fi scanning
-- CoreWLAN framework is used for scanning
-- Some network information may be limited for privacy reasons
+```bash
+npm install
+npm --workspace munim-wifi-example run prebuild
+npm --workspace munim-wifi-example run ios
+# or
+npm --workspace munim-wifi-example run android
+```
 
 ## 👏 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to submit pull requests, report issues, and contribute to the project.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution guidelines. Before opening a pull request, run:
+
+```bash
+npm install
+npm run codegen
+npm run build
+npm run typecheck:example
+npm pack --dry-run
+```
+
+Do not edit files in `nitrogen/generated` directly. Change `src/specs/munim-wifi.nitro.ts` and rerun `npm run codegen`.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-<img alt="Star the Munim Technologies repo on GitHub to support the project" src="https://user-images.githubusercontent.com/9664363/185428788-d762fd5d-97b3-4f59-8db7-f72405be9677.gif" width="50%">
+MIT License. See [LICENSE](./LICENSE).

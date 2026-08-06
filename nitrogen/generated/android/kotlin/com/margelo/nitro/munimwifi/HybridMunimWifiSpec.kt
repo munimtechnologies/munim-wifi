@@ -10,6 +10,7 @@ package com.margelo.nitro.munimwifi
 import androidx.annotation.Keep
 import com.facebook.jni.HybridData
 import com.facebook.proguard.annotations.DoNotStrip
+import dalvik.annotation.optimization.FastNative
 import com.margelo.nitro.core.Promise
 import com.margelo.nitro.core.NullType
 import com.margelo.nitro.core.HybridObject
@@ -26,23 +27,6 @@ import com.margelo.nitro.core.HybridObject
   "LocalVariableName", "PropertyName", "PrivatePropertyName", "FunctionName"
 )
 abstract class HybridMunimWifiSpec: HybridObject() {
-  @DoNotStrip
-  private var mHybridData: HybridData = initHybrid()
-
-  init {
-    super.updateNative(mHybridData)
-  }
-
-  override fun updateNative(hybridData: HybridData) {
-    mHybridData = hybridData
-    super.updateNative(hybridData)
-  }
-
-  // Default implementation of `HybridObject.toString()`
-  override fun toString(): String {
-    return "[HybridObject MunimWifi]"
-  }
-
   // Properties
   
 
@@ -59,9 +43,14 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>>
   
+  abstract fun startScan(options: ScanOptions?, onNetworks: (networks: Array<WifiNetwork>) -> Unit, onError: ((message: String) -> Unit)?): Unit
+  
   @DoNotStrip
   @Keep
-  abstract fun startScan(options: ScanOptions?): Unit
+  private fun startScan_cxx(options: ScanOptions?, onNetworks: Func_void_std__vector_WifiNetwork_, onError: Func_void_std__string?): Unit {
+    val __result = startScan(options, onNetworks, onError?.let { it })
+    return __result
+  }
   
   @DoNotStrip
   @Keep
@@ -115,7 +104,22 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun removeListeners(count: Double): Unit
 
-  private external fun initHybrid(): HybridData
+  // Default implementation of `HybridObject.toString()`
+  override fun toString(): String {
+    return "[HybridObject MunimWifi]"
+  }
+
+  // C++ backing class
+  @DoNotStrip
+  @Keep
+  protected open class CxxPart(javaPart: HybridMunimWifiSpec): HybridObject.CxxPart(javaPart) {
+    // C++ JHybridMunimWifiSpec::CxxPart::initHybrid(...)
+    @FastNative
+    external override fun initHybrid(): HybridData
+  }
+  override fun createCxxPart(): CxxPart {
+    return CxxPart(this)
+  }
 
   companion object {
     protected const val TAG = "HybridMunimWifiSpec"

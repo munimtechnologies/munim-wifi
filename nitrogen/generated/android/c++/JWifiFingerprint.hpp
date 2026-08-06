@@ -23,11 +23,11 @@ namespace margelo::nitro::munimwifi {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "WifiFingerprint" and the the Kotlin data class "WifiFingerprint".
+   * The C++ JNI bridge between the C++ struct "WifiFingerprint" and the Kotlin data class "WifiFingerprint".
    */
   struct JWifiFingerprint final: public jni::JavaClass<JWifiFingerprint> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/WifiFingerprint;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/WifiFingerprint;";
 
   public:
     /**
@@ -44,16 +44,16 @@ namespace margelo::nitro::munimwifi {
       static const auto fieldLocation = clazz->getField<JLocation>("location");
       jni::local_ref<JLocation> location = this->getFieldValue(fieldLocation);
       return WifiFingerprint(
-        [&]() {
-          size_t __size = networks->size();
+        [&](auto&& __input) {
+          size_t __size = __input->size();
           std::vector<WifiNetwork> __vector;
           __vector.reserve(__size);
           for (size_t __i = 0; __i < __size; __i++) {
-            auto __element = networks->getElement(__i);
+            auto __element = __input->getElement(__i);
             __vector.push_back(__element->toCpp());
           }
           return __vector;
-        }(),
+        }(networks),
         timestamp,
         location != nullptr ? std::make_optional(location->toCpp()) : std::nullopt
       );
@@ -70,16 +70,16 @@ namespace margelo::nitro::munimwifi {
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
-        [&]() {
-          size_t __size = value.networks.size();
+        [&](auto&& __input) {
+          size_t __size = __input.size();
           jni::local_ref<jni::JArrayClass<JWifiNetwork>> __array = jni::JArrayClass<JWifiNetwork>::newArray(__size);
           for (size_t __i = 0; __i < __size; __i++) {
-            const auto& __element = value.networks[__i];
+            const auto& __element = __input[__i];
             auto __elementJni = JWifiNetwork::fromCpp(__element);
             __array->setElement(__i, *__elementJni);
           }
           return __array;
-        }(),
+        }(value.networks),
         value.timestamp,
         value.location.has_value() ? JLocation::fromCpp(value.location.value()) : nullptr
       );

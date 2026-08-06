@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -25,6 +26,20 @@ data class Location(
   val longitude: Double?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is Location) return false
+    return Objects.deepEquals(this.latitude, other.latitude)
+      && Objects.deepEquals(this.longitude, other.longitude)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      latitude,
+      longitude
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

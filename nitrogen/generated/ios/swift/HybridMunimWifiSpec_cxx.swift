@@ -5,7 +5,6 @@
 /// Copyright © Marc Rousavy @ Margelo
 ///
 
-import Foundation
 import NitroModules
 
 /**
@@ -189,9 +188,32 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func startScan(options: bridge.std__optional_ScanOptions_) -> bridge.Result_void_ {
+  public final func startScan(options: bridge.std__optional_ScanOptions_, onNetworks: bridge.Func_void_std__vector_WifiNetwork_, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_void_ {
     do {
-      try self.__implementation.startScan(options: options.value)
+      try self.__implementation.startScan(options: options.value, onNetworks: { () -> ([WifiNetwork]) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_std__vector_WifiNetwork_(onNetworks)
+        return { (__networks: [WifiNetwork]) -> Void in
+          __wrappedFunction.call({ () -> bridge.std__vector_WifiNetwork_ in
+            var __vector = bridge.create_std__vector_WifiNetwork_(__networks.count)
+            for __item in __networks {
+              __vector.push_back(__item)
+            }
+            return __vector
+          }())
+        }
+      }(), onError: { () -> ((_ message: String) -> Void)? in
+        if bridge.has_value_std__optional_std__function_void_const_std__string_____message______(onError) {
+          let __unwrapped = bridge.get_std__optional_std__function_void_const_std__string_____message______(onError)
+          return { () -> (String) -> Void in
+            let __wrappedFunction = bridge.wrap_Func_void_std__string(__unwrapped)
+            return { (__message: String) -> Void in
+              __wrappedFunction.call(std.string(__message))
+            }
+          }()
+        } else {
+          return nil
+        }
+      }())
       return bridge.create_Result_void_()
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()

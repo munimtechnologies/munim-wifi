@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -25,6 +26,20 @@ data class ChannelInfo(
   val frequency: Double
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is ChannelInfo) return false
+    return Objects.deepEquals(this.channel, other.channel)
+      && Objects.deepEquals(this.frequency, other.frequency)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      channel,
+      frequency
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

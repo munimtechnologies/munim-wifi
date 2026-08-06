@@ -41,10 +41,11 @@ namespace margelo::nitro::munimwifi {
   public:
     std::optional<double> maxResults     SWIFT_PRIVATE;
     std::optional<double> timeout     SWIFT_PRIVATE;
+    std::optional<double> interval     SWIFT_PRIVATE;
 
   public:
     ScanOptions() = default;
-    explicit ScanOptions(std::optional<double> maxResults, std::optional<double> timeout): maxResults(maxResults), timeout(timeout) {}
+    explicit ScanOptions(std::optional<double> maxResults, std::optional<double> timeout, std::optional<double> interval): maxResults(maxResults), timeout(timeout), interval(interval) {}
 
   public:
     friend bool operator==(const ScanOptions& lhs, const ScanOptions& rhs) = default;
@@ -61,13 +62,15 @@ namespace margelo::nitro {
       jsi::Object obj = arg.asObject(runtime);
       return margelo::nitro::munimwifi::ScanOptions(
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "maxResults"))),
-        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))
+        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout"))),
+        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "interval")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::munimwifi::ScanOptions& arg) {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "maxResults"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.maxResults));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "timeout"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.timeout));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "interval"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.interval));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -80,6 +83,7 @@ namespace margelo::nitro {
       }
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "maxResults")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))) return false;
+      if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "interval")))) return false;
       return true;
     }
   };

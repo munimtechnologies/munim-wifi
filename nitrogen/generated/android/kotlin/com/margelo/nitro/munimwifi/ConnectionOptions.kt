@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -25,9 +26,40 @@ data class ConnectionOptions(
   val password: String?,
   @DoNotStrip
   @Keep
-  val isWEP: Boolean?
+  val isWEP: Boolean?,
+  @DoNotStrip
+  @Keep
+  val bssid: String?,
+  @DoNotStrip
+  @Keep
+  val joinOnce: Boolean?,
+  @DoNotStrip
+  @Keep
+  val timeout: Double?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is ConnectionOptions) return false
+    return Objects.deepEquals(this.ssid, other.ssid)
+      && Objects.deepEquals(this.password, other.password)
+      && Objects.deepEquals(this.isWEP, other.isWEP)
+      && Objects.deepEquals(this.bssid, other.bssid)
+      && Objects.deepEquals(this.joinOnce, other.joinOnce)
+      && Objects.deepEquals(this.timeout, other.timeout)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      ssid,
+      password,
+      isWEP,
+      bssid,
+      joinOnce,
+      timeout
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**
@@ -37,8 +69,8 @@ data class ConnectionOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, password: String?, isWEP: Boolean?): ConnectionOptions {
-      return ConnectionOptions(ssid, password, isWEP)
+    private fun fromCpp(ssid: String, password: String?, isWEP: Boolean?, bssid: String?, joinOnce: Boolean?, timeout: Double?): ConnectionOptions {
+      return ConnectionOptions(ssid, password, isWEP, bssid, joinOnce, timeout)
     }
   }
 }

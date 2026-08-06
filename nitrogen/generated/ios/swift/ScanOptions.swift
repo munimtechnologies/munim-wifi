@@ -5,7 +5,6 @@
 /// Copyright © Marc Rousavy @ Margelo
 ///
 
-import Foundation
 import NitroModules
 
 /**
@@ -19,7 +18,7 @@ public extension ScanOptions {
   /**
    * Create a new instance of `ScanOptions`.
    */
-  init(maxResults: Double?, timeout: Double?) {
+  init(maxResults: Double?, timeout: Double?, interval: Double?) {
     self.init({ () -> bridge.std__optional_double_ in
       if let __unwrappedValue = maxResults {
         return bridge.create_std__optional_double_(__unwrappedValue)
@@ -32,16 +31,48 @@ public extension ScanOptions {
       } else {
         return .init()
       }
+    }(), { () -> bridge.std__optional_double_ in
+      if let __unwrappedValue = interval {
+        return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
     }())
   }
 
   @inline(__always)
   var maxResults: Double? {
-    return self.__maxResults.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__maxResults) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__maxResults)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
   
   @inline(__always)
   var timeout: Double? {
-    return self.__timeout.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__timeout) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__timeout)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var interval: Double? {
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__interval) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__interval)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
 }

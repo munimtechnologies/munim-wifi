@@ -18,11 +18,11 @@ namespace margelo::nitro::munimwifi {
   using namespace facebook;
 
   /**
-   * The C++ JNI bridge between the C++ struct "WifiNetwork" and the the Kotlin data class "WifiNetwork".
+   * The C++ JNI bridge between the C++ struct "WifiNetwork" and the Kotlin data class "WifiNetwork".
    */
   struct JWifiNetwork final: public jni::JavaClass<JWifiNetwork> {
   public:
-    static auto constexpr kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/WifiNetwork;";
+    static constexpr auto kJavaDescriptor = "Lcom/margelo/nitro/munimwifi/WifiNetwork;";
 
   public:
     /**

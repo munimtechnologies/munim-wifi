@@ -39,6 +39,9 @@ export interface ConnectionOptions {
   ssid: string
   password?: string
   isWEP?: boolean
+  bssid?: string
+  joinOnce?: boolean
+  timeout?: number
 }
 
 // Wi-Fi Fingerprint data
@@ -52,7 +55,11 @@ export interface WifiFingerprint {
 export interface ScanOptions {
   maxResults?: number
   timeout?: number
+  interval?: number
 }
+
+export type WifiScanCallback = (networks: WifiNetwork[]) => void
+export type WifiScanErrorCallback = (message: string) => void
 
 export interface MunimWifi
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
@@ -85,7 +92,11 @@ export interface MunimWifi
    *
    * @param options - Optional scan configuration.
    */
-  startScan(options?: ScanOptions): void
+  startScan(
+    options: ScanOptions | undefined,
+    onNetworks: WifiScanCallback,
+    onError?: WifiScanErrorCallback
+  ): void
 
   /**
    * Stop continuous Wi-Fi scanning.

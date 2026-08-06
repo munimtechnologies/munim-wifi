@@ -5,7 +5,6 @@
 /// Copyright © Marc Rousavy @ Margelo
 ///
 
-import Foundation
 import NitroModules
 
 /**
@@ -71,17 +70,38 @@ public extension WifiNetwork {
   
   @inline(__always)
   var rssi: Double? {
-    return self.__rssi.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__rssi) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__rssi)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
   
   @inline(__always)
   var frequency: Double? {
-    return self.__frequency.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__frequency) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__frequency)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
   
   @inline(__always)
   var channel: Double? {
-    return self.__channel.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__channel) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__channel)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
   
   @inline(__always)
@@ -110,6 +130,13 @@ public extension WifiNetwork {
   
   @inline(__always)
   var timestamp: Double? {
-    return self.__timestamp.value
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__timestamp) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__timestamp)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
   }
 }

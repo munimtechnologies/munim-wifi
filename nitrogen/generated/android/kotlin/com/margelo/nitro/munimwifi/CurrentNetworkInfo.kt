@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -37,6 +38,28 @@ data class CurrentNetworkInfo(
   val dnsServers: Array<String>?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is CurrentNetworkInfo) return false
+    return Objects.deepEquals(this.ssid, other.ssid)
+      && Objects.deepEquals(this.bssid, other.bssid)
+      && Objects.deepEquals(this.ipAddress, other.ipAddress)
+      && Objects.deepEquals(this.subnetMask, other.subnetMask)
+      && Objects.deepEquals(this.gateway, other.gateway)
+      && Objects.deepEquals(this.dnsServers, other.dnsServers)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      ssid,
+      bssid,
+      ipAddress,
+      subnetMask,
+      gateway,
+      dnsServers
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

@@ -5,7 +5,6 @@
 /// Copyright © Marc Rousavy @ Margelo
 ///
 
-import Foundation
 import NitroModules
 
 /**
@@ -19,7 +18,7 @@ public extension ConnectionOptions {
   /**
    * Create a new instance of `ConnectionOptions`.
    */
-  init(ssid: String, password: String?, isWEP: Bool?) {
+  init(ssid: String, password: String?, isWEP: Bool?, bssid: String?, joinOnce: Bool?, timeout: Double?) {
     self.init(std.string(ssid), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = password {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -29,6 +28,24 @@ public extension ConnectionOptions {
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = isWEP {
         return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__string_ in
+      if let __unwrappedValue = bssid {
+        return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = joinOnce {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_double_ in
+      if let __unwrappedValue = timeout {
+        return bridge.create_std__optional_double_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -57,6 +74,42 @@ public extension ConnectionOptions {
     return { () -> Bool? in
       if bridge.has_value_std__optional_bool_(self.__isWEP) {
         let __unwrapped = bridge.get_std__optional_bool_(self.__isWEP)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var bssid: String? {
+    return { () -> String? in
+      if bridge.has_value_std__optional_std__string_(self.__bssid) {
+        let __unwrapped = bridge.get_std__optional_std__string_(self.__bssid)
+        return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var joinOnce: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__joinOnce) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__joinOnce)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var timeout: Double? {
+    return { () -> Double? in
+      if bridge.has_value_std__optional_double_(self.__timeout) {
+        let __unwrapped = bridge.get_std__optional_double_(self.__timeout)
         return __unwrapped
       } else {
         return nil

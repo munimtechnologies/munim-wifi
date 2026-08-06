@@ -31,6 +31,7 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include <vector>
 #include "ScanOptions.hpp"
 #include <optional>
+#include <functional>
 #include <string>
 #include "WifiFingerprint.hpp"
 #include <NitroModules/Null.hpp>
@@ -73,7 +74,7 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<bool>> isWifiEnabled() = 0;
       virtual std::shared_ptr<Promise<bool>> requestWifiPermission() = 0;
       virtual std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) = 0;
-      virtual void startScan(const std::optional<ScanOptions>& options) = 0;
+      virtual void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;
       virtual void stopScan() = 0;
       virtual std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() = 0;
       virtual std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() = 0;

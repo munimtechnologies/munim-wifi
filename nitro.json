@@ -14,8 +14,14 @@
   },
   "autolinking": {
     "MunimWifi": {
-      "swift": "HybridMunimWifi",
-      "kotlin": "HybridMunimWifi"
+      "ios": {
+        "language": "swift",
+        "implementationClassName": "HybridMunimWifi"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridMunimWifi"
+      }
     }
   },
   "ignorePaths": [

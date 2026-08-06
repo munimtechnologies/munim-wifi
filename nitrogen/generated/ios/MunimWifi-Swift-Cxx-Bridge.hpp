@@ -121,7 +121,7 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.has_value();
   }
   inline double get_std__optional_double_(const std::optional<double>& optional) noexcept {
-    return *optional;
+    return optional.value();
   }
   
   // pragma MARK: std::optional<std::string>
@@ -136,7 +136,7 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.has_value();
   }
   inline std::string get_std__optional_std__string_(const std::optional<std::string>& optional) noexcept {
-    return *optional;
+    return optional.value();
   }
   
   // pragma MARK: std::optional<bool>
@@ -151,7 +151,7 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.has_value();
   }
   inline bool get_std__optional_bool_(const std::optional<bool>& optional) noexcept {
-    return *optional;
+    return optional.value();
   }
   
   // pragma MARK: std::vector<WifiNetwork>
@@ -211,7 +211,44 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.has_value();
   }
   inline ScanOptions get_std__optional_ScanOptions_(const std::optional<ScanOptions>& optional) noexcept {
-    return *optional;
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<void(const std::string& /* message */)>
+  /**
+   * Specialized version of `std::function<void(const std::string&)>`.
+   */
+  using Func_void_std__string = std::function<void(const std::string& /* message */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::string& / * message * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__string_Wrapper final {
+  public:
+    explicit Func_void_std__string_Wrapper(std::function<void(const std::string& /* message */)>&& func): _function(std::make_unique<std::function<void(const std::string& /* message */)>>(std::move(func))) {}
+    inline void call(std::string message) const noexcept {
+      _function->operator()(message);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::string& /* message */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__string create_Func_void_std__string(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__string_Wrapper wrap_Func_void_std__string(Func_void_std__string value) noexcept {
+    return Func_void_std__string_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<std::function<void(const std::string& /* message */)>>
+  /**
+   * Specialized version of `std::optional<std::function<void(const std::string& / * message * /)>>`.
+   */
+  using std__optional_std__function_void_const_std__string_____message______ = std::optional<std::function<void(const std::string& /* message */)>>;
+  inline std::optional<std::function<void(const std::string& /* message */)>> create_std__optional_std__function_void_const_std__string_____message______(const std::function<void(const std::string& /* message */)>& value) noexcept {
+    return std::optional<std::function<void(const std::string& /* message */)>>(value);
+  }
+  inline bool has_value_std__optional_std__function_void_const_std__string_____message______(const std::optional<std::function<void(const std::string& /* message */)>>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline std::function<void(const std::string& /* message */)> get_std__optional_std__function_void_const_std__string_____message______(const std::optional<std::function<void(const std::string& /* message */)>>& optional) noexcept {
+    return optional.value();
   }
   
   // pragma MARK: std::vector<std::string>
@@ -271,7 +308,7 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.has_value();
   }
   inline Location get_std__optional_Location_(const std::optional<Location>& optional) noexcept {
-    return *optional;
+    return optional.value();
   }
   
   // pragma MARK: std::shared_ptr<Promise<WifiFingerprint>>
@@ -572,7 +609,7 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.has_value();
   }
   inline std::vector<std::string> get_std__optional_std__vector_std__string__(const std::optional<std::vector<std::string>>& optional) noexcept {
-    return *optional;
+    return optional.value();
   }
   
   // pragma MARK: std::variant<nitro::NullType, CurrentNetworkInfo>

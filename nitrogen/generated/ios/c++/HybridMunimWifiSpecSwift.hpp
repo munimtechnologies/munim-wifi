@@ -33,6 +33,7 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include <string>
 #include <optional>
 #include "ScanOptions.hpp"
+#include <functional>
 #include "WifiFingerprint.hpp"
 #include "Location.hpp"
 #include <NitroModules/Null.hpp>
@@ -115,8 +116,8 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline void startScan(const std::optional<ScanOptions>& options) override {
-      auto __result = _swiftPart.startScan(options);
+    inline void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
+      auto __result = _swiftPart.startScan(options, onNetworks, onError);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

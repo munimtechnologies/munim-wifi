@@ -9,6 +9,7 @@ package com.margelo.nitro.munimwifi
 
 import androidx.annotation.Keep
 import com.facebook.proguard.annotations.DoNotStrip
+import java.util.Objects
 
 
 /**
@@ -28,6 +29,22 @@ data class WifiFingerprint(
   val location: Location?
 ) {
   /* primary constructor */
+
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    if (other !is WifiFingerprint) return false
+    return Objects.deepEquals(this.networks, other.networks)
+      && Objects.deepEquals(this.timestamp, other.timestamp)
+      && Objects.deepEquals(this.location, other.location)
+  }
+
+  override fun hashCode(): Int {
+    return arrayOf<Any?>(
+      networks,
+      timestamp,
+      location
+    ).contentDeepHashCode()
+  }
 
   companion object {
     /**

@@ -5,7 +5,6 @@
 /// Copyright © Marc Rousavy @ Margelo
 ///
 
-import Foundation
 import NitroModules
 
 /// See ``HybridMunimWifiSpec``
@@ -17,7 +16,7 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func isWifiEnabled() throws -> Promise<Bool>
   func requestWifiPermission() throws -> Promise<Bool>
   func scanNetworks(options: ScanOptions?) throws -> Promise<[WifiNetwork]>
-  func startScan(options: ScanOptions?) throws -> Void
+  func startScan(options: ScanOptions?, onNetworks: @escaping (_ networks: [WifiNetwork]) -> Void, onError: ((_ message: String) -> Void)?) throws -> Void
   func stopScan() throws -> Void
   func getSSIDs() throws -> Promise<[String]>
   func getWifiFingerprint() throws -> Promise<WifiFingerprint>
