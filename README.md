@@ -20,9 +20,14 @@
   <a aria-label="Total downloads" href="https://www.npmjs.com/package/munim-wifi" target="_blank">
     <img alt="Total downloads" src="https://img.shields.io/npm/dt/munim-wifi.svg?style=flat-square&labelColor=gray&color=0066CC&label=Total%20Downloads" />
   </a>
-  <a aria-label="Continuous integration" href="https://github.com/munimtechnologies/munim-wifi/actions/workflows/ci.yml" target="_blank">
-    <img alt="CI" src="https://img.shields.io/github/actions/workflow/status/munimtechnologies/munim-wifi/ci.yml?branch=master&style=flat-square&label=CI" />
-  </a>
+</p>
+
+<p align="center">
+  <img alt="React Native" src="https://img.shields.io/badge/React%20Native-0.76%2B-61DAFB?style=flat-square&logo=react&logoColor=white" />
+  <img alt="Expo" src="https://img.shields.io/badge/Expo-development%20build-000020?style=flat-square&logo=expo&logoColor=white" />
+  <img alt="iOS" src="https://img.shields.io/badge/iOS-13%2B-000000?style=flat-square&logo=apple&logoColor=white" />
+  <img alt="Android" src="https://img.shields.io/badge/Android-API%2023%2B-3DDC84?style=flat-square&logo=android&logoColor=white" />
+  <img alt="Nitro Modules" src="https://img.shields.io/badge/Nitro%20Modules-0.36%2B-7C3AED?style=flat-square" />
 </p>
 
 <p align="center">
@@ -104,7 +109,7 @@
 - ⚡ **High Performance:** Nitro Modules with generated Swift/Kotlin/C++ bindings.
 - 🚀 **Expo Compatible:** Managed config plugin and Expo 57 example project.
 - 🔐 **Permission Handling:** Android runtime permission requests and real iOS location authorization.
-- 🧪 **Release Verification:** Package, example, iOS, and Android CI workflows.
+- 🧪 **Release Verification:** Package, example, iOS, and Android release-candidate checks.
 
 ## Platform Support Matrix
 
