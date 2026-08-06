@@ -1,3 +1,22 @@
+## [0.2.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.1.11...v0.2.0) (2026-08-06)
+
+### ✨ Features
+
+* modernize Expo Wi-Fi Nitro module ([0a7e29e](https://github.com/munimtechnologies/munim-wifi/commit/0a7e29e5e7c71a48700dca4f17d2526627f65254))
+
+### 🐛 Bug Fixes
+
+* update package names to reflect correct project naming ([3d86a9a](https://github.com/munimtechnologies/munim-wifi/commit/3d86a9ae5fbde56cd00ba0e97f647d00f9543044))
+
+### 📚 Documentation
+
+* polish README branding and platform badges ([51eb235](https://github.com/munimtechnologies/munim-wifi/commit/51eb235f68eead3110ad0b89e0913ed2be7c9c87))
+
+### 🛠️ Other changes
+
+* add Keychain-backed local releases ([b25be87](https://github.com/munimtechnologies/munim-wifi/commit/b25be870cbb5e232b993926b2feefb9f9735db46))
+* **release:** 0.2.0 [skip ci] ([2736938](https://github.com/munimtechnologies/munim-wifi/commit/27369382134af96ce7824db09b38f5910016133c))
+
 # Changelog
 
 All notable changes to this project are documented in this file. Releases are generated from Conventional Commits.
