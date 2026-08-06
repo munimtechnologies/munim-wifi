@@ -1,4 +1,6 @@
 import { execFileSync, spawnSync } from 'node:child_process'
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 
@@ -57,19 +59,35 @@ const semanticRelease = path.join(
   'bin',
   'semantic-release.js'
 )
-const result = spawnSync(
-  process.execPath,
-  [semanticRelease, '--no-ci', ...process.argv.slice(2)],
-  {
-    cwd: repositoryRoot,
-    env: {
-      ...process.env,
-      GITHUB_TOKEN: resolveGitHubToken(),
-      NPM_TOKEN: resolveNpmToken(),
-    },
-    stdio: 'inherit',
-  }
+const npmConfigDirectory = mkdtempSync(
+  path.join(tmpdir(), 'munim-wifi-release-')
 )
+const npmUserConfig = path.join(npmConfigDirectory, '.npmrc')
+writeFileSync(
+  npmUserConfig,
+  '//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n',
+  { mode: 0o600 }
+)
+
+let result
+try {
+  result = spawnSync(
+    process.execPath,
+    [semanticRelease, '--no-ci', ...process.argv.slice(2)],
+    {
+      cwd: repositoryRoot,
+      env: {
+        ...process.env,
+        GITHUB_TOKEN: resolveGitHubToken(),
+        NPM_CONFIG_USERCONFIG: npmUserConfig,
+        NPM_TOKEN: resolveNpmToken(),
+      },
+      stdio: 'inherit',
+    }
+  )
+} finally {
+  rmSync(npmConfigDirectory, { force: true, recursive: true })
+}
 
 if (result.error) {
   console.error(result.error.message)
