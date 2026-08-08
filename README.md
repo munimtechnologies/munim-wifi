@@ -12,7 +12,7 @@
     <img alt="Package version" src="https://img.shields.io/npm/v/munim-wifi.svg?style=flat-square&label=Version&labelColor=000000&color=0066CC" />
   </a>
   <a aria-label="Package is free to use" href="https://github.com/munimtechnologies/munim-wifi/blob/master/LICENSE" target="_blank">
-    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-success.svg?style=flat-square&color=33CC12" />
+    <img alt="License: Apache-2.0" src="https://img.shields.io/badge/License-Apache%202.0-success.svg?style=flat-square&color=33CC12" />
   </a>
   <a aria-label="Monthly downloads" href="https://www.npmtrends.com/munim-wifi" target="_blank">
     <img alt="Monthly downloads" src="https://img.shields.io/npm/dm/munim-wifi.svg?style=flat-square&labelColor=gray&color=33CC12&label=Downloads" />
@@ -553,4 +553,4 @@ Use `npm run release:local -- --dry-run` to verify the next release without publ
 
 ## 📄 License
 
-MIT License. See [LICENSE](./LICENSE).
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.

@@ -62,7 +62,7 @@
     "url": "git+https://github.com/munimtechnologies/munim-wifi.git"
   },
   "author": "sheehanmunim <support@munimtech.com> (https://github.com/sheehanmunim)",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "bugs": "https://github.com/munimtechnologies/munim-wifi/issues",
   "homepage": "https://github.com/munimtechnologies/munim-wifi#readme",
   "publishConfig": {
