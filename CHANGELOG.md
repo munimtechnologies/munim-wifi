@@ -1,3 +1,10 @@
+## [0.2.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.2.0...v0.2.1) (2026-08-08)
+
+### 🐛 Bug Fixes
+
+* isolate local npm publishing credentials ([9f73a2f](https://github.com/munimtechnologies/munim-wifi/commit/9f73a2fd7ca54114e074f9acae1a53e1fa9e2cbc))
+* use Apache-2.0 license ([50e2b76](https://github.com/munimtechnologies/munim-wifi/commit/50e2b761acb35d396f53fd89beb25117f519725c))
+
 ## [0.2.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.1.11...v0.2.0) (2026-08-06)
 
 ### ✨ Features
