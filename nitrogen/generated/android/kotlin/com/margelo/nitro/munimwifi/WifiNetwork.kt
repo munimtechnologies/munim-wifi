@@ -41,6 +41,9 @@ data class WifiNetwork(
   val isSecure: Boolean?,
   @DoNotStrip
   @Keep
+  val securityType: WifiSecurityType,
+  @DoNotStrip
+  @Keep
   val timestamp: Double?
 ) {
   /* primary constructor */
@@ -55,6 +58,7 @@ data class WifiNetwork(
       && Objects.deepEquals(this.channel, other.channel)
       && Objects.deepEquals(this.capabilities, other.capabilities)
       && Objects.deepEquals(this.isSecure, other.isSecure)
+      && Objects.deepEquals(this.securityType, other.securityType)
       && Objects.deepEquals(this.timestamp, other.timestamp)
   }
 
@@ -67,6 +71,7 @@ data class WifiNetwork(
       channel,
       capabilities,
       isSecure,
+      securityType,
       timestamp
     ).contentDeepHashCode()
   }
@@ -79,8 +84,8 @@ data class WifiNetwork(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, bssid: String, rssi: Double?, frequency: Double?, channel: Double?, capabilities: String?, isSecure: Boolean?, timestamp: Double?): WifiNetwork {
-      return WifiNetwork(ssid, bssid, rssi, frequency, channel, capabilities, isSecure, timestamp)
+    private fun fromCpp(ssid: String, bssid: String, rssi: Double?, frequency: Double?, channel: Double?, capabilities: String?, isSecure: Boolean?, securityType: WifiSecurityType, timestamp: Double?): WifiNetwork {
+      return WifiNetwork(ssid, bssid, rssi, frequency, channel, capabilities, isSecure, securityType, timestamp)
     }
   }
 }

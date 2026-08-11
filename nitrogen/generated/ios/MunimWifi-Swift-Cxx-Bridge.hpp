@@ -8,33 +8,78 @@
 #pragma once
 
 // Forward declarations of C++ defined types
+// Forward declaration of `CapabilityAvailability` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class CapabilityAvailability; }
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `ConnectionMode` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionMode; }
+// Forward declaration of `ConnectionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
+// Forward declaration of `ConnectionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `HotspotOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
+// Forward declaration of `HotspotStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
 // Forward declaration of `Location` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct Location; }
+// Forward declaration of `NativeConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `NetworkDiagnostics` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
+// Forward declaration of `NetworkLinkProperties` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
+// Forward declaration of `NetworkState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class NetworkState; }
+// Forward declaration of `PermissionState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class PermissionState; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `SuggestionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
+// Forward declaration of `SuggestionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionStatus; }
+// Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 // Forward declaration of `WifiFingerprint` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `WifiNetwork` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridMunimWifiSpec_cxx` to properly resolve imports.
 namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 
 // Include C++ defined types
+#include "CapabilityAvailability.hpp"
 #include "ChannelInfo.hpp"
+#include "ConnectionMode.hpp"
+#include "ConnectionOutcome.hpp"
+#include "ConnectionStatus.hpp"
 #include "CurrentNetworkInfo.hpp"
+#include "HotspotOutcome.hpp"
+#include "HotspotStatus.hpp"
 #include "HybridMunimWifiSpec.hpp"
 #include "Location.hpp"
+#include "NativeConnectionOptions.hpp"
+#include "NetworkDiagnostics.hpp"
+#include "NetworkLinkProperties.hpp"
+#include "NetworkState.hpp"
+#include "PermissionState.hpp"
 #include "ScanOptions.hpp"
+#include "SuggestionOutcome.hpp"
+#include "SuggestionStatus.hpp"
+#include "WifiCapabilityStatus.hpp"
 #include "WifiFingerprint.hpp"
 #include "WifiNetwork.hpp"
+#include "WifiSecurityType.hpp"
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
@@ -709,6 +754,236 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return Func_void_Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::optional<WifiSecurityType>
+  /**
+   * Specialized version of `std::optional<WifiSecurityType>`.
+   */
+  using std__optional_WifiSecurityType_ = std::optional<WifiSecurityType>;
+  inline std::optional<WifiSecurityType> create_std__optional_WifiSecurityType_(const WifiSecurityType& value) noexcept {
+    return std::optional<WifiSecurityType>(value);
+  }
+  inline bool has_value_std__optional_WifiSecurityType_(const std::optional<WifiSecurityType>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline WifiSecurityType get_std__optional_WifiSecurityType_(const std::optional<WifiSecurityType>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<ConnectionOutcome>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<ConnectionOutcome>>`.
+   */
+  using std__shared_ptr_Promise_ConnectionOutcome__ = std::shared_ptr<Promise<ConnectionOutcome>>;
+  inline std::shared_ptr<Promise<ConnectionOutcome>> create_std__shared_ptr_Promise_ConnectionOutcome__() noexcept {
+    return Promise<ConnectionOutcome>::create();
+  }
+  inline PromiseHolder<ConnectionOutcome> wrap_std__shared_ptr_Promise_ConnectionOutcome__(std::shared_ptr<Promise<ConnectionOutcome>> promise) noexcept {
+    return PromiseHolder<ConnectionOutcome>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const ConnectionOutcome& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const ConnectionOutcome&)>`.
+   */
+  using Func_void_ConnectionOutcome = std::function<void(const ConnectionOutcome& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const ConnectionOutcome& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_ConnectionOutcome_Wrapper final {
+  public:
+    explicit Func_void_ConnectionOutcome_Wrapper(std::function<void(const ConnectionOutcome& /* result */)>&& func): _function(std::make_unique<std::function<void(const ConnectionOutcome& /* result */)>>(std::move(func))) {}
+    inline void call(ConnectionOutcome result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const ConnectionOutcome& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_ConnectionOutcome create_Func_void_ConnectionOutcome(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_ConnectionOutcome_Wrapper wrap_Func_void_ConnectionOutcome(Func_void_ConnectionOutcome value) noexcept {
+    return Func_void_ConnectionOutcome_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<NativeConnectionOptions>
+  /**
+   * Specialized version of `std::optional<NativeConnectionOptions>`.
+   */
+  using std__optional_NativeConnectionOptions_ = std::optional<NativeConnectionOptions>;
+  inline std::optional<NativeConnectionOptions> create_std__optional_NativeConnectionOptions_(const NativeConnectionOptions& value) noexcept {
+    return std::optional<NativeConnectionOptions>(value);
+  }
+  inline bool has_value_std__optional_NativeConnectionOptions_(const std::optional<NativeConnectionOptions>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline NativeConnectionOptions get_std__optional_NativeConnectionOptions_(const std::optional<NativeConnectionOptions>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<SuggestionOutcome>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<SuggestionOutcome>>`.
+   */
+  using std__shared_ptr_Promise_SuggestionOutcome__ = std::shared_ptr<Promise<SuggestionOutcome>>;
+  inline std::shared_ptr<Promise<SuggestionOutcome>> create_std__shared_ptr_Promise_SuggestionOutcome__() noexcept {
+    return Promise<SuggestionOutcome>::create();
+  }
+  inline PromiseHolder<SuggestionOutcome> wrap_std__shared_ptr_Promise_SuggestionOutcome__(std::shared_ptr<Promise<SuggestionOutcome>> promise) noexcept {
+    return PromiseHolder<SuggestionOutcome>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const SuggestionOutcome& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const SuggestionOutcome&)>`.
+   */
+  using Func_void_SuggestionOutcome = std::function<void(const SuggestionOutcome& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const SuggestionOutcome& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_SuggestionOutcome_Wrapper final {
+  public:
+    explicit Func_void_SuggestionOutcome_Wrapper(std::function<void(const SuggestionOutcome& /* result */)>&& func): _function(std::make_unique<std::function<void(const SuggestionOutcome& /* result */)>>(std::move(func))) {}
+    inline void call(SuggestionOutcome result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const SuggestionOutcome& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_SuggestionOutcome create_Func_void_SuggestionOutcome(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_SuggestionOutcome_Wrapper wrap_Func_void_SuggestionOutcome(Func_void_SuggestionOutcome value) noexcept {
+    return Func_void_SuggestionOutcome_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<HotspotOutcome>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<HotspotOutcome>>`.
+   */
+  using std__shared_ptr_Promise_HotspotOutcome__ = std::shared_ptr<Promise<HotspotOutcome>>;
+  inline std::shared_ptr<Promise<HotspotOutcome>> create_std__shared_ptr_Promise_HotspotOutcome__() noexcept {
+    return Promise<HotspotOutcome>::create();
+  }
+  inline PromiseHolder<HotspotOutcome> wrap_std__shared_ptr_Promise_HotspotOutcome__(std::shared_ptr<Promise<HotspotOutcome>> promise) noexcept {
+    return PromiseHolder<HotspotOutcome>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const HotspotOutcome& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const HotspotOutcome&)>`.
+   */
+  using Func_void_HotspotOutcome = std::function<void(const HotspotOutcome& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const HotspotOutcome& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_HotspotOutcome_Wrapper final {
+  public:
+    explicit Func_void_HotspotOutcome_Wrapper(std::function<void(const HotspotOutcome& /* result */)>&& func): _function(std::make_unique<std::function<void(const HotspotOutcome& /* result */)>>(std::move(func))) {}
+    inline void call(HotspotOutcome result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const HotspotOutcome& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_HotspotOutcome create_Func_void_HotspotOutcome(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_HotspotOutcome_Wrapper wrap_Func_void_HotspotOutcome(Func_void_HotspotOutcome value) noexcept {
+    return Func_void_HotspotOutcome_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<WifiCapabilityStatus>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<WifiCapabilityStatus>>`.
+   */
+  using std__shared_ptr_Promise_WifiCapabilityStatus__ = std::shared_ptr<Promise<WifiCapabilityStatus>>;
+  inline std::shared_ptr<Promise<WifiCapabilityStatus>> create_std__shared_ptr_Promise_WifiCapabilityStatus__() noexcept {
+    return Promise<WifiCapabilityStatus>::create();
+  }
+  inline PromiseHolder<WifiCapabilityStatus> wrap_std__shared_ptr_Promise_WifiCapabilityStatus__(std::shared_ptr<Promise<WifiCapabilityStatus>> promise) noexcept {
+    return PromiseHolder<WifiCapabilityStatus>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const WifiCapabilityStatus& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const WifiCapabilityStatus&)>`.
+   */
+  using Func_void_WifiCapabilityStatus = std::function<void(const WifiCapabilityStatus& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const WifiCapabilityStatus& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_WifiCapabilityStatus_Wrapper final {
+  public:
+    explicit Func_void_WifiCapabilityStatus_Wrapper(std::function<void(const WifiCapabilityStatus& /* result */)>&& func): _function(std::make_unique<std::function<void(const WifiCapabilityStatus& /* result */)>>(std::move(func))) {}
+    inline void call(WifiCapabilityStatus result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const WifiCapabilityStatus& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_WifiCapabilityStatus create_Func_void_WifiCapabilityStatus(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_WifiCapabilityStatus_Wrapper wrap_Func_void_WifiCapabilityStatus(Func_void_WifiCapabilityStatus value) noexcept {
+    return Func_void_WifiCapabilityStatus_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<CurrentNetworkInfo>
+  /**
+   * Specialized version of `std::optional<CurrentNetworkInfo>`.
+   */
+  using std__optional_CurrentNetworkInfo_ = std::optional<CurrentNetworkInfo>;
+  inline std::optional<CurrentNetworkInfo> create_std__optional_CurrentNetworkInfo_(const CurrentNetworkInfo& value) noexcept {
+    return std::optional<CurrentNetworkInfo>(value);
+  }
+  inline bool has_value_std__optional_CurrentNetworkInfo_(const std::optional<CurrentNetworkInfo>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline CurrentNetworkInfo get_std__optional_CurrentNetworkInfo_(const std::optional<CurrentNetworkInfo>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<NetworkLinkProperties>
+  /**
+   * Specialized version of `std::optional<NetworkLinkProperties>`.
+   */
+  using std__optional_NetworkLinkProperties_ = std::optional<NetworkLinkProperties>;
+  inline std::optional<NetworkLinkProperties> create_std__optional_NetworkLinkProperties_(const NetworkLinkProperties& value) noexcept {
+    return std::optional<NetworkLinkProperties>(value);
+  }
+  inline bool has_value_std__optional_NetworkLinkProperties_(const std::optional<NetworkLinkProperties>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline NetworkLinkProperties get_std__optional_NetworkLinkProperties_(const std::optional<NetworkLinkProperties>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<NetworkDiagnostics>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<NetworkDiagnostics>>`.
+   */
+  using std__shared_ptr_Promise_NetworkDiagnostics__ = std::shared_ptr<Promise<NetworkDiagnostics>>;
+  inline std::shared_ptr<Promise<NetworkDiagnostics>> create_std__shared_ptr_Promise_NetworkDiagnostics__() noexcept {
+    return Promise<NetworkDiagnostics>::create();
+  }
+  inline PromiseHolder<NetworkDiagnostics> wrap_std__shared_ptr_Promise_NetworkDiagnostics__(std::shared_ptr<Promise<NetworkDiagnostics>> promise) noexcept {
+    return PromiseHolder<NetworkDiagnostics>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const NetworkDiagnostics& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const NetworkDiagnostics&)>`.
+   */
+  using Func_void_NetworkDiagnostics = std::function<void(const NetworkDiagnostics& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const NetworkDiagnostics& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_NetworkDiagnostics_Wrapper final {
+  public:
+    explicit Func_void_NetworkDiagnostics_Wrapper(std::function<void(const NetworkDiagnostics& /* result */)>&& func): _function(std::make_unique<std::function<void(const NetworkDiagnostics& /* result */)>>(std::move(func))) {}
+    inline void call(NetworkDiagnostics result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const NetworkDiagnostics& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_NetworkDiagnostics create_Func_void_NetworkDiagnostics(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_NetworkDiagnostics_Wrapper wrap_Func_void_NetworkDiagnostics(Func_void_NetworkDiagnostics value) noexcept {
+    return Func_void_NetworkDiagnostics_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<HybridMunimWifiSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridMunimWifiSpec>`.
@@ -818,6 +1093,51 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_void___ create_Result_std__shared_ptr_Promise_void___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<void>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<ConnectionOutcome>>>
+  using Result_std__shared_ptr_Promise_ConnectionOutcome___ = Result<std::shared_ptr<Promise<ConnectionOutcome>>>;
+  inline Result_std__shared_ptr_Promise_ConnectionOutcome___ create_Result_std__shared_ptr_Promise_ConnectionOutcome___(const std::shared_ptr<Promise<ConnectionOutcome>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<ConnectionOutcome>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_ConnectionOutcome___ create_Result_std__shared_ptr_Promise_ConnectionOutcome___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<ConnectionOutcome>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<SuggestionOutcome>>>
+  using Result_std__shared_ptr_Promise_SuggestionOutcome___ = Result<std::shared_ptr<Promise<SuggestionOutcome>>>;
+  inline Result_std__shared_ptr_Promise_SuggestionOutcome___ create_Result_std__shared_ptr_Promise_SuggestionOutcome___(const std::shared_ptr<Promise<SuggestionOutcome>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<SuggestionOutcome>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_SuggestionOutcome___ create_Result_std__shared_ptr_Promise_SuggestionOutcome___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<SuggestionOutcome>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<HotspotOutcome>>>
+  using Result_std__shared_ptr_Promise_HotspotOutcome___ = Result<std::shared_ptr<Promise<HotspotOutcome>>>;
+  inline Result_std__shared_ptr_Promise_HotspotOutcome___ create_Result_std__shared_ptr_Promise_HotspotOutcome___(const std::shared_ptr<Promise<HotspotOutcome>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<HotspotOutcome>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_HotspotOutcome___ create_Result_std__shared_ptr_Promise_HotspotOutcome___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<HotspotOutcome>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<WifiCapabilityStatus>>>
+  using Result_std__shared_ptr_Promise_WifiCapabilityStatus___ = Result<std::shared_ptr<Promise<WifiCapabilityStatus>>>;
+  inline Result_std__shared_ptr_Promise_WifiCapabilityStatus___ create_Result_std__shared_ptr_Promise_WifiCapabilityStatus___(const std::shared_ptr<Promise<WifiCapabilityStatus>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<WifiCapabilityStatus>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_WifiCapabilityStatus___ create_Result_std__shared_ptr_Promise_WifiCapabilityStatus___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<WifiCapabilityStatus>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<NetworkDiagnostics>>>
+  using Result_std__shared_ptr_Promise_NetworkDiagnostics___ = Result<std::shared_ptr<Promise<NetworkDiagnostics>>>;
+  inline Result_std__shared_ptr_Promise_NetworkDiagnostics___ create_Result_std__shared_ptr_Promise_NetworkDiagnostics___(const std::shared_ptr<Promise<NetworkDiagnostics>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<NetworkDiagnostics>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_NetworkDiagnostics___ create_Result_std__shared_ptr_Promise_NetworkDiagnostics___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<NetworkDiagnostics>>>::withError(error);
   }
 
 } // namespace margelo::nitro::munimwifi::bridge::swift

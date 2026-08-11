@@ -28,10 +28,12 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 
 #include <string>
 #include <optional>
+#include "WifiSecurityType.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -47,11 +49,12 @@ namespace margelo::nitro::munimwifi {
     std::optional<double> channel     SWIFT_PRIVATE;
     std::optional<std::string> capabilities     SWIFT_PRIVATE;
     std::optional<bool> isSecure     SWIFT_PRIVATE;
+    WifiSecurityType securityType     SWIFT_PRIVATE;
     std::optional<double> timestamp     SWIFT_PRIVATE;
 
   public:
     WifiNetwork() = default;
-    explicit WifiNetwork(std::string ssid, std::string bssid, std::optional<double> rssi, std::optional<double> frequency, std::optional<double> channel, std::optional<std::string> capabilities, std::optional<bool> isSecure, std::optional<double> timestamp): ssid(ssid), bssid(bssid), rssi(rssi), frequency(frequency), channel(channel), capabilities(capabilities), isSecure(isSecure), timestamp(timestamp) {}
+    explicit WifiNetwork(std::string ssid, std::string bssid, std::optional<double> rssi, std::optional<double> frequency, std::optional<double> channel, std::optional<std::string> capabilities, std::optional<bool> isSecure, WifiSecurityType securityType, std::optional<double> timestamp): ssid(ssid), bssid(bssid), rssi(rssi), frequency(frequency), channel(channel), capabilities(capabilities), isSecure(isSecure), securityType(securityType), timestamp(timestamp) {}
 
   public:
     friend bool operator==(const WifiNetwork& lhs, const WifiNetwork& rhs) = default;
@@ -74,6 +77,7 @@ namespace margelo::nitro {
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "channel"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "capabilities"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isSecure"))),
+        JSIConverter<margelo::nitro::munimwifi::WifiSecurityType>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "securityType"))),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timestamp")))
       );
     }
@@ -86,6 +90,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "channel"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.channel));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "capabilities"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.capabilities));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "isSecure"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isSecure));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "securityType"), JSIConverter<margelo::nitro::munimwifi::WifiSecurityType>::toJSI(runtime, arg.securityType));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "timestamp"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.timestamp));
       return obj;
     }
@@ -104,6 +109,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "channel")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "capabilities")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isSecure")))) return false;
+      if (!JSIConverter<margelo::nitro::munimwifi::WifiSecurityType>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "securityType")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timestamp")))) return false;
       return true;
     }

@@ -13,9 +13,10 @@
     "release": "semantic-release",
     "release:local": "node scripts/release-local.mjs",
     "build": "npm run typecheck && bob build",
-    "codegen": "nitrogen --logLevel=\"debug\"",
+    "codegen": "nitrogen --logLevel=\"debug\" && node scripts/patch-nitrogen-swift.mjs",
     "typecheck:example": "tsc --noEmit -p example/tsconfig.json",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "test": "jest"
   },
   "keywords": [
     "react-native",
@@ -78,18 +79,19 @@
   },
   "devDependencies": {
     "@expo/config-plugins": "^57.0.7",
-    "@jamesacarr/eslint-formatter-github-actions": "^0.2.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/jest": "^29.5.12",
     "@types/react": "19.2.0",
+    "conventional-changelog-conventionalcommits": "^9.1.0",
+    "jest": "^29.7.0",
     "nitrogen": "0.36.5",
     "react": "19.2.3",
     "react-native": "0.86.2",
     "react-native-builder-bob": "^0.40.17",
     "react-native-nitro-modules": "0.36.5",
-    "conventional-changelog-conventionalcommits": "^9.1.0",
-    "semantic-release": "^25.0.2",
+    "semantic-release": "^25.0.9",
+    "ts-jest": "^29.4.12",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
@@ -101,6 +103,16 @@
   "peerDependenciesMeta": {
     "@expo/config-plugins": {
       "optional": true
+    }
+  },
+  "overrides": {
+    "brace-expansion@1.x": "1.1.18",
+    "brace-expansion@2.x": "2.1.4",
+    "brace-expansion@>=3 <6": "5.0.9",
+    "minimatch@3.x": "3.1.5",
+    "picomatch@2.x": "2.3.2",
+    "@semantic-release/npm": {
+      "npm": "npm:@semantic-release/error@4.0.0"
     }
   },
   "eslintConfig": {

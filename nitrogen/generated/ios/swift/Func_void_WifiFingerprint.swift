@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Wraps a Swift `(_ value: WifiFingerprint) -> Void` as a class.

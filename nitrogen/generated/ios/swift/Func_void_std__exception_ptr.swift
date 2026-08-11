@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Wraps a Swift `(_ error: Error) -> Void` as a class.

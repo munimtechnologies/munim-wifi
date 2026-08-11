@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Represents an instance of `CurrentNetworkInfo`, backed by a C++ struct.
@@ -18,8 +19,8 @@ public extension CurrentNetworkInfo {
   /**
    * Create a new instance of `CurrentNetworkInfo`.
    */
-  init(ssid: String, bssid: String, ipAddress: String?, subnetMask: String?, gateway: String?, dnsServers: [String]?) {
-    self.init(std.string(ssid), std.string(bssid), { () -> bridge.std__optional_std__string_ in
+  init(ssid: String, bssid: String, securityType: WifiSecurityType, ipAddress: String?, subnetMask: String?, gateway: String?, dnsServers: [String]?) {
+    self.init(std.string(ssid), std.string(bssid), securityType, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = ipAddress {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
       } else {
@@ -63,6 +64,11 @@ public extension CurrentNetworkInfo {
   }
   
   @inline(__always)
+  var securityType: WifiSecurityType {
+    return self.__securityType
+  }
+  
+  @inline(__always)
   var ipAddress: String? {
     return { () -> String? in
       if bridge.has_value_std__optional_std__string_(self.__ipAddress) {
@@ -103,10 +109,23 @@ public extension CurrentNetworkInfo {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__dnsServers) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__dnsServers)
-        return __unwrapped.map({ __item in String(__item) })
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }
     }()
   }
+}
+
+@inline(__always)
+fileprivate func __nitroVectorToStringArray(_ __vector: margelo.nitro.munimwifi.bridge.swift.std__vector_std__string_) -> [String] {
+  var __result: [String] = []
+  let __count = Int(__vector.size())
+  __result.reserveCapacity(__count)
+  var __index = 0
+  while __index < __count {
+    __result.append(String(__vector[__index]))
+    __index += 1
+  }
+  return __result
 }

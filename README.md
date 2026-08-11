@@ -126,6 +126,15 @@
 | Disconnect | ⚠️ Removes app configuration | ✅ | iOS cannot force-disconnect arbitrary saved networks. |
 | Continuous scan | ⚠️ One current-network result | ✅ | Android scan throttling still applies. |
 | Wi-Fi fingerprint | ⚠️ Current network only | ✅ | No location is inferred by the library. |
+| Security type | ⚠️ Coarse (open/WEP/personal/enterprise) | ✅ Full | Android classifies WPA2/WPA3/OWE/EAP/Passpoint from scan capabilities. |
+| Local network request | ✅ `joinOnce` configuration | ✅ Android 10+ specifier | Structured `ConnectionOutcome` on both platforms. |
+| Persistent configuration | ✅ `NEHotspotConfiguration` | ⚠️ Via network suggestion | `configureNetwork()`. |
+| Network suggestions | ❌ `unsupported` outcome | ✅ Android 10+ | `NEHotspotConfiguration` is the iOS analog. |
+| Wi-Fi settings intent | ❌ | ✅ Android 10+ | `requestUserSavedNetwork()` opens the system panel. |
+| Local-only hotspot | ❌ | ✅ Android 8+ | Returns generated SSID/passphrase/security. |
+| Network diagnostics | ⚠️ Path-level | ✅ Capability + link level | `validated`/`captivePortal` are Android-only. |
+| Network observer | ✅ `NWPathMonitor` | ✅ Default network callback | Continuous `NetworkDiagnostics` updates. |
+| Capability report | ✅ | ✅ | `getWifiCapabilityStatus()` includes permission states. |
 
 Platform support can vary by OS version, hardware, permission state, foreground/background state, and device-management policy.
 
@@ -379,20 +388,94 @@ Starts the native connection flow.
 
 **Parameters:**
 
-- `ssid` (`string`): Required network name.
-- `password?` (`string`): WPA/WPA2 or WEP password.
+- `ssid` (`string`): Required network name, limited to 32 UTF-8 bytes.
+- `password?` (`string`): WPA/WPA2 or WEP password, limited to 64 UTF-8 bytes.
 - `isWEP?` (`boolean`): Legacy WEP mode; unsupported on Android 10+.
+- `security?` (`WifiSecurityType`): Optional explicit security type. When omitted, security is inferred from `password`/`isWEP` (open without a password, WPA2 with one). Pass `'wpa3'` to allow short SAE passphrases and use `setWpa3Passphrase` on Android.
 - `bssid?` (`string`): Optional Android 10+ BSSID constraint.
-- `joinOnce?` (`boolean`): iOS `NEHotspotConfiguration.joinOnce` value.
-- `timeout?` (`number`): Android timeout from 5,000 to 120,000 milliseconds.
+- `joinOnce?` (`boolean`): Temporary connection behavior. Defaults to `true`; set explicitly to `false` to retain a saved configuration where supported.
+- `timeout?` (`number`): Connection timeout from 5,000 to 120,000 milliseconds on iOS and Android.
 
 **Returns:** `Promise<void>`
+
+iOS settles each attempt once, verifies the resulting SSID when public APIs
+expose it, and removes only a newly created persistent configuration after a
+failed or timed-out attempt. Existing saved configurations are preserved.
 
 #### `disconnect()`
 
 Android releases the requested network and clears process binding. iOS removes the app-created configuration for the current SSID.
 
 **Returns:** `Promise<void>`
+
+### Structured Connection Functions
+
+These functions never reject on ordinary platform limitations — they resolve
+with a structured outcome whose `status` explains what happened
+(`'connected' | 'configured' | 'presented' | 'released' | 'unsupported' | 'cancelled' | 'failed'`).
+
+#### `requestLocalNetwork(options)`
+
+Requests a temporary, app-scoped connection to a nearby network.
+
+- Android 10+: `WifiNetworkSpecifier` + `ConnectivityManager.requestNetwork`. Set `bindProcess: true` to route this process's traffic through the network. The returned `leaseId` releases the request later.
+- iOS: `NEHotspotConfiguration` with `joinOnce: true`. The returned `leaseId` is the SSID.
+
+**Parameters:** `{ ssid, security, bssid?, timeout?, bindProcess? }` where `security` is one of
+`{ type: 'open' } | { type: 'owe' } | { type: 'wep', passphrase } | { type: 'wpa2', passphrase } | { type: 'wpa3', passphrase }`.
+
+**Returns:** `Promise<ConnectionOutcome>` — `status: 'connected'` on success with `mode: 'localNetwork'`.
+
+#### `configureNetwork(options)`
+
+Persists a network configuration.
+
+- iOS: persistent `NEHotspotConfiguration` (`configurationId` is the SSID).
+- Android 10+: routed through a network suggestion, since Android has no direct managed-configuration equivalent.
+
+**Returns:** `Promise<ConnectionOutcome>` — `status: 'configured'` with `mode: 'managedConfiguration'`.
+
+#### `requestUserSavedNetwork(options?)`
+
+- Android 10+: opens the system Wi-Fi panel (or the Android 11+ "add networks" flow when options are given) and resolves `status: 'presented'`.
+- iOS: resolves `status: 'unsupported'`.
+
+#### `releaseConnection(leaseOrConfigurationId)`
+
+Releases a `requestLocalNetwork` lease (Android unregisters the callback and unbinds the process) or removes a configuration (`removeConfiguration(forSSID:)` on iOS). Resolves `status: 'released'`.
+
+#### `addNetworkSuggestion(options)` / `removeNetworkSuggestion(options)` / `getNetworkSuggestionStatus(options)`
+
+Android 10+ `WifiManager` network suggestions with `open`, `owe`, `wpa2`, and `wpa3` support plus `hidden` and `appInteractionRequired` flags. Status values include `'added' | 'alreadyExists' | 'removed' | 'notFound' | 'active' | 'inactive'`. On iOS these resolve `status: 'unsupported'` — `NEHotspotConfiguration` (`configureNetwork`) is the closest analog. Enterprise and Passpoint credentials resolve `'unsupported'` on both platforms.
+
+**Returns:** `Promise<SuggestionOutcome>`
+
+#### `startLocalOnlyHotspot()` / `stopLocalOnlyHotspot(reservationId)`
+
+Android 8+ local-only hotspot (requires location and, on Android 13+, Nearby Wi-Fi Devices permissions). The outcome carries the generated `ssid`, `passphrase`, and `securityType`. iOS resolves `status: 'unsupported'`.
+
+**Returns:** `Promise<HotspotOutcome>`
+
+### Capability and Diagnostics Functions
+
+#### `getWifiCapabilityStatus()`
+
+Reports per-capability availability (`scan`, `localNetworkRequest`, `managedConfiguration`, `networkSuggestions`, `userSavedNetworkIntent`, `localOnlyHotspot`, `wifiDirect`, `wifiAware`, `wifiRtt`) and permission states (`locationPermission`, `nearbyWifiPermission`, `wifiInformationPermission`) for the current OS version.
+
+**Returns:** `Promise<WifiCapabilityStatus>`
+
+#### `getNetworkDiagnostics()`
+
+One-shot snapshot of the default network.
+
+- Android: `NetworkCapabilities` (`validated`, `captivePortal`, `metered`, `constrained`) plus `LinkProperties` (interface, addresses, DNS servers, routes, MTU).
+- iOS: `NWPathMonitor` (`metered` from `isExpensive`, `constrained` from `isConstrained`); `validated`/`captivePortal` are not detectable and stay unset.
+
+**Returns:** `Promise<NetworkDiagnostics>`
+
+#### `startNetworkObserver(callback)` / `stopNetworkObserver()` / `addNetworkObserverListener(callback)`
+
+Continuous `NetworkDiagnostics` updates as the default network appears, changes capabilities, or is lost (`state: 'available' | 'lost' | 'unavailable'`). `addNetworkObserverListener` multiplexes many JS listeners over one native observer and returns a cleanup function.
 
 ### Events
 
@@ -410,6 +493,16 @@ Each listener function returns a cleanup function. `addListener()` and `removeLi
 ### Types
 
 ```typescript
+type WifiSecurityType =
+  | 'open'
+  | 'owe'
+  | 'wep'
+  | 'wpa2'
+  | 'wpa3'
+  | 'enterprise'
+  | 'passpoint'
+  | 'unknown'
+
 interface WifiNetwork {
   ssid: string
   bssid: string
@@ -418,12 +511,14 @@ interface WifiNetwork {
   channel?: number
   capabilities?: string
   isSecure?: boolean
+  securityType: WifiSecurityType
   timestamp?: number
 }
 
 interface CurrentNetworkInfo {
   ssid: string
   bssid: string
+  securityType: WifiSecurityType
   ipAddress?: string
   subnetMask?: string
   gateway?: string
@@ -434,6 +529,42 @@ interface WifiFingerprint {
   networks: WifiNetwork[]
   timestamp: number
   location?: { latitude?: number; longitude?: number }
+}
+
+interface ConnectionOutcome {
+  status: ConnectionStatus // 'connected' | 'configured' | 'presented' | 'released' | 'unsupported' | 'cancelled' | 'failed'
+  mode: ConnectionMode // 'localNetwork' | 'managedConfiguration' | 'userSavedNetwork'
+  ssid?: string
+  leaseId?: string
+  configurationId?: string
+  boundProcess: boolean
+  message?: string
+}
+
+interface SuggestionOutcome {
+  status: SuggestionStatus
+  suggestionId?: string
+  message?: string
+}
+
+interface HotspotOutcome {
+  status: HotspotStatus // 'started' | 'stopped' | 'unsupported' | 'failed'
+  reservationId?: string
+  ssid?: string
+  passphrase?: string
+  securityType: WifiSecurityType
+  message?: string
+}
+
+interface NetworkDiagnostics {
+  timestamp: number
+  state: NetworkState // 'available' | 'lost' | 'unavailable'
+  validated?: boolean
+  captivePortal?: boolean
+  metered?: boolean
+  constrained?: boolean
+  currentNetwork?: CurrentNetworkInfo
+  linkProperties?: NetworkLinkProperties
 }
 ```
 

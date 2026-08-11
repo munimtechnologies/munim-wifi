@@ -10,6 +10,8 @@
 #include <fbjni/fbjni.h>
 #include "CurrentNetworkInfo.hpp"
 
+#include "JWifiSecurityType.hpp"
+#include "WifiSecurityType.hpp"
 #include <optional>
 #include <string>
 #include <vector>
@@ -37,6 +39,8 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JString> ssid = this->getFieldValue(fieldSsid);
       static const auto fieldBssid = clazz->getField<jni::JString>("bssid");
       jni::local_ref<jni::JString> bssid = this->getFieldValue(fieldBssid);
+      static const auto fieldSecurityType = clazz->getField<JWifiSecurityType>("securityType");
+      jni::local_ref<JWifiSecurityType> securityType = this->getFieldValue(fieldSecurityType);
       static const auto fieldIpAddress = clazz->getField<jni::JString>("ipAddress");
       jni::local_ref<jni::JString> ipAddress = this->getFieldValue(fieldIpAddress);
       static const auto fieldSubnetMask = clazz->getField<jni::JString>("subnetMask");
@@ -48,6 +52,7 @@ namespace margelo::nitro::munimwifi {
       return CurrentNetworkInfo(
         ssid->toStdString(),
         bssid->toStdString(),
+        securityType->toCpp(),
         ipAddress != nullptr ? std::make_optional(ipAddress->toStdString()) : std::nullopt,
         subnetMask != nullptr ? std::make_optional(subnetMask->toStdString()) : std::nullopt,
         gateway != nullptr ? std::make_optional(gateway->toStdString()) : std::nullopt,
@@ -70,13 +75,14 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JCurrentNetworkInfo::javaobject> fromCpp(const CurrentNetworkInfo& value) {
-      using JSignature = JCurrentNetworkInfo(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>);
+      using JSignature = JCurrentNetworkInfo(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         jni::make_jstring(value.ssid),
         jni::make_jstring(value.bssid),
+        JWifiSecurityType::fromCpp(value.securityType),
         value.ipAddress.has_value() ? jni::make_jstring(value.ipAddress.value()) : nullptr,
         value.subnetMask.has_value() ? jni::make_jstring(value.subnetMask.value()) : nullptr,
         value.gateway.has_value() ? jni::make_jstring(value.gateway.value()) : nullptr,

@@ -25,6 +25,20 @@ namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
 // Forward declaration of `ConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
+// Forward declaration of `ConnectionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
+// Forward declaration of `NativeConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `SuggestionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
+// Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `HotspotOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
+// Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
+// Forward declaration of `NetworkDiagnostics` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 
 #include <NitroModules/Promise.hpp>
 #include "WifiNetwork.hpp"
@@ -39,6 +53,13 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include "ChannelInfo.hpp"
 #include "CurrentNetworkInfo.hpp"
 #include "ConnectionOptions.hpp"
+#include "ConnectionOutcome.hpp"
+#include "NativeConnectionOptions.hpp"
+#include "SuggestionOutcome.hpp"
+#include "NativeNetworkSuggestionOptions.hpp"
+#include "HotspotOutcome.hpp"
+#include "WifiCapabilityStatus.hpp"
+#include "NetworkDiagnostics.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -84,8 +105,21 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, WifiNetwork>>> getNetworkInfo(const std::string& ssid) = 0;
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, CurrentNetworkInfo>>> getCurrentNetwork() = 0;
       virtual std::shared_ptr<Promise<void>> connectToNetwork(const ConnectionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<ConnectionOutcome>> requestLocalNetwork(const NativeConnectionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<ConnectionOutcome>> configureNetwork(const NativeConnectionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) = 0;
+      virtual std::shared_ptr<Promise<ConnectionOutcome>> releaseConnection(const std::string& leaseOrConfigurationId) = 0;
+      virtual std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<SuggestionOutcome>> removeNetworkSuggestion(const NativeNetworkSuggestionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<SuggestionOutcome>> getNetworkSuggestionStatus(const NativeNetworkSuggestionOptions& options) = 0;
+      virtual std::shared_ptr<Promise<HotspotOutcome>> startLocalOnlyHotspot() = 0;
+      virtual std::shared_ptr<Promise<HotspotOutcome>> stopLocalOnlyHotspot(const std::string& reservationId) = 0;
       virtual std::shared_ptr<Promise<void>> disconnect() = 0;
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() = 0;
+      virtual std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() = 0;
+      virtual std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() = 0;
+      virtual void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) = 0;
+      virtual void stopNetworkObserver() = 0;
       virtual void addListener(const std::string& eventName) = 0;
       virtual void removeListeners(double count) = 0;
 

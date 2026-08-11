@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Represents an instance of `ConnectionOptions`, backed by a C++ struct.
@@ -18,7 +19,7 @@ public extension ConnectionOptions {
   /**
    * Create a new instance of `ConnectionOptions`.
    */
-  init(ssid: String, password: String?, isWEP: Bool?, bssid: String?, joinOnce: Bool?, timeout: Double?) {
+  init(ssid: String, password: String?, isWEP: Bool?, security: WifiSecurityType?, bssid: String?, joinOnce: Bool?, timeout: Double?) {
     self.init(std.string(ssid), { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = password {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -28,6 +29,12 @@ public extension ConnectionOptions {
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = isWEP {
         return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_WifiSecurityType_ in
+      if let __unwrappedValue = security {
+        return bridge.create_std__optional_WifiSecurityType_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -79,6 +86,11 @@ public extension ConnectionOptions {
         return nil
       }
     }()
+  }
+  
+  @inline(__always)
+  var security: WifiSecurityType? {
+    return self.__security.value
   }
   
   @inline(__always)

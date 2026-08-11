@@ -8,32 +8,80 @@
 #pragma once
 
 // Forward declarations of C++ defined types
+// Forward declaration of `CapabilityAvailability` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class CapabilityAvailability; }
 // Forward declaration of `ChannelInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
+// Forward declaration of `ConnectionMode` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionMode; }
 // Forward declaration of `ConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
+// Forward declaration of `ConnectionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
+// Forward declaration of `ConnectionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `HotspotOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
+// Forward declaration of `HotspotStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
 // Forward declaration of `Location` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct Location; }
+// Forward declaration of `NativeConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `NetworkDiagnostics` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
+// Forward declaration of `NetworkLinkProperties` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
+// Forward declaration of `NetworkState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class NetworkState; }
+// Forward declaration of `PermissionState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class PermissionState; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `SuggestionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
+// Forward declaration of `SuggestionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionStatus; }
+// Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 // Forward declaration of `WifiFingerprint` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `WifiNetwork` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 
 // Include C++ defined types
+#include "CapabilityAvailability.hpp"
 #include "ChannelInfo.hpp"
+#include "ConnectionMode.hpp"
 #include "ConnectionOptions.hpp"
+#include "ConnectionOutcome.hpp"
+#include "ConnectionStatus.hpp"
 #include "CurrentNetworkInfo.hpp"
+#include "HotspotOutcome.hpp"
+#include "HotspotStatus.hpp"
 #include "HybridMunimWifiSpec.hpp"
 #include "Location.hpp"
+#include "NativeConnectionOptions.hpp"
+#include "NativeNetworkSuggestionOptions.hpp"
+#include "NetworkDiagnostics.hpp"
+#include "NetworkLinkProperties.hpp"
+#include "NetworkState.hpp"
+#include "PermissionState.hpp"
 #include "ScanOptions.hpp"
+#include "SuggestionOutcome.hpp"
+#include "SuggestionStatus.hpp"
+#include "WifiCapabilityStatus.hpp"
 #include "WifiFingerprint.hpp"
 #include "WifiNetwork.hpp"
+#include "WifiSecurityType.hpp"
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>

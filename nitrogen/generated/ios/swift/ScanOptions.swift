@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Represents an instance of `ScanOptions`, backed by a C++ struct.

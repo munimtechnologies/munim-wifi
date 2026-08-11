@@ -14,6 +14,8 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 
 // Forward declaration of `WifiNetwork` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
 // Forward declaration of `WifiFingerprint` to properly resolve imports.
@@ -26,12 +28,43 @@ namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
 // Forward declaration of `ConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
+// Forward declaration of `ConnectionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
+// Forward declaration of `ConnectionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
+// Forward declaration of `ConnectionMode` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionMode; }
+// Forward declaration of `NativeConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `SuggestionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
+// Forward declaration of `SuggestionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionStatus; }
+// Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `HotspotOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
+// Forward declaration of `HotspotStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
+// Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
+// Forward declaration of `CapabilityAvailability` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class CapabilityAvailability; }
+// Forward declaration of `PermissionState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class PermissionState; }
+// Forward declaration of `NetworkDiagnostics` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
+// Forward declaration of `NetworkState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class NetworkState; }
+// Forward declaration of `NetworkLinkProperties` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 
 #include <NitroModules/Promise.hpp>
 #include "WifiNetwork.hpp"
 #include <vector>
 #include <string>
 #include <optional>
+#include "WifiSecurityType.hpp"
 #include "ScanOptions.hpp"
 #include <functional>
 #include "WifiFingerprint.hpp"
@@ -41,6 +74,21 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include "ChannelInfo.hpp"
 #include "CurrentNetworkInfo.hpp"
 #include "ConnectionOptions.hpp"
+#include "ConnectionOutcome.hpp"
+#include "ConnectionStatus.hpp"
+#include "ConnectionMode.hpp"
+#include "NativeConnectionOptions.hpp"
+#include "SuggestionOutcome.hpp"
+#include "SuggestionStatus.hpp"
+#include "NativeNetworkSuggestionOptions.hpp"
+#include "HotspotOutcome.hpp"
+#include "HotspotStatus.hpp"
+#include "WifiCapabilityStatus.hpp"
+#include "CapabilityAvailability.hpp"
+#include "PermissionState.hpp"
+#include "NetworkDiagnostics.hpp"
+#include "NetworkState.hpp"
+#include "NetworkLinkProperties.hpp"
 
 #include "MunimWifi-Swift-Cxx-Umbrella.hpp"
 
@@ -192,6 +240,78 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
+    inline std::shared_ptr<Promise<ConnectionOutcome>> requestLocalNetwork(const NativeConnectionOptions& options) override {
+      auto __result = _swiftPart.requestLocalNetwork(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<ConnectionOutcome>> configureNetwork(const NativeConnectionOptions& options) override {
+      auto __result = _swiftPart.configureNetwork(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) override {
+      auto __result = _swiftPart.requestUserSavedNetwork(options);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<ConnectionOutcome>> releaseConnection(const std::string& leaseOrConfigurationId) override {
+      auto __result = _swiftPart.releaseConnection(leaseOrConfigurationId);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override {
+      auto __result = _swiftPart.addNetworkSuggestion(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<SuggestionOutcome>> removeNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override {
+      auto __result = _swiftPart.removeNetworkSuggestion(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<SuggestionOutcome>> getNetworkSuggestionStatus(const NativeNetworkSuggestionOptions& options) override {
+      auto __result = _swiftPart.getNetworkSuggestionStatus(std::forward<decltype(options)>(options));
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<HotspotOutcome>> startLocalOnlyHotspot() override {
+      auto __result = _swiftPart.startLocalOnlyHotspot();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<HotspotOutcome>> stopLocalOnlyHotspot(const std::string& reservationId) override {
+      auto __result = _swiftPart.stopLocalOnlyHotspot(reservationId);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
     inline std::shared_ptr<Promise<void>> disconnect() override {
       auto __result = _swiftPart.disconnect();
       if (__result.hasError()) [[unlikely]] {
@@ -207,6 +327,34 @@ namespace margelo::nitro::munimwifi {
       }
       auto __value = std::move(__result.value());
       return __value;
+    }
+    inline std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() override {
+      auto __result = _swiftPart.getWifiCapabilityStatus();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() override {
+      auto __result = _swiftPart.getNetworkDiagnostics();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) override {
+      auto __result = _swiftPart.startNetworkObserver(onUpdate);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void stopNetworkObserver() override {
+      auto __result = _swiftPart.stopNetworkObserver();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
     }
     inline void addListener(const std::string& eventName) override {
       auto __result = _swiftPart.addListener(eventName);

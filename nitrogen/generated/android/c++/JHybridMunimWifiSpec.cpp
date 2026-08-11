@@ -9,6 +9,8 @@
 
 // Forward declaration of `WifiNetwork` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 // Forward declaration of `WifiFingerprint` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `Location` to properly resolve imports.
@@ -17,10 +19,40 @@ namespace margelo::nitro::munimwifi { struct Location; }
 namespace margelo::nitro::munimwifi { struct ChannelInfo; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `ConnectionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
+// Forward declaration of `ConnectionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
+// Forward declaration of `ConnectionMode` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class ConnectionMode; }
+// Forward declaration of `SuggestionOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
+// Forward declaration of `SuggestionStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionStatus; }
+// Forward declaration of `HotspotOutcome` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
+// Forward declaration of `HotspotStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
+// Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
+// Forward declaration of `CapabilityAvailability` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class CapabilityAvailability; }
+// Forward declaration of `PermissionState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class PermissionState; }
+// Forward declaration of `NetworkDiagnostics` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
+// Forward declaration of `NetworkState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class NetworkState; }
+// Forward declaration of `NetworkLinkProperties` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
 // Forward declaration of `ConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
+// Forward declaration of `NativeConnectionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/JPromise.hpp>
@@ -29,6 +61,8 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include "JWifiNetwork.hpp"
 #include <string>
 #include <optional>
+#include "WifiSecurityType.hpp"
+#include "JWifiSecurityType.hpp"
 #include "WifiFingerprint.hpp"
 #include "JWifiFingerprint.hpp"
 #include "Location.hpp"
@@ -46,6 +80,32 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include "JVariant_NullType_CurrentNetworkInfo.hpp"
 #include "JCurrentNetworkInfo.hpp"
 #include <NitroModules/JUnit.hpp>
+#include "ConnectionOutcome.hpp"
+#include "JConnectionOutcome.hpp"
+#include "ConnectionStatus.hpp"
+#include "JConnectionStatus.hpp"
+#include "ConnectionMode.hpp"
+#include "JConnectionMode.hpp"
+#include "SuggestionOutcome.hpp"
+#include "JSuggestionOutcome.hpp"
+#include "SuggestionStatus.hpp"
+#include "JSuggestionStatus.hpp"
+#include "HotspotOutcome.hpp"
+#include "JHotspotOutcome.hpp"
+#include "HotspotStatus.hpp"
+#include "JHotspotStatus.hpp"
+#include "WifiCapabilityStatus.hpp"
+#include "JWifiCapabilityStatus.hpp"
+#include "CapabilityAvailability.hpp"
+#include "JCapabilityAvailability.hpp"
+#include "PermissionState.hpp"
+#include "JPermissionState.hpp"
+#include "NetworkDiagnostics.hpp"
+#include "JNetworkDiagnostics.hpp"
+#include "NetworkState.hpp"
+#include "JNetworkState.hpp"
+#include "NetworkLinkProperties.hpp"
+#include "JNetworkLinkProperties.hpp"
 #include "ScanOptions.hpp"
 #include "JScanOptions.hpp"
 #include <functional>
@@ -54,6 +114,11 @@ namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 #include "JFunc_void_std__string.hpp"
 #include "ConnectionOptions.hpp"
 #include "JConnectionOptions.hpp"
+#include "NativeConnectionOptions.hpp"
+#include "JNativeConnectionOptions.hpp"
+#include "NativeNetworkSuggestionOptions.hpp"
+#include "JNativeNetworkSuggestionOptions.hpp"
+#include "JFunc_void_NetworkDiagnostics.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -289,6 +354,150 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
+  std::shared_ptr<Promise<ConnectionOutcome>> JHybridMunimWifiSpec::requestLocalNetwork(const NativeConnectionOptions& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeConnectionOptions> /* options */)>("requestLocalNetwork");
+    auto __result = method(_javaPart, JNativeConnectionOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<ConnectionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JConnectionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<ConnectionOutcome>> JHybridMunimWifiSpec::configureNetwork(const NativeConnectionOptions& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeConnectionOptions> /* options */)>("configureNetwork");
+    auto __result = method(_javaPart, JNativeConnectionOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<ConnectionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JConnectionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<ConnectionOutcome>> JHybridMunimWifiSpec::requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeConnectionOptions> /* options */)>("requestUserSavedNetwork");
+    auto __result = method(_javaPart, options.has_value() ? JNativeConnectionOptions::fromCpp(options.value()) : nullptr);
+    return [&]() {
+      auto __promise = Promise<ConnectionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JConnectionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<ConnectionOutcome>> JHybridMunimWifiSpec::releaseConnection(const std::string& leaseOrConfigurationId) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JString> /* leaseOrConfigurationId */)>("releaseConnection");
+    auto __result = method(_javaPart, jni::make_jstring(leaseOrConfigurationId));
+    return [&]() {
+      auto __promise = Promise<ConnectionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JConnectionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<SuggestionOutcome>> JHybridMunimWifiSpec::addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeNetworkSuggestionOptions> /* options */)>("addNetworkSuggestion");
+    auto __result = method(_javaPart, JNativeNetworkSuggestionOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<SuggestionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JSuggestionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<SuggestionOutcome>> JHybridMunimWifiSpec::removeNetworkSuggestion(const NativeNetworkSuggestionOptions& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeNetworkSuggestionOptions> /* options */)>("removeNetworkSuggestion");
+    auto __result = method(_javaPart, JNativeNetworkSuggestionOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<SuggestionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JSuggestionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<SuggestionOutcome>> JHybridMunimWifiSpec::getNetworkSuggestionStatus(const NativeNetworkSuggestionOptions& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeNetworkSuggestionOptions> /* options */)>("getNetworkSuggestionStatus");
+    auto __result = method(_javaPart, JNativeNetworkSuggestionOptions::fromCpp(options));
+    return [&]() {
+      auto __promise = Promise<SuggestionOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JSuggestionOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<HotspotOutcome>> JHybridMunimWifiSpec::startLocalOnlyHotspot() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("startLocalOnlyHotspot");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<HotspotOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JHotspotOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<HotspotOutcome>> JHybridMunimWifiSpec::stopLocalOnlyHotspot(const std::string& reservationId) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JString> /* reservationId */)>("stopLocalOnlyHotspot");
+    auto __result = method(_javaPart, jni::make_jstring(reservationId));
+    return [&]() {
+      auto __promise = Promise<HotspotOutcome>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JHotspotOutcome>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
   std::shared_ptr<Promise<void>> JHybridMunimWifiSpec::disconnect() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("disconnect");
     auto __result = method(_javaPart);
@@ -319,6 +528,46 @@ namespace margelo::nitro::munimwifi {
       });
       return __promise;
     }();
+  }
+  std::shared_ptr<Promise<WifiCapabilityStatus>> JHybridMunimWifiSpec::getWifiCapabilityStatus() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("getWifiCapabilityStatus");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<WifiCapabilityStatus>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JWifiCapabilityStatus>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<NetworkDiagnostics>> JHybridMunimWifiSpec::getNetworkDiagnostics() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("getNetworkDiagnostics");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<NetworkDiagnostics>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JNetworkDiagnostics>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  void JHybridMunimWifiSpec::startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JFunc_void_NetworkDiagnostics::javaobject> /* onUpdate */)>("startNetworkObserver_cxx");
+    method(_javaPart, JFunc_void_NetworkDiagnostics_cxx::fromCpp(onUpdate));
+  }
+  void JHybridMunimWifiSpec::stopNetworkObserver() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("stopNetworkObserver");
+    method(_javaPart);
   }
   void JHybridMunimWifiSpec::addListener(const std::string& eventName) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JString> /* eventName */)>("addListener");

@@ -12,8 +12,10 @@
 
 #include "JLocation.hpp"
 #include "JWifiNetwork.hpp"
+#include "JWifiSecurityType.hpp"
 #include "Location.hpp"
 #include "WifiNetwork.hpp"
+#include "WifiSecurityType.hpp"
 #include <optional>
 #include <string>
 #include <vector>

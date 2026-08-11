@@ -90,11 +90,68 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun requestLocalNetwork(options: NativeConnectionOptions): Promise<ConnectionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun configureNetwork(options: NativeConnectionOptions): Promise<ConnectionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun requestUserSavedNetwork(options: NativeConnectionOptions?): Promise<ConnectionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun releaseConnection(leaseOrConfigurationId: String): Promise<ConnectionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun addNetworkSuggestion(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun removeNetworkSuggestion(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun startLocalOnlyHotspot(): Promise<HotspotOutcome>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun stopLocalOnlyHotspot(reservationId: String): Promise<HotspotOutcome>
+  
+  @DoNotStrip
+  @Keep
   abstract fun disconnect(): Promise<Unit>
   
   @DoNotStrip
   @Keep
   abstract fun getIPAddress(): Promise<Variant_NullType_String>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getWifiCapabilityStatus(): Promise<WifiCapabilityStatus>
+  
+  @DoNotStrip
+  @Keep
+  abstract fun getNetworkDiagnostics(): Promise<NetworkDiagnostics>
+  
+  abstract fun startNetworkObserver(onUpdate: (diagnostics: NetworkDiagnostics) -> Unit): Unit
+  
+  @DoNotStrip
+  @Keep
+  private fun startNetworkObserver_cxx(onUpdate: Func_void_NetworkDiagnostics): Unit {
+    val __result = startNetworkObserver(onUpdate)
+    return __result
+  }
+  
+  @DoNotStrip
+  @Keep
+  abstract fun stopNetworkObserver(): Unit
   
   @DoNotStrip
   @Keep

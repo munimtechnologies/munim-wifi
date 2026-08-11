@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Represents an instance of `WifiNetwork`, backed by a C++ struct.
@@ -18,7 +19,7 @@ public extension WifiNetwork {
   /**
    * Create a new instance of `WifiNetwork`.
    */
-  init(ssid: String, bssid: String, rssi: Double?, frequency: Double?, channel: Double?, capabilities: String?, isSecure: Bool?, timestamp: Double?) {
+  init(ssid: String, bssid: String, rssi: Double?, frequency: Double?, channel: Double?, capabilities: String?, isSecure: Bool?, securityType: WifiSecurityType, timestamp: Double?) {
     self.init(std.string(ssid), std.string(bssid), { () -> bridge.std__optional_double_ in
       if let __unwrappedValue = rssi {
         return bridge.create_std__optional_double_(__unwrappedValue)
@@ -49,7 +50,7 @@ public extension WifiNetwork {
       } else {
         return .init()
       }
-    }(), { () -> bridge.std__optional_double_ in
+    }(), securityType, { () -> bridge.std__optional_double_ in
       if let __unwrappedValue = timestamp {
         return bridge.create_std__optional_double_(__unwrappedValue)
       } else {
@@ -126,6 +127,11 @@ public extension WifiNetwork {
         return nil
       }
     }()
+  }
+  
+  @inline(__always)
+  var securityType: WifiSecurityType {
+    return self.__securityType
   }
   
   @inline(__always)

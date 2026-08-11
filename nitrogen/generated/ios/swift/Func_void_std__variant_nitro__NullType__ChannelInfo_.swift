@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Wraps a Swift `(_ value: Variant_NullType_ChannelInfo) -> Void` as a class.

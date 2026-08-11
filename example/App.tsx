@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActivityIndicator,
   Pressable,
@@ -10,29 +10,56 @@ import {
   View,
 } from 'react-native'
 import {
+  addNetworkObserverListener,
   getCurrentNetwork,
+  getNetworkDiagnostics,
+  getWifiCapabilityStatus,
   isWifiEnabled,
+  releaseConnection,
+  requestLocalNetwork,
   requestWifiPermission,
   scanNetworks,
+  type ConnectionOutcome,
   type CurrentNetworkInfo,
+  type NetworkDiagnostics,
+  type WifiCapabilityStatus,
   type WifiNetwork,
 } from 'munim-wifi'
+
+const DEMO_SSID = 'munim-demo'
+const DEMO_PASSPHRASE = 'demo-passphrase'
 
 export default function App() {
   const [busy, setBusy] = useState(false)
   const [enabled, setEnabled] = useState<boolean | null>(null)
   const [current, setCurrent] = useState<CurrentNetworkInfo | null>(null)
   const [networks, setNetworks] = useState<WifiNetwork[]>([])
+  const [capabilities, setCapabilities] = useState<WifiCapabilityStatus | null>(null)
+  const [diagnostics, setDiagnostics] = useState<NetworkDiagnostics | null>(null)
+  const [observing, setObserving] = useState(false)
+  const [connection, setConnection] = useState<ConnectionOutcome | null>(null)
   const [message, setMessage] = useState('Request permission, then scan nearby networks.')
+  const stopObserving = useRef<(() => void) | null>(null)
 
   useEffect(() => {
     void isWifiEnabled().then(setEnabled).catch(() => setEnabled(false))
+    return () => stopObserving.current?.()
   }, [])
 
-  const runScan = async () => {
+  const guard = async (work: () => Promise<void>) => {
     setBusy(true)
-    setMessage('Checking Wi-Fi permissions…')
     try {
+      await work()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const runScan = () =>
+    guard(async () => {
+      setMessage('Checking Wi-Fi permissions…')
       if (!(await requestWifiPermission())) {
         setMessage('Wi-Fi permission was not granted.')
         return
@@ -44,11 +71,60 @@ export default function App() {
       setCurrent(nextCurrent)
       setNetworks(nextNetworks)
       setMessage(`Found ${nextNetworks.length} network${nextNetworks.length === 1 ? '' : 's'}.`)
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : String(error))
-    } finally {
-      setBusy(false)
+    })
+
+  const runCapabilities = () =>
+    guard(async () => {
+      const status = await getWifiCapabilityStatus()
+      setCapabilities(status)
+      setMessage(`Capability report ready for ${status.platform}.`)
+    })
+
+  const runDiagnostics = () =>
+    guard(async () => {
+      const snapshot = await getNetworkDiagnostics()
+      setDiagnostics(snapshot)
+      setMessage(`Diagnostics captured at ${new Date(snapshot.timestamp).toLocaleTimeString()}.`)
+    })
+
+  const runStructuredConnect = () =>
+    guard(async () => {
+      setMessage(`Requesting local network "${DEMO_SSID}"…`)
+      const outcome = await requestLocalNetwork({
+        ssid: DEMO_SSID,
+        security: { type: 'wpa2', passphrase: DEMO_PASSPHRASE },
+        timeout: 15_000,
+        bindProcess: false,
+      })
+      setConnection(outcome)
+      setMessage(`Connection outcome: ${outcome.status}${outcome.message ? ` (${outcome.message})` : ''}`)
+    })
+
+  const releaseLease = () =>
+    guard(async () => {
+      const id = connection?.leaseId ?? connection?.configurationId
+      if (!id) {
+        setMessage('Nothing to release yet.')
+        return
+      }
+      const outcome = await releaseConnection(id)
+      setConnection(null)
+      setMessage(`Release outcome: ${outcome.status}`)
+    })
+
+  const toggleObserver = () => {
+    if (stopObserving.current) {
+      stopObserving.current()
+      stopObserving.current = null
+      setObserving(false)
+      setMessage('Network observer stopped.')
+      return
     }
+    stopObserving.current = addNetworkObserverListener((update) => {
+      setDiagnostics(update)
+    })
+    setObserving(true)
+    setMessage('Network observer running — diagnostics update live.')
   }
 
   return (
@@ -80,13 +156,77 @@ export default function App() {
           {busy ? <ActivityIndicator color="#07131d" /> : <Text style={styles.buttonText}>Scan networks</Text>}
         </Pressable>
 
+        <View style={styles.buttonGrid}>
+          <Pressable disabled={busy} onPress={runCapabilities} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Capabilities</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runDiagnostics} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Diagnostics</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runStructuredConnect} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Connect</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={releaseLease} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Release</Text>
+          </Pressable>
+          <Pressable onPress={toggleObserver} style={({ pressed }) => [styles.smallButton, observing && styles.smallButtonActive, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>{observing ? 'Stop observer' : 'Observe'}</Text>
+          </Pressable>
+        </View>
+
         <Text style={styles.message}>{message}</Text>
+
+        {connection && (
+          <View style={styles.currentCard}>
+            <Text style={styles.cardLabel}>CONNECTION OUTCOME</Text>
+            <Text style={styles.networkName}>{connection.ssid ?? '—'}</Text>
+            <Text style={styles.meta}>
+              {connection.status} · {connection.mode}
+              {connection.boundProcess ? ' · process bound' : ''}
+            </Text>
+            {(connection.leaseId ?? connection.configurationId) && (
+              <Text style={styles.meta}>id: {connection.leaseId ?? connection.configurationId}</Text>
+            )}
+          </View>
+        )}
+
+        {capabilities && (
+          <View style={styles.currentCard}>
+            <Text style={styles.cardLabel}>CAPABILITIES · {capabilities.platform.toUpperCase()}</Text>
+            <Text style={styles.meta}>scan: {capabilities.scan} · local request: {capabilities.localNetworkRequest}</Text>
+            <Text style={styles.meta}>configuration: {capabilities.managedConfiguration} · suggestions: {capabilities.networkSuggestions}</Text>
+            <Text style={styles.meta}>hotspot: {capabilities.localOnlyHotspot} · settings intent: {capabilities.userSavedNetworkIntent}</Text>
+            <Text style={styles.meta}>location: {capabilities.locationPermission} · nearby devices: {capabilities.nearbyWifiPermission}</Text>
+          </View>
+        )}
+
+        {diagnostics && (
+          <View style={styles.currentCard}>
+            <Text style={styles.cardLabel}>DIAGNOSTICS{observing ? ' · LIVE' : ''}</Text>
+            <Text style={styles.networkName}>{diagnostics.currentNetwork?.ssid ?? diagnostics.state}</Text>
+            <Text style={styles.meta}>
+              state: {diagnostics.state}
+              {diagnostics.validated == null ? '' : ` · validated: ${diagnostics.validated}`}
+              {diagnostics.captivePortal == null ? '' : ` · captive portal: ${diagnostics.captivePortal}`}
+            </Text>
+            <Text style={styles.meta}>
+              {diagnostics.metered == null ? '' : `metered: ${diagnostics.metered}`}
+              {diagnostics.constrained == null ? '' : ` · constrained: ${diagnostics.constrained}`}
+            </Text>
+            {diagnostics.linkProperties && (
+              <Text style={styles.meta}>
+                {diagnostics.linkProperties.interfaceName ?? 'if?'} · {diagnostics.linkProperties.addresses.join(', ') || 'no addresses'}
+              </Text>
+            )}
+          </View>
+        )}
 
         {current && (
           <View style={styles.currentCard}>
             <Text style={styles.cardLabel}>CURRENT NETWORK</Text>
             <Text style={styles.networkName}>{current.ssid}</Text>
             <Text style={styles.meta}>{current.ipAddress ?? 'IP address unavailable'}</Text>
+            <Text style={styles.meta}>security: {current.securityType}</Text>
           </View>
         )}
 
@@ -99,7 +239,7 @@ export default function App() {
             <Text style={styles.meta}>{network.bssid || 'BSSID unavailable'}</Text>
             <Text style={styles.meta}>
               {network.channel == null ? 'Channel unavailable' : `Channel ${network.channel}`}
-              {network.isSecure == null ? '' : network.isSecure ? ' · Secured' : ' · Open'}
+              {` · ${network.securityType}`}
             </Text>
           </View>
         ))}
@@ -122,6 +262,10 @@ const styles = StyleSheet.create({
   buttonPressed: { opacity: 0.82, transform: [{ scale: 0.99 }] },
   buttonDisabled: { opacity: 0.6 },
   buttonText: { color: '#07131d', fontSize: 16, fontWeight: '800' },
+  buttonGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  smallButton: { backgroundColor: '#0e2635', borderColor: '#2d7b9a', borderRadius: 12, borderWidth: 1, paddingHorizontal: 14, paddingVertical: 10 },
+  smallButtonActive: { backgroundColor: '#2d7b9a' },
+  smallButtonText: { color: '#bfe8f8', fontSize: 13, fontWeight: '700' },
   message: { color: '#bfd0da', fontSize: 13, lineHeight: 20, marginVertical: 18 },
   currentCard: { backgroundColor: '#0e2635', borderColor: '#2d7b9a', borderRadius: 16, borderWidth: 1, marginBottom: 12, padding: 16 },
   networkCard: { backgroundColor: '#0b1d29', borderColor: '#19394a', borderRadius: 14, borderWidth: 1, marginBottom: 10, padding: 15 },

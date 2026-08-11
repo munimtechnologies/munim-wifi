@@ -16,6 +16,8 @@
 #include <NitroModules/JNull.hpp>
 #include "JCurrentNetworkInfo.hpp"
 #include <string>
+#include "WifiSecurityType.hpp"
+#include "JWifiSecurityType.hpp"
 #include <optional>
 #include <vector>
 

@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * Wraps a Swift `(_ value: [String]) -> Void` as a class.
@@ -22,7 +23,7 @@ public final class Func_void_std__vector_std__string_ {
 
   @inline(__always)
   public func call(value: bridge.std__vector_std__string_) -> Void {
-    self.closure(value.map({ __item in String(__item) }))
+    self.closure(__nitroVectorToStringArray(value))
   }
 
   /**
@@ -43,4 +44,17 @@ public final class Func_void_std__vector_std__string_ {
   public static func fromUnsafe(_ pointer: UnsafeMutableRawPointer) -> Func_void_std__vector_std__string_ {
     return Unmanaged<Func_void_std__vector_std__string_>.fromOpaque(pointer).takeRetainedValue()
   }
+}
+
+@inline(__always)
+fileprivate func __nitroVectorToStringArray(_ __vector: margelo.nitro.munimwifi.bridge.swift.std__vector_std__string_) -> [String] {
+  var __result: [String] = []
+  let __count = Int(__vector.size())
+  __result.reserveCapacity(__count)
+  var __index = 0
+  while __index < __count {
+    __result.append(String(__vector[__index]))
+    __index += 1
+  }
+  return __result
 }

@@ -28,9 +28,11 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 
 #include <string>
+#include "WifiSecurityType.hpp"
 #include <optional>
 #include <vector>
 
@@ -43,6 +45,7 @@ namespace margelo::nitro::munimwifi {
   public:
     std::string ssid     SWIFT_PRIVATE;
     std::string bssid     SWIFT_PRIVATE;
+    WifiSecurityType securityType     SWIFT_PRIVATE;
     std::optional<std::string> ipAddress     SWIFT_PRIVATE;
     std::optional<std::string> subnetMask     SWIFT_PRIVATE;
     std::optional<std::string> gateway     SWIFT_PRIVATE;
@@ -50,7 +53,7 @@ namespace margelo::nitro::munimwifi {
 
   public:
     CurrentNetworkInfo() = default;
-    explicit CurrentNetworkInfo(std::string ssid, std::string bssid, std::optional<std::string> ipAddress, std::optional<std::string> subnetMask, std::optional<std::string> gateway, std::optional<std::vector<std::string>> dnsServers): ssid(ssid), bssid(bssid), ipAddress(ipAddress), subnetMask(subnetMask), gateway(gateway), dnsServers(dnsServers) {}
+    explicit CurrentNetworkInfo(std::string ssid, std::string bssid, WifiSecurityType securityType, std::optional<std::string> ipAddress, std::optional<std::string> subnetMask, std::optional<std::string> gateway, std::optional<std::vector<std::string>> dnsServers): ssid(ssid), bssid(bssid), securityType(securityType), ipAddress(ipAddress), subnetMask(subnetMask), gateway(gateway), dnsServers(dnsServers) {}
 
   public:
     friend bool operator==(const CurrentNetworkInfo& lhs, const CurrentNetworkInfo& rhs) = default;
@@ -68,6 +71,7 @@ namespace margelo::nitro {
       return margelo::nitro::munimwifi::CurrentNetworkInfo(
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid"))),
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid"))),
+        JSIConverter<margelo::nitro::munimwifi::WifiSecurityType>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "securityType"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ipAddress"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "subnetMask"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "gateway"))),
@@ -78,6 +82,7 @@ namespace margelo::nitro {
       jsi::Object obj(runtime);
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "ssid"), JSIConverter<std::string>::toJSI(runtime, arg.ssid));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "bssid"), JSIConverter<std::string>::toJSI(runtime, arg.bssid));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "securityType"), JSIConverter<margelo::nitro::munimwifi::WifiSecurityType>::toJSI(runtime, arg.securityType));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "ipAddress"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.ipAddress));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "subnetMask"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.subnetMask));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "gateway"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.gateway));
@@ -94,6 +99,7 @@ namespace margelo::nitro {
       }
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid")))) return false;
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid")))) return false;
+      if (!JSIConverter<margelo::nitro::munimwifi::WifiSecurityType>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "securityType")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ipAddress")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "subnetMask")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "gateway")))) return false;

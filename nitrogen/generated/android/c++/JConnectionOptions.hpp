@@ -10,6 +10,8 @@
 #include <fbjni/fbjni.h>
 #include "ConnectionOptions.hpp"
 
+#include "JWifiSecurityType.hpp"
+#include "WifiSecurityType.hpp"
 #include <optional>
 #include <string>
 
@@ -38,6 +40,8 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JString> password = this->getFieldValue(fieldPassword);
       static const auto fieldIsWEP = clazz->getField<jni::JBoolean>("isWEP");
       jni::local_ref<jni::JBoolean> isWEP = this->getFieldValue(fieldIsWEP);
+      static const auto fieldSecurity = clazz->getField<JWifiSecurityType>("security");
+      jni::local_ref<JWifiSecurityType> security = this->getFieldValue(fieldSecurity);
       static const auto fieldBssid = clazz->getField<jni::JString>("bssid");
       jni::local_ref<jni::JString> bssid = this->getFieldValue(fieldBssid);
       static const auto fieldJoinOnce = clazz->getField<jni::JBoolean>("joinOnce");
@@ -48,6 +52,7 @@ namespace margelo::nitro::munimwifi {
         ssid->toStdString(),
         password != nullptr ? std::make_optional(password->toStdString()) : std::nullopt,
         isWEP != nullptr ? std::make_optional(static_cast<bool>(isWEP->value())) : std::nullopt,
+        security != nullptr ? std::make_optional(security->toCpp()) : std::nullopt,
         bssid != nullptr ? std::make_optional(bssid->toStdString()) : std::nullopt,
         joinOnce != nullptr ? std::make_optional(static_cast<bool>(joinOnce->value())) : std::nullopt,
         timeout != nullptr ? std::make_optional(timeout->value()) : std::nullopt
@@ -60,7 +65,7 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JConnectionOptions::javaobject> fromCpp(const ConnectionOptions& value) {
-      using JSignature = JConnectionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>);
+      using JSignature = JConnectionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -68,6 +73,7 @@ namespace margelo::nitro::munimwifi {
         jni::make_jstring(value.ssid),
         value.password.has_value() ? jni::make_jstring(value.password.value()) : nullptr,
         value.isWEP.has_value() ? jni::JBoolean::valueOf(value.isWEP.value()) : nullptr,
+        value.security.has_value() ? JWifiSecurityType::fromCpp(value.security.value()) : nullptr,
         value.bssid.has_value() ? jni::make_jstring(value.bssid.value()) : nullptr,
         value.joinOnce.has_value() ? jni::JBoolean::valueOf(value.joinOnce.value()) : nullptr,
         value.timeout.has_value() ? jni::JDouble::valueOf(value.timeout.value()) : nullptr

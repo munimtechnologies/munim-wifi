@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /// See ``HybridMunimWifiSpec``
 public protocol HybridMunimWifiSpec_protocol: HybridObject {
@@ -26,8 +27,21 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func getNetworkInfo(ssid: String) throws -> Promise<Variant_NullType_WifiNetwork>
   func getCurrentNetwork() throws -> Promise<Variant_NullType_CurrentNetworkInfo>
   func connectToNetwork(options: ConnectionOptions) throws -> Promise<Void>
+  func requestLocalNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome>
+  func configureNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome>
+  func requestUserSavedNetwork(options: NativeConnectionOptions?) throws -> Promise<ConnectionOutcome>
+  func releaseConnection(leaseOrConfigurationId: String) throws -> Promise<ConnectionOutcome>
+  func addNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
+  func removeNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
+  func getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
+  func startLocalOnlyHotspot() throws -> Promise<HotspotOutcome>
+  func stopLocalOnlyHotspot(reservationId: String) throws -> Promise<HotspotOutcome>
   func disconnect() throws -> Promise<Void>
   func getIPAddress() throws -> Promise<Variant_NullType_String>
+  func getWifiCapabilityStatus() throws -> Promise<WifiCapabilityStatus>
+  func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics>
+  func startNetworkObserver(onUpdate: @escaping (_ diagnostics: NetworkDiagnostics) -> Void) throws -> Void
+  func stopNetworkObserver() throws -> Void
   func addListener(eventName: String) throws -> Void
   func removeListeners(count: Double) throws -> Void
 }

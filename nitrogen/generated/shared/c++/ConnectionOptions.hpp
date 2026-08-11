@@ -28,10 +28,12 @@
 #error NitroModules cannot be found! Are you sure you installed NitroModules properly?
 #endif
 
-
+// Forward declaration of `WifiSecurityType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 
 #include <string>
 #include <optional>
+#include "WifiSecurityType.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -43,13 +45,14 @@ namespace margelo::nitro::munimwifi {
     std::string ssid     SWIFT_PRIVATE;
     std::optional<std::string> password     SWIFT_PRIVATE;
     std::optional<bool> isWEP     SWIFT_PRIVATE;
+    std::optional<WifiSecurityType> security     SWIFT_PRIVATE;
     std::optional<std::string> bssid     SWIFT_PRIVATE;
     std::optional<bool> joinOnce     SWIFT_PRIVATE;
     std::optional<double> timeout     SWIFT_PRIVATE;
 
   public:
     ConnectionOptions() = default;
-    explicit ConnectionOptions(std::string ssid, std::optional<std::string> password, std::optional<bool> isWEP, std::optional<std::string> bssid, std::optional<bool> joinOnce, std::optional<double> timeout): ssid(ssid), password(password), isWEP(isWEP), bssid(bssid), joinOnce(joinOnce), timeout(timeout) {}
+    explicit ConnectionOptions(std::string ssid, std::optional<std::string> password, std::optional<bool> isWEP, std::optional<WifiSecurityType> security, std::optional<std::string> bssid, std::optional<bool> joinOnce, std::optional<double> timeout): ssid(ssid), password(password), isWEP(isWEP), security(security), bssid(bssid), joinOnce(joinOnce), timeout(timeout) {}
 
   public:
     friend bool operator==(const ConnectionOptions& lhs, const ConnectionOptions& rhs) = default;
@@ -68,6 +71,7 @@ namespace margelo::nitro {
         JSIConverter<std::string>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "password"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isWEP"))),
+        JSIConverter<std::optional<margelo::nitro::munimwifi::WifiSecurityType>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "security"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "joinOnce"))),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))
@@ -78,6 +82,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "ssid"), JSIConverter<std::string>::toJSI(runtime, arg.ssid));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "password"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.password));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "isWEP"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.isWEP));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "security"), JSIConverter<std::optional<margelo::nitro::munimwifi::WifiSecurityType>>::toJSI(runtime, arg.security));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "bssid"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.bssid));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "joinOnce"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.joinOnce));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "timeout"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.timeout));
@@ -94,6 +99,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::string>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "ssid")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "password")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "isWEP")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::munimwifi::WifiSecurityType>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "security")))) return false;
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "joinOnce")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))) return false;

@@ -6,6 +6,7 @@
 ///
 
 import NitroModules
+import CxxStdlib
 
 /**
  * A class implementation that bridges HybridMunimWifiSpec over to C++.
@@ -426,6 +427,177 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
+  public final func requestLocalNetwork(options: NativeConnectionOptions) -> bridge.Result_std__shared_ptr_Promise_ConnectionOutcome___ {
+    do {
+      let __result = try self.__implementation.requestLocalNetwork(options: options)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_ConnectionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_ConnectionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_ConnectionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func configureNetwork(options: NativeConnectionOptions) -> bridge.Result_std__shared_ptr_Promise_ConnectionOutcome___ {
+    do {
+      let __result = try self.__implementation.configureNetwork(options: options)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_ConnectionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_ConnectionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_ConnectionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func requestUserSavedNetwork(options: bridge.std__optional_NativeConnectionOptions_) -> bridge.Result_std__shared_ptr_Promise_ConnectionOutcome___ {
+    do {
+      let __result = try self.__implementation.requestUserSavedNetwork(options: options.value)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_ConnectionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_ConnectionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_ConnectionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func releaseConnection(leaseOrConfigurationId: std.string) -> bridge.Result_std__shared_ptr_Promise_ConnectionOutcome___ {
+    do {
+      let __result = try self.__implementation.releaseConnection(leaseOrConfigurationId: String(leaseOrConfigurationId))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_ConnectionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_ConnectionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_ConnectionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_ConnectionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func addNetworkSuggestion(options: NativeNetworkSuggestionOptions) -> bridge.Result_std__shared_ptr_Promise_SuggestionOutcome___ {
+    do {
+      let __result = try self.__implementation.addNetworkSuggestion(options: options)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_SuggestionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_SuggestionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_SuggestionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_SuggestionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_SuggestionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func removeNetworkSuggestion(options: NativeNetworkSuggestionOptions) -> bridge.Result_std__shared_ptr_Promise_SuggestionOutcome___ {
+    do {
+      let __result = try self.__implementation.removeNetworkSuggestion(options: options)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_SuggestionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_SuggestionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_SuggestionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_SuggestionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_SuggestionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions) -> bridge.Result_std__shared_ptr_Promise_SuggestionOutcome___ {
+    do {
+      let __result = try self.__implementation.getNetworkSuggestionStatus(options: options)
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_SuggestionOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_SuggestionOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_SuggestionOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_SuggestionOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_SuggestionOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func startLocalOnlyHotspot() -> bridge.Result_std__shared_ptr_Promise_HotspotOutcome___ {
+    do {
+      let __result = try self.__implementation.startLocalOnlyHotspot()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_HotspotOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_HotspotOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_HotspotOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_HotspotOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_HotspotOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func stopLocalOnlyHotspot(reservationId: std.string) -> bridge.Result_std__shared_ptr_Promise_HotspotOutcome___ {
+    do {
+      let __result = try self.__implementation.stopLocalOnlyHotspot(reservationId: String(reservationId))
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_HotspotOutcome__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_HotspotOutcome__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_HotspotOutcome__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_HotspotOutcome___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_HotspotOutcome___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
   public final func disconnect() -> bridge.Result_std__shared_ptr_Promise_void___ {
     do {
       let __result = try self.__implementation.disconnect()
@@ -467,6 +639,71 @@ open class HybridMunimWifiSpec_cxx {
     } catch (let __error) {
       let __exceptionPtr = __error.toCpp()
       return bridge.create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__std__string____(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getWifiCapabilityStatus() -> bridge.Result_std__shared_ptr_Promise_WifiCapabilityStatus___ {
+    do {
+      let __result = try self.__implementation.getWifiCapabilityStatus()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_WifiCapabilityStatus__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_WifiCapabilityStatus__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_WifiCapabilityStatus__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_WifiCapabilityStatus___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_WifiCapabilityStatus___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func getNetworkDiagnostics() -> bridge.Result_std__shared_ptr_Promise_NetworkDiagnostics___ {
+    do {
+      let __result = try self.__implementation.getNetworkDiagnostics()
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_NetworkDiagnostics__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_NetworkDiagnostics__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_NetworkDiagnostics__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_NetworkDiagnostics___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_NetworkDiagnostics___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func startNetworkObserver(onUpdate: bridge.Func_void_NetworkDiagnostics) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.startNetworkObserver(onUpdate: { () -> (NetworkDiagnostics) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_NetworkDiagnostics(onUpdate)
+        return { (__diagnostics: NetworkDiagnostics) -> Void in
+          __wrappedFunction.call(__diagnostics)
+        }
+      }())
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func stopNetworkObserver() -> bridge.Result_void_ {
+    do {
+      try self.__implementation.stopNetworkObserver()
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
     }
   }
   

@@ -17,6 +17,8 @@
 #include "JWifiNetwork.hpp"
 #include <string>
 #include <optional>
+#include "WifiSecurityType.hpp"
+#include "JWifiSecurityType.hpp"
 
 namespace margelo::nitro::munimwifi {
 

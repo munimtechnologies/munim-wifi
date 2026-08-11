@@ -29,6 +29,9 @@ data class ConnectionOptions(
   val isWEP: Boolean?,
   @DoNotStrip
   @Keep
+  val security: WifiSecurityType?,
+  @DoNotStrip
+  @Keep
   val bssid: String?,
   @DoNotStrip
   @Keep
@@ -45,6 +48,7 @@ data class ConnectionOptions(
     return Objects.deepEquals(this.ssid, other.ssid)
       && Objects.deepEquals(this.password, other.password)
       && Objects.deepEquals(this.isWEP, other.isWEP)
+      && Objects.deepEquals(this.security, other.security)
       && Objects.deepEquals(this.bssid, other.bssid)
       && Objects.deepEquals(this.joinOnce, other.joinOnce)
       && Objects.deepEquals(this.timeout, other.timeout)
@@ -55,6 +59,7 @@ data class ConnectionOptions(
       ssid,
       password,
       isWEP,
+      security,
       bssid,
       joinOnce,
       timeout
@@ -69,8 +74,8 @@ data class ConnectionOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, password: String?, isWEP: Boolean?, bssid: String?, joinOnce: Boolean?, timeout: Double?): ConnectionOptions {
-      return ConnectionOptions(ssid, password, isWEP, bssid, joinOnce, timeout)
+    private fun fromCpp(ssid: String, password: String?, isWEP: Boolean?, security: WifiSecurityType?, bssid: String?, joinOnce: Boolean?, timeout: Double?): ConnectionOptions {
+      return ConnectionOptions(ssid, password, isWEP, security, bssid, joinOnce, timeout)
     }
   }
 }

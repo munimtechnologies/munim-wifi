@@ -26,6 +26,9 @@ data class CurrentNetworkInfo(
   val bssid: String,
   @DoNotStrip
   @Keep
+  val securityType: WifiSecurityType,
+  @DoNotStrip
+  @Keep
   val ipAddress: String?,
   @DoNotStrip
   @Keep
@@ -44,6 +47,7 @@ data class CurrentNetworkInfo(
     if (other !is CurrentNetworkInfo) return false
     return Objects.deepEquals(this.ssid, other.ssid)
       && Objects.deepEquals(this.bssid, other.bssid)
+      && Objects.deepEquals(this.securityType, other.securityType)
       && Objects.deepEquals(this.ipAddress, other.ipAddress)
       && Objects.deepEquals(this.subnetMask, other.subnetMask)
       && Objects.deepEquals(this.gateway, other.gateway)
@@ -54,6 +58,7 @@ data class CurrentNetworkInfo(
     return arrayOf<Any?>(
       ssid,
       bssid,
+      securityType,
       ipAddress,
       subnetMask,
       gateway,
@@ -69,8 +74,8 @@ data class CurrentNetworkInfo(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, bssid: String, ipAddress: String?, subnetMask: String?, gateway: String?, dnsServers: Array<String>?): CurrentNetworkInfo {
-      return CurrentNetworkInfo(ssid, bssid, ipAddress, subnetMask, gateway, dnsServers)
+    private fun fromCpp(ssid: String, bssid: String, securityType: WifiSecurityType, ipAddress: String?, subnetMask: String?, gateway: String?, dnsServers: Array<String>?): CurrentNetworkInfo {
+      return CurrentNetworkInfo(ssid, bssid, securityType, ipAddress, subnetMask, gateway, dnsServers)
     }
   }
 }
