@@ -1,6 +1,6 @@
 {
   "name": "munim-wifi",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Fast Wi-Fi scanning, connection, and network information for Expo and React Native, powered by Nitro Modules",
   "main": "./lib/commonjs/index.js",
   "module": "./lib/module/index.js",

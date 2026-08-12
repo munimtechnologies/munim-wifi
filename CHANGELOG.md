@@ -1,3 +1,13 @@
+## [0.3.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.0...v0.3.1) (2026-08-12)
+
+### 🐛 Bug Fixes
+
+* **android:** declare CHANGE_NETWORK_STATE + ACCESS_NETWORK_STATE for requestLocalNetwork ([fd92080](https://github.com/munimtechnologies/munim-wifi/commit/fd92080f6e67b9ae2d30a35f1a89f563f6cb68f8))
+
+### 🛠️ Other changes
+
+* restore GitHub Actions workflows ([e8d58f6](https://github.com/munimtechnologies/munim-wifi/commit/e8d58f6a103b209c6d048c54cbb1b48e3da89806))
+
 ## [0.3.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.2.1...v0.3.0) (2026-08-12)
 
 ### ✨ Features
