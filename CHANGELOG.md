@@ -1,3 +1,17 @@
+## [0.3.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.2.1...v0.3.0) (2026-08-12)
+
+### ✨ Features
+
+* connection API v2 - typed security, structured outcomes, network suggestions, local-only hotspot, diagnostics, and network observer ([d7437de](https://github.com/munimtechnologies/munim-wifi/commit/d7437deed96e432a40f2a0ea77778eabd2ed9182))
+
+### 🐛 Bug Fixes
+
+* release from main branch ([ba032a7](https://github.com/munimtechnologies/munim-wifi/commit/ba032a726bc600fcbd45883b9eafd83676f51434))
+
+### 🛠️ Other changes
+
+* drop GitHub Actions; release locally via release:local ([d4ce09d](https://github.com/munimtechnologies/munim-wifi/commit/d4ce09d8020e986745c79bbfaa3dfdea75751b5d))
+
 ## [0.2.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.2.0...v0.2.1) (2026-08-08)
 
 ### 🐛 Bug Fixes
