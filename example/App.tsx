@@ -11,14 +11,19 @@ import {
 } from 'react-native'
 import {
   addNetworkObserverListener,
+  addNetworkSuggestion,
   getCurrentNetwork,
   getNetworkDiagnostics,
+  getNetworkSuggestionStatus,
   getWifiCapabilityStatus,
   isWifiEnabled,
   releaseConnection,
+  removeNetworkSuggestion,
   requestLocalNetwork,
   requestWifiPermission,
   scanNetworks,
+  startLocalOnlyHotspot,
+  stopLocalOnlyHotspot,
   type ConnectionOutcome,
   type CurrentNetworkInfo,
   type NetworkDiagnostics,
@@ -112,6 +117,39 @@ export default function App() {
       setMessage(`Release outcome: ${outcome.status}`)
     })
 
+  const runHotspot = () =>
+    guard(async () => {
+      setMessage('Starting local-only hotspot…')
+      const outcome = await startLocalOnlyHotspot()
+      setMessage(
+        `Hotspot: ${outcome.status}` +
+          (outcome.ssid ? ` ssid=${outcome.ssid}` : '') +
+          (outcome.reservationId ? ` (stopping in 6s)` : ''),
+      )
+      if (outcome.reservationId) {
+        const id = outcome.reservationId
+        setTimeout(async () => {
+          const stopped = await stopLocalOnlyHotspot(id)
+          setMessage(`Hotspot stopped: ${stopped.status}`)
+        }, 6000)
+      }
+    })
+
+  const runSuggestions = () =>
+    guard(async () => {
+      setMessage('Adding network suggestion…')
+      const suggestion = {
+        ssid: DEMO_SSID,
+        security: { type: 'wpa2' as const, passphrase: DEMO_PASSPHRASE },
+      }
+      const added = await addNetworkSuggestion(suggestion)
+      const status = await getNetworkSuggestionStatus(suggestion)
+      const removed = await removeNetworkSuggestion(suggestion)
+      setMessage(
+        `Suggestion add=${added.status} status=${status.status} remove=${removed.status}`,
+      )
+    })
+
   const toggleObserver = () => {
     if (stopObserving.current) {
       stopObserving.current()
@@ -168,6 +206,12 @@ export default function App() {
           </Pressable>
           <Pressable disabled={busy} onPress={releaseLease} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
             <Text style={styles.smallButtonText}>Release</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runHotspot} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Hotspot</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runSuggestions} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Suggest</Text>
           </Pressable>
           <Pressable onPress={toggleObserver} style={({ pressed }) => [styles.smallButton, observing && styles.smallButtonActive, pressed && styles.buttonPressed]}>
             <Text style={styles.smallButtonText}>{observing ? 'Stop observer' : 'Observe'}</Text>
