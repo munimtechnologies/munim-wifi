@@ -936,7 +936,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     )
 
   private fun connectWithSpecifier(options: ConnectionOptions): Promise<Unit> {
-    if (options.isWEP == true) {
+    if (options.isWEP == true || options.security == WifiSecurityType.WEP) {
       return Promise.rejected(UnsupportedOperationException("munim-wifi: WEP is not supported on Android 10+"))
     }
     if (!hasNearbyPermission()) {
