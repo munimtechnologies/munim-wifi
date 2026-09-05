@@ -1,3 +1,14 @@
+## [0.3.2](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.1...v0.3.2) (2026-09-05)
+
+### 🐛 Bug Fixes
+
+* **android:** reject WEP networks in the Android 10+ specifier path ([86235d7](https://github.com/munimtechnologies/munim-wifi/commit/86235d7f978559d090b81059049ae73fd4e0c483))
+* **deps:** override transitive uuid to 11.1.1 (GHSA buffer bounds check) ([8fdbc1f](https://github.com/munimtechnologies/munim-wifi/commit/8fdbc1f32626838769066578aa241d3ef56a35d1))
+
+### 🛠️ Other changes
+
+* regenerate Nitro bindings and refresh dependencies ([5a47cb6](https://github.com/munimtechnologies/munim-wifi/commit/5a47cb63bee9c3e2a8d2fef83f4c7199601a7e18)), closes [margelo/nitro#1573](https://github.com/margelo/nitro/issues/1573)
+
 ## [0.3.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.0...v0.3.1) (2026-08-12)
 
 ### 🐛 Bug Fixes
