@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /// See ``HybridMunimWifiSpec``
 public protocol HybridMunimWifiSpec_protocol: HybridObject {

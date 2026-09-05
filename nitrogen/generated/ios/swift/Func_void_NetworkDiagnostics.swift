@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /**
  * Wraps a Swift `(_ value: NetworkDiagnostics) -> Void` as a class.

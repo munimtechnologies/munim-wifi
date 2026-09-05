@@ -78,7 +78,7 @@
     ]
   },
   "devDependencies": {
-    "@expo/config-plugins": "^57.0.7",
+    "@expo/config-plugins": "57.0.9",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",
     "@types/jest": "^29.5.12",

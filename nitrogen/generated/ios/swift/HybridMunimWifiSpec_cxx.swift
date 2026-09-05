@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /**
  * A class implementation that bridges HybridMunimWifiSpec over to C++.

@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /**
  * Represents an instance of `HotspotOutcome`, backed by a C++ struct.

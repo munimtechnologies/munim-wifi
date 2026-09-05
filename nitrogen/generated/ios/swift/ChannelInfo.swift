@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /**
  * Represents an instance of `ChannelInfo`, backed by a C++ struct.

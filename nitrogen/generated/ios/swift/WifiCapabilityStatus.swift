@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /**
  * Represents an instance of `WifiCapabilityStatus`, backed by a C++ struct.

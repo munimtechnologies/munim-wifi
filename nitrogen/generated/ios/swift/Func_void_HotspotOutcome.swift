@@ -6,7 +6,6 @@
 ///
 
 import NitroModules
-import CxxStdlib
 
 /**
  * Wraps a Swift `(_ value: HotspotOutcome) -> Void` as a class.
