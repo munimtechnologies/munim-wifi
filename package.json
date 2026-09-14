@@ -109,6 +109,8 @@
     "brace-expansion@1.x": "1.1.18",
     "brace-expansion@2.x": "2.1.4",
     "brace-expansion@>=3 <6": "5.0.9",
+    "js-yaml@3.x": "3.15.2",
+    "js-yaml@4.x": "4.3.2",
     "minimatch@3.x": "3.1.5",
     "picomatch@2.x": "2.3.2",
     "uuid": "11.1.1",
