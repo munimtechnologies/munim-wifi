@@ -1,3 +1,9 @@
+## [0.3.3](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.2...v0.3.3) (2026-09-14)
+
+### 🛠️ Other changes
+
+* **deps:** override js-yaml to 3.15.2/4.3.2 for GHSA-2883-xcg3-v3hh ([11455f3](https://github.com/munimtechnologies/munim-wifi/commit/11455f31a06d32b971bce37a2afc51193ed58cdc))
+
 ## [0.3.2](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.1...v0.3.2) (2026-09-05)
 
 ### 🐛 Bug Fixes
