@@ -1,3 +1,9 @@
+## [0.4.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.4.0...v0.4.1) (2026-09-19)
+
+### 🐛 Bug Fixes
+
+* **ios:** stop optional option objects arriving as garbage in Release builds ([5580c96](https://github.com/munimtechnologies/munim-wifi/commit/5580c966984e6107c751901f0095183a705b8b61)), closes [margelo/nitro#1319](https://github.com/margelo/nitro/issues/1319) [swiftlang/swift#84848](https://github.com/swiftlang/swift/issues/84848)
+
 ## [0.4.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.3...v0.4.0) (2026-09-19)
 
 ### ✨ Features
