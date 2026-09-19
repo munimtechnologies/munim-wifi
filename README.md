@@ -99,7 +99,11 @@
 
 - 🔌 **Native Connection Flows:** Android `WifiNetworkSpecifier` and iOS `NEHotspotConfiguration`.
 - 📱 **Current Network Information:** Read SSID, BSSID, IP address, gateway, DNS, and subnet data where available.
-- 🌐 **Local Routing:** Android 10+ binds the app process to the approved requested network until `disconnect()`.
+- 🌐 **Local Routing:** Android 10+ binds the app process to the approved requested network until `disconnect()`, then restores the previous binding.
+- 🏢 **Enterprise and Passpoint:** WPA2/WPA3-Enterprise (PEAP, TTLS, TLS, …) and Hotspot 2.0 on both platforms.
+- 🔎 **SSID-prefix joins:** Join the first network whose SSID starts with a prefix (iOS 13+, Android 10+).
+- 🛰️ **Service Discovery:** Browse Bonjour/mDNS services (`NsdManager` / `NWBrowser`) with resolved host, port and TXT records.
+- 🌍 **Internet Reachability:** OS-validated reachability plus an optional HTTP probe.
 - ✅ **Explicit Failures:** Invalid options, missing permissions, disabled Wi-Fi, timeouts, and unsupported WEP flows reject clearly.
 
 ### Additional Features
@@ -121,15 +125,23 @@
 | Frequency and channel | ❌ | ✅ | Android covers 2.4, 5, 6, and 60 GHz channel calculations. |
 | Capabilities/security | ⚠️ Security state only | ✅ | iOS does not expose Android-style capability strings. |
 | Current network | ✅ | ✅ | Values can be hidden by permissions or OS privacy behavior. |
-| Local IPv4 address | ✅ | ✅ | Returns `null` when no Wi-Fi interface is available. |
+| Local IPv4/IPv6 addresses | ✅ | ✅ | `getIPAddress()` (IPv4) and `getIPAddresses()` (IPv4 + IPv6). |
 | Connect | ✅ | ✅ | Both platforms use system-controlled user-consent flows. |
-| Disconnect | ⚠️ Removes app configuration | ✅ | iOS cannot force-disconnect arbitrary saved networks. |
-| Continuous scan | ⚠️ One current-network result | ✅ | Android scan throttling still applies. |
+| Disconnect | ⚠️ Removes app configuration | ✅ | Resolves `false` when there was nothing this app could release. |
+| Continuous scan | ⚠️ One current-network result | ✅ | Throttled batches are flagged (`info.throttled`), never passed off as fresh. |
 | Wi-Fi fingerprint | ⚠️ Current network only | ✅ | No location is inferred by the library. |
 | Security type | ⚠️ Coarse (open/WEP/personal/enterprise) | ✅ Full | Android classifies WPA2/WPA3/OWE/EAP/Passpoint from scan capabilities. |
 | Local network request | ✅ `joinOnce` configuration | ✅ Android 10+ specifier | Structured `ConnectionOutcome` on both platforms. |
 | Persistent configuration | ✅ `NEHotspotConfiguration` | ⚠️ Via network suggestion | `configureNetwork()`. |
 | Network suggestions | ❌ `unsupported` outcome | ✅ Android 10+ | `NEHotspotConfiguration` is the iOS analog. |
+| Suggestion connection events | ❌ | ✅ Android 10+ | Post-connection broadcast; failures on Android 11+. |
+| WPA2/WPA3-Enterprise | ✅ PEAP/TTLS/TLS/FAST | ✅ PEAP/TTLS/TLS/PWD/SIM/AKA/AKA' | `security: { type: 'enterprise', eap }`. |
+| Passpoint (Hotspot 2.0) | ✅ | ✅ Android 11+ (suggestions) | `security: { type: 'passpoint', passpoint, eap }`. |
+| SSID-prefix join | ✅ iOS 13+ | ⚠️ `requestLocalNetwork` only | `ssidPrefix: true`. |
+| Configured SSIDs | ✅ | ✅ (app suggestions) | `getConfiguredSSIDs()`. |
+| Service discovery (DNS-SD) | ✅ `NWBrowser` | ✅ `NsdManager` | iOS needs `NSBonjourServices`. |
+| Local network permission | ✅ Prompt + result | ✅ Always granted | `requestLocalNetworkPermission()`. |
+| Internet reachability | ✅ `NWPath` | ✅ `NET_CAPABILITY_VALIDATED` | Optional HTTP probe on both. |
 | Wi-Fi settings intent | ❌ | ✅ Android 10+ | `requestUserSavedNetwork()` opens the system panel. |
 | Local-only hotspot | ❌ | ✅ Android 8+ | Returns generated SSID/passphrase/security. |
 | Network diagnostics | ⚠️ Path-level | ✅ Capability + link level | `validated`/`captivePortal` are Android-only. |
@@ -173,7 +185,30 @@ Add the included config plugin to `app.json`:
 }
 ```
 
-The plugin adds the Android Wi-Fi, location, and Nearby Wi-Fi Devices permissions; the iOS location description; and the iOS Access Wi-Fi Information and Hotspot Configuration entitlements.
+The plugin adds the Android Wi-Fi, location, and Nearby Wi-Fi Devices permissions; the iOS location and local-network descriptions and `NSBonjourServices`; and the iOS Access Wi-Fi Information and Hotspot Configuration entitlements.
+
+All plugin options:
+
+```json
+[
+  "munim-wifi",
+  {
+    "locationPermission": "Allow this app to find nearby Wi-Fi networks.",
+    "localNetworkPermission": "Allow this app to find devices on your local network.",
+    "bonjourServices": ["_http._tcp", "_ipp._tcp"],
+    "android": {
+      "locationOnAndroid13Plus": true,
+      "neverForLocation": true
+    }
+  }
+]
+```
+
+- `locationPermission`: iOS `NSLocationWhenInUseUsageDescription`.
+- `localNetworkPermission`: iOS `NSLocalNetworkUsageDescription`.
+- `bonjourServices`: service types for `startServiceDiscovery()`, added to `NSBonjourServices` next to `_munimwifi._tcp` (used by `requestLocalNetworkPermission()`).
+- `android.locationOnAndroid13Plus` (default `true`): keep `ACCESS_FINE_LOCATION` on Android 13+ so `getCurrentNetwork()` can read the connected SSID/BSSID. Set `false` to cap location at API 32; scanning then needs only Nearby Wi-Fi Devices.
+- `android.neverForLocation` (default `true`): declare `NEARBY_WIFI_DEVICES` with `usesPermissionFlags="neverForLocation"`. Set `false` only if your app derives physical location from Wi-Fi scans (scans then also need location on Android 13+).
 
 Generate or rebuild native projects after changing the plugin configuration:
 
@@ -200,17 +235,36 @@ Add a location usage message to `Info.plist`:
 
 ### Android Setup
 
-Bare React Native apps should merge these permissions into the application manifest:
+The library manifest already declares what it needs and is merged into your app:
 
 ```xml
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-<uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+<uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="32" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="32" />
+<uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+    android:usesPermissionFlags="neverForLocation" />
 ```
 
-The Expo config plugin adds them automatically.
+Location is capped at API 32 because Android 13+ gates scans with `NEARBY_WIFI_DEVICES` instead. If your app reads the connected network's SSID/BSSID (`getCurrentNetwork()`, `getNetworkSuggestionStatus()`'s `active` state) or uses suggestion connection events on Android 13+, lift the cap in your app manifest (add `xmlns:tools="http://schemas.android.com/tools"` to `<manifest>`):
+
+```xml
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+    tools:remove="android:maxSdkVersion" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"
+    tools:remove="android:maxSdkVersion" />
+```
+
+If your app derives physical location from Wi-Fi scans, also drop the `neverForLocation` assertion (scans then need location as well as Nearby Wi-Fi Devices on 13+):
+
+```xml
+<uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+    tools:remove="android:usesPermissionFlags" />
+```
+
+The Expo config plugin does this for you (see its `android` options above).
 
 ## Permissions and OS Behavior
 
@@ -220,13 +274,32 @@ Apple's `NEHotspotNetwork.fetchCurrent()` returns a network only when the app ha
 
 `disconnect()` can remove only a Wi-Fi configuration created by the app. It cannot remove or force-disconnect a network configured by the user or another app.
 
-### Android scan and connection access
+### Which permission each API needs
 
-Wi-Fi scans and scan results require precise-location permission. Android 13+ connection management also uses the Nearby Wi-Fi Devices runtime permission. See [Android Wi-Fi permissions](https://developer.android.com/develop/connectivity/wifi/wifi-permissions).
+`requestWifiPermission()` asks for what scanning needs on the running OS (Nearby Wi-Fi Devices on Android 13+, precise location below; plus location on 13+ when your manifest declares it). Everything else is checked at call time.
 
-Android throttles `WifiManager.startScan()`. Foreground apps can still receive cached results when the OS declines a fresh scan, so the `timestamp` field records when this package converted the result, not when the radio last observed it.
+| API | Android 13+ (API 33+) | Android 10–12L (API 29–32) | Android 9 and below | iOS |
+| --- | --- | --- | --- | --- |
+| `scanNetworks`, `startScan`, `getSSIDs`, `getWifiFingerprint`, `getRSSI`, `getBSSID`, `getChannelInfo`, `getNetworkInfo` | `NEARBY_WIFI_DEVICES` (plus `ACCESS_FINE_LOCATION` if the app did not declare `neverForLocation`) | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION` | Access Wi-Fi Information entitlement + location (current network only) |
+| `getCurrentNetwork`, `CurrentNetworkInfo` in diagnostics | `ACCESS_FINE_LOCATION` (the SSID/BSSID is redacted without it) | `ACCESS_FINE_LOCATION` | location | entitlement + location, or a network this app configured |
+| `getIPAddress`, `getIPAddresses`, `getNetworkDiagnostics`, observer, `isInternetReachable` | none | none | none | none |
+| `connectToNetwork`, `requestLocalNetwork` | `NEARBY_WIFI_DEVICES` | none | none (legacy `WifiManager`) | Hotspot Configuration entitlement |
+| `configureNetwork`, suggestions | none (`CHANGE_WIFI_STATE`) | none | unsupported | Hotspot Configuration entitlement |
+| Suggestion connection events | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` | unsupported | unsupported |
+| `startLocalOnlyHotspot` | `NEARBY_WIFI_DEVICES` (plus location without `neverForLocation`) | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` | unsupported |
+| `startServiceDiscovery` | none | none | none | Local Network permission + `NSBonjourServices` entry |
 
-Android 10+ connections use `WifiNetworkSpecifier`. The OS presents a system approval flow and may create a local-only connection. The library binds the app process to the approved network until `disconnect()` so app traffic can reach that network.
+See [Android Wi-Fi permissions](https://developer.android.com/develop/connectivity/wifi/wifi-permissions).
+
+### Android scan throttling
+
+Android throttles `WifiManager.startScan()` (foreground apps: 4 scans every 2 minutes). When a continuous-scan request is refused, the cached batch is still delivered but flagged: `addNetworksFoundListener((networks, info) => …)` receives `info.throttled === true` and `info.fresh === false`, and `addScanThrottledListener` fires. `scanNetworks({ allowCached: false })` rejects instead of resolving with cached results. Each `WifiNetwork.timestamp` is when the radio last saw that network, so stale entries show their age.
+
+### Android process binding
+
+Android 10+ connections use `WifiNetworkSpecifier`. The OS presents a system approval flow and may create a local-only connection. `connectToNetwork()` binds the app process to the approved network; when that network is lost or `disconnect()` is called, the binding the app had before is restored.
+
+
 
 ## ⚡ Quick Start
 
@@ -267,8 +340,9 @@ import {
   stopScan,
 } from 'munim-wifi'
 
-const removeResults = addNetworksFoundListener((networks) => {
-  console.log('Updated networks:', networks)
+const removeResults = addNetworksFoundListener((networks, info) => {
+  // info.throttled: Android refused a new scan; these are cached results.
+  console.log(info.fresh ? 'Fresh scan' : 'Cached results', networks)
 })
 const removeError = addScanErrorListener(console.warn)
 
@@ -292,7 +366,7 @@ await connectToNetwork({
 })
 
 // Release/remove the app-managed connection later.
-await disconnect()
+const released = await disconnect() // false when nothing app-owned was removed
 ```
 
 Android 10+ and iOS both show system-controlled approval UI. WEP is unsupported on Android 10+.
@@ -303,17 +377,20 @@ Android 10+ and iOS both show system-controlled approval UI. WEP is unsupported 
 
 #### `isWifiEnabled()`
 
-Checks whether Wi-Fi appears available to the app.
+- Android: whether the Wi-Fi radio is on (`WifiManager.isWifiEnabled`).
+- iOS: whether a Wi-Fi interface currently offers a usable path (`NWPathMonitor(requiredInterfaceType: .wifi)`). Apple has no public radio-state API, so Wi-Fi switched on but not joined to any network reports `false`. This does not need location permission.
 
 **Returns:** `Promise<boolean>`
-
-On iOS this is inferred from current-network access because Apple does not expose a public Wi-Fi enabled-state API.
 
 #### `requestWifiPermission()`
 
-Requests precise-location and Nearby Wi-Fi Devices permissions on supported Android versions. On iOS, requests When In Use location authorization when it has not been determined.
+Prompts natively (no `PermissionsAndroid` needed):
 
-**Returns:** `Promise<boolean>`
+- Android 13+: `NEARBY_WIFI_DEVICES`, plus location when the app manifest declares it for this API level.
+- Android 12L and below: `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`.
+- iOS: When-In-Use location when it has not been determined.
+
+**Returns:** `Promise<boolean>` — `true` when Wi-Fi scanning (Android) or current-network access (iOS) is permitted afterwards. Check `getWifiCapabilityStatus().locationPermission` for the location grant on Android 13+.
 
 #### `scanNetworks(options?)`
 
@@ -323,6 +400,7 @@ Runs one Android scan or one iOS current-network lookup.
 
 - `maxResults?` (`number`): Positive integer result limit.
 - `timeout?` (`number`): Android timeout from 250 to 30,000 milliseconds.
+- `allowCached?` (`boolean`): Android. When the OS refuses or fails a fresh scan, resolve with cached results (`true`, default) or reject (`false`).
 
 **Returns:** `Promise<WifiNetwork[]>`
 
@@ -336,7 +414,7 @@ Starts repeated Android scans. On iOS, emits one current-network result because 
 - `interval?` (`number`): 10,000 to 600,000 milliseconds. Defaults to 30,000.
 - `timeout?` (`number`): Validation-compatible one-shot timeout value.
 
-Use `addNetworksFoundListener()`, `addNetworkFoundListener()`, or `addScanErrorListener()` before starting.
+Use `addNetworksFoundListener()`, `addNetworkFoundListener()`, `addScanThrottledListener()`, or `addScanErrorListener()` before starting. Batch listeners receive `(networks, info: ScanResultInfo)` where `info` is `{ fresh, throttled, message? }`.
 
 #### `stopScan()`
 
@@ -378,7 +456,11 @@ Returns `CurrentNetworkInfo` or `null`. Depending on the platform, it can contai
 
 #### `getIPAddress()`
 
-Returns the current Wi-Fi interface's local IPv4 address or `null`.
+Returns the Wi-Fi interface's IPv4 address or `null`. Android reads it from the Wi-Fi network's `LinkProperties`, so no location permission is needed.
+
+#### `getIPAddresses()`
+
+Returns `{ interfaceName?, ipv4: string[], ipv6: string[] }` for the Wi-Fi interface, or `null`. IPv6 lists global and unique-local addresses first and link-local (`fe80::…%en0`) last, so IPv6-only networks are covered. `CurrentNetworkInfo.ipv6Addresses` carries the same IPv6 list.
 
 ### Connection Functions
 
@@ -404,9 +486,9 @@ failed or timed-out attempt. Existing saved configurations are preserved.
 
 #### `disconnect()`
 
-Android releases the requested network and clears process binding. iOS removes the app-created configuration for the current SSID.
+Android releases the requested network and restores the previous process binding. iOS removes the app-created configuration for the current SSID (or the SSID this app last joined when the current network cannot be read).
 
-**Returns:** `Promise<void>`
+**Returns:** `Promise<boolean>` — `true` when something owned by this app was released; `false` when there was nothing to remove (for example on iOS when the current network was configured by the user).
 
 ### Structured Connection Functions
 
@@ -421,8 +503,32 @@ Requests a temporary, app-scoped connection to a nearby network.
 - Android 10+: `WifiNetworkSpecifier` + `ConnectivityManager.requestNetwork`. Set `bindProcess: true` to route this process's traffic through the network. The returned `leaseId` releases the request later.
 - iOS: `NEHotspotConfiguration` with `joinOnce: true`. The returned `leaseId` is the SSID.
 
-**Parameters:** `{ ssid, security, bssid?, timeout?, bindProcess? }` where `security` is one of
-`{ type: 'open' } | { type: 'owe' } | { type: 'wep', passphrase } | { type: 'wpa2', passphrase } | { type: 'wpa3', passphrase }`.
+**Parameters:** `{ ssid, security, bssid?, timeout?, bindProcess?, ssidPrefix? }` where `security` is one of
+`{ type: 'open' } | { type: 'owe' } | { type: 'wep', passphrase } | { type: 'wpa2', passphrase } | { type: 'wpa3', passphrase } | { type: 'enterprise', eap } | { type: 'passpoint', passpoint, eap }`.
+
+- `ssidPrefix: true` joins the first network whose SSID starts with `ssid` (iOS 13+ `NEHotspotConfiguration(ssidPrefix:)` for open/WEP/WPA personal; Android `setSsidPattern` with `PATTERN_PREFIX`).
+- Enterprise works on both platforms (Android through `setWpa2EnterpriseConfig`/`setWpa3Enterprise…`); Passpoint is `unsupported` for Android local requests (use suggestions).
+
+```typescript
+await requestLocalNetwork({
+  ssid: 'Corp',
+  security: {
+    type: 'enterprise',
+    eap: {
+      method: 'peap',
+      phase2: 'mschapv2',
+      identity: 'alice@example.com',
+      password: 'secret',
+      serverDomain: 'radius.example.com',
+      caCertificates: [caPemOrBase64Der],
+    },
+  },
+})
+```
+
+`EnterpriseCredentials`: `method` (`'peap' | 'ttls' | 'tls' | 'fast' | 'pwd' | 'sim' | 'aka' | 'akaPrime'`), `phase2?` (`'none' | 'pap' | 'chap' | 'mschap' | 'mschapv2' | 'gtc' | 'eap'`), `identity?`, `anonymousIdentity?`, `password?`, `serverDomain?` (Android `domainSuffixMatch`, iOS trusted server name), `trustedServerNames?` (iOS), `caCertificates?` (base64 DER or PEM), `clientCertificate?` (base64 PKCS#12, required for TLS) + `clientCertificatePassword?`, `wpa3?` (Android). iOS supports peap/ttls/tls/fast and imports certificates/identities into the app keychain (as `NEHotspotEAPSettings` requires). Android supports peap/ttls/tls/pwd/sim/aka/akaPrime; Android 11+ rejects enterprise suggestions without server validation (`caCertificates` + `serverDomain`).
+
+`PasspointConfig`: `domainName`, `friendlyName?`, `realm?`, `naiRealmNames?`, `roamingConsortiumOIs?` (hex), `mccAndMncs?`, `roamingEnabled?` (iOS). For Passpoint the `ssid` is only an identifier; the configuration ID is the domain name. Android Passpoint credentials: TTLS (username/password), TLS (PKCS#12) or SIM/AKA (`mccAndMncs` required).
 
 **Returns:** `Promise<ConnectionOutcome>` — `status: 'connected'` on success with `mode: 'localNetwork'`.
 
@@ -430,8 +536,8 @@ Requests a temporary, app-scoped connection to a nearby network.
 
 Persists a network configuration.
 
-- iOS: persistent `NEHotspotConfiguration` (`configurationId` is the SSID).
-- Android 10+: routed through a network suggestion, since Android has no direct managed-configuration equivalent.
+- iOS: persistent `NEHotspotConfiguration` (`configurationId` is the SSID, or the domain for Passpoint). Supports `ssidPrefix`, enterprise and Passpoint.
+- Android 10+: routed through a network suggestion, since Android has no direct managed-configuration equivalent. `ssidPrefix` resolves `unsupported`.
 
 **Returns:** `Promise<ConnectionOutcome>` — `status: 'configured'` with `mode: 'managedConfiguration'`.
 
@@ -442,17 +548,30 @@ Persists a network configuration.
 
 #### `releaseConnection(leaseOrConfigurationId)`
 
-Releases a `requestLocalNetwork` lease (Android unregisters the callback and unbinds the process) or removes a configuration (`removeConfiguration(forSSID:)` on iOS). Resolves `status: 'released'`.
+Releases a `requestLocalNetwork` lease (Android unregisters the callback and restores the previous process binding) or removes a configuration (iOS `removeConfiguration(forSSID:)` and, for Passpoint, `removeConfiguration(forHS20DomainName:)`). Resolves `status: 'released'`.
+
+#### `getConfiguredSSIDs()`
+
+iOS: `NEHotspotConfigurationManager.getConfiguredSSIDs()` (configurations this app created). Android: SSIDs (or Passpoint domains) of this app's network suggestions.
+
+**Returns:** `Promise<string[]>`
 
 #### `addNetworkSuggestion(options)` / `removeNetworkSuggestion(options)` / `getNetworkSuggestionStatus(options)`
 
-Android 10+ `WifiManager` network suggestions with `open`, `owe`, `wpa2`, and `wpa3` support plus `hidden` and `appInteractionRequired` flags. Status values include `'added' | 'alreadyExists' | 'removed' | 'notFound' | 'active' | 'inactive'`. On iOS these resolve `status: 'unsupported'` — `NEHotspotConfiguration` (`configureNetwork`) is the closest analog. Enterprise and Passpoint credentials resolve `'unsupported'` on both platforms.
+Android 10+ `WifiManager` network suggestions with `open`, `owe`, `wpa2`, `wpa3`, `enterprise` and (Android 11+) `passpoint` support plus `hidden` and `appInteractionRequired` flags. Status values include `'added' | 'alreadyExists' | 'removed' | 'notFound' | 'active' | 'inactive'`. On iOS these resolve `status: 'unsupported'` — `NEHotspotConfiguration` (`configureNetwork`) is the closest analog.
 
 **Returns:** `Promise<SuggestionOutcome>`
 
+#### `addSuggestionConnectionListener(callback)`
+
+Android 10+: `callback({ type, ssid?, failureReason?, message? })` for
+`'postConnection'` (`ACTION_WIFI_NETWORK_SUGGESTION_POST_CONNECTION`; only for suggestions added with `appInteractionRequired: true`) and, on Android 11+, `'connectionFailure'` with `failureReason` `'association' | 'authentication' | 'ipProvisioning' | 'unknown'` (`addSuggestionConnectionStatusListener`). Both need `ACCESS_FINE_LOCATION`; an `'error'` event says so when it is missing.
+
+**Returns:** an unsubscribe function, or `null` on iOS and Android 9 and below.
+
 #### `startLocalOnlyHotspot()` / `stopLocalOnlyHotspot(reservationId)`
 
-Android 8+ local-only hotspot (requires location and, on Android 13+, Nearby Wi-Fi Devices permissions). The outcome carries the generated `ssid`, `passphrase`, and `securityType`. iOS resolves `status: 'unsupported'`.
+Android 8+ local-only hotspot (requires Nearby Wi-Fi Devices on Android 13+, location below). The outcome carries the generated `ssid`, `passphrase`, and `securityType`. iOS resolves `status: 'unsupported'`.
 
 **Returns:** `Promise<HotspotOutcome>`
 
@@ -473,20 +592,57 @@ One-shot snapshot of the default network.
 
 **Returns:** `Promise<NetworkDiagnostics>`
 
+#### `isInternetReachable(options?)`
+
+- Android: the default network has `NET_CAPABILITY_INTERNET` and `NET_CAPABILITY_VALIDATED` and is not a captive portal.
+- iOS: the default `NWPath` is satisfied.
+- With `{ probeUrl, timeout? }` the answer is an HTTP GET over that network instead (redirects are not followed, only 2xx counts, so captive portals report `false`). Use an https endpoint that returns 204, such as `https://www.google.com/generate_204`; Android blocks cleartext `http` unless your network security config allows it.
+
+**Returns:** `Promise<boolean>`
+
 #### `startNetworkObserver(callback)` / `stopNetworkObserver()` / `addNetworkObserverListener(callback)`
 
 Continuous `NetworkDiagnostics` updates as the default network appears, changes capabilities, or is lost (`state: 'available' | 'lost' | 'unavailable'`). `addNetworkObserverListener` multiplexes many JS listeners over one native observer and returns a cleanup function.
+
+### Local Network Functions
+
+#### `startServiceDiscovery(type, handlers, options?)`
+
+Browses for DNS-SD (Bonjour/mDNS) services such as `'_http._tcp'`.
+
+```typescript
+const discovery = startServiceDiscovery('_http._tcp', {
+  onFound: (service) => console.log(service.name, service.host, service.port, txtRecordToObject(service.txt)),
+  onLost: (service) => console.log('gone', service.id),
+  onError: console.warn,
+})
+// Later:
+discovery.stop() // or stopServiceDiscovery(discovery.id)
+```
+
+- `options`: `domain?` (default `'local.'`), `resolve?` (default `true`), `resolveTimeout?` (1,000–30,000 ms, default 5,000).
+- `DiscoveredService`: `id` (`name.type.domain`, the same for found/lost), `name`, `type`, `domain`, `host?`, `port?`, `addresses`, `txt` (`{ key, value? }[]`), `interfaceName?`, `resolved`. A service is re-reported through `onFound` when its TXT record changes.
+- Android: `NsdManager`; services are resolved one at a time with a timeout.
+- iOS: `NWBrowser`; TXT comes from the browse result, host/port from a short-lived `NWConnection` to the service (opened and cancelled immediately). The type must be listed in `NSBonjourServices` and `NSLocalNetworkUsageDescription` must be set (config plugin: `bonjourServices`, `localNetworkPermission`), otherwise `onError` reports a policy denial.
+
+#### `requestLocalNetworkPermission(timeoutMs?)`
+
+iOS has no API to read the Local Network permission. This publishes and browses a private `_munimwifi._tcp` service (declared by the config plugin; bare apps add it to `NSBonjourServices`), which shows the prompt the first time. Resolves `'granted'` when the browse sees the service, `'denied'` when access is refused (judged after the alert is dismissed), or `'notDetermined'` if nothing is decided within `timeoutMs` (default 30,000). Android needs no runtime permission for mDNS and resolves `'granted'`.
+
+**Returns:** `Promise<PermissionState>`
 
 ### Events
 
 | API/event | Payload | Notes |
 | --- | --- | --- |
 | `addNetworkFoundListener(callback)` | `WifiNetwork` | Called once for every network in a result batch. |
-| `addNetworksFoundListener(callback)` | `WifiNetwork[]` | Called once per continuous result batch. |
+| `addNetworksFoundListener(callback)` | `WifiNetwork[]`, `ScanResultInfo` | Called once per continuous result batch; `info.fresh`/`info.throttled` say whether the batch is new. |
+| `addScanThrottledListener(callback)` | `ScanResultInfo` | Android refused a scan request; the cached batch follows. |
 | `addScanErrorListener(callback)` | `string` | Continuous-scan error message. |
 | `addEventListener('networkFound', callback)` | `WifiNetwork` | Generic listener alias. |
 | `addEventListener('networksFound', callback)` | `WifiNetwork[]` | Generic listener alias. |
 | `addEventListener('scanError', callback)` | `string` | Generic listener alias. |
+| `addEventListener('scanThrottled', callback)` | `ScanResultInfo` | Generic listener alias. |
 
 Each listener function returns a cleanup function. `addListener()` and `removeListeners()` remain deprecated compatibility shims.
 
@@ -512,7 +668,19 @@ interface WifiNetwork {
   capabilities?: string
   isSecure?: boolean
   securityType: WifiSecurityType
-  timestamp?: number
+  timestamp?: number // when the radio last saw it (Android ScanResult.timestamp)
+}
+
+interface ScanResultInfo {
+  fresh: boolean
+  throttled: boolean
+  message?: string
+}
+
+interface IPAddressInfo {
+  interfaceName?: string
+  ipv4: string[]
+  ipv6: string[]
 }
 
 interface CurrentNetworkInfo {
@@ -520,6 +688,7 @@ interface CurrentNetworkInfo {
   bssid: string
   securityType: WifiSecurityType
   ipAddress?: string
+  ipv6Addresses?: string[]
   subnetMask?: string
   gateway?: string
   dnsServers?: string[]
@@ -636,8 +805,10 @@ export function NetworkScanner() {
 
 ### Common Issues
 
-- **The scan returns no Android networks:** Confirm Wi-Fi is enabled, precise-location permission is granted, and device Location Services are enabled. Android can also throttle repeated scans.
+- **The scan returns no Android networks:** Confirm Wi-Fi is enabled and `requestWifiPermission()` resolved `true` (Nearby Wi-Fi Devices on 13+, precise location and device Location Services below). Android also throttles repeated scans — check `info.throttled`.
 - **Android 13+ connection throws a permission error:** Request Nearby Wi-Fi Devices permission with `requestWifiPermission()` before connecting.
+- **`getCurrentNetwork()` is `null` on Android 13+:** reading the connected SSID still needs `ACCESS_FINE_LOCATION`; keep it declared without the API-32 cap (see Android Setup).
+- **iOS service discovery reports a policy denial:** add the type to `NSBonjourServices`, set `NSLocalNetworkUsageDescription`, and allow Local Network access (Settings › Privacy & Security › Local Network).
 - **iOS returns `null` for the current network:** Verify the Access Wi-Fi Information entitlement, precise-location authorization, and Apple's `fetchCurrent()` eligibility conditions.
 - **iOS returns no RSSI/channel/frequency:** Those values are not exposed to ordinary iOS apps. This is expected.
 - **The Android connection cannot reach a local device:** Keep the connection active and do not call `disconnect()` until local traffic is finished; the package binds the app process to the approved network.
