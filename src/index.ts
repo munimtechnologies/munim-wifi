@@ -18,6 +18,7 @@ import type {
   NetworkState,
   PermissionState,
   ScanOptions,
+  ScanResultInfo,
   SuggestionOutcome,
   SuggestionStatus,
   WifiCapabilityStatus,
@@ -39,7 +40,8 @@ export const MunimWifi =
   NitroModules.createHybridObject<MunimWifiSpec>('MunimWifi')
 
 type NetworkListener = (network: WifiNetwork) => void
-type NetworksListener = (networks: WifiNetwork[]) => void
+type NetworksListener = (networks: WifiNetwork[], info: ScanResultInfo) => void
+type ThrottledListener = (info: ScanResultInfo) => void
 type ErrorListener = (message: string) => void
 
 function validateConnectionOptions(options: ConnectionOptions): void {
@@ -145,6 +147,7 @@ function validateLookupSSID<T>(ssid: string, operation: () => Promise<T>): Promi
 const networkListeners = new Set<NetworkListener>()
 const networksListeners = new Set<NetworksListener>()
 const errorListeners = new Set<ErrorListener>()
+const throttledListeners = new Set<ThrottledListener>()
 const diagnosticsListeners = new Set<(diagnostics: NetworkDiagnostics) => void>()
 
 export function isWifiEnabled(): Promise<boolean> {
@@ -171,8 +174,11 @@ export function scanNetworks(options?: ScanOptions): Promise<WifiNetwork[]> {
 export function startScan(options?: ScanOptions): void {
   MunimWifi.startScan(
     options,
-    (networks) => {
-      networksListeners.forEach((listener) => listener(networks))
+    (networks, info) => {
+      if (info.throttled) {
+        throttledListeners.forEach((listener) => listener(info))
+      }
+      networksListeners.forEach((listener) => listener(networks, info))
       networks.forEach((network) => {
         networkListeners.forEach((listener) => listener(network))
       })
@@ -374,10 +380,25 @@ export function addScanErrorListener(callback: ErrorListener): () => void {
   return () => errorListeners.delete(callback)
 }
 
-export function addEventListener(
-  eventName: 'networkFound' | 'networksFound' | 'scanError',
-  callback: NetworkListener | NetworksListener | ErrorListener
+/**
+ * Called when Android declines a continuous-scan request (throttling). The
+ * cached batch is still delivered to `networksFound` listeners with
+ * `info.fresh === false`.
+ */
+export function addScanThrottledListener(
+  callback: ThrottledListener
 ): () => void {
+  throttledListeners.add(callback)
+  return () => throttledListeners.delete(callback)
+}
+
+export function addEventListener(
+  eventName: 'networkFound' | 'networksFound' | 'scanError' | 'scanThrottled',
+  callback: NetworkListener | NetworksListener | ErrorListener | ThrottledListener
+): () => void {
+  if (eventName === 'scanThrottled') {
+    return addScanThrottledListener(callback as ThrottledListener)
+  }
   if (eventName === 'networkFound') {
     return addNetworkFoundListener(callback as NetworkListener)
   }
@@ -416,6 +437,7 @@ export type {
   NetworkState,
   PermissionState,
   ScanOptions,
+  ScanResultInfo,
   SuggestionOutcome,
   SuggestionStatus,
   WifiCapabilityStatus,
@@ -458,6 +480,7 @@ export default {
   addNetworkFoundListener,
   addNetworksFoundListener,
   addScanErrorListener,
+  addScanThrottledListener,
   addEventListener,
   addListener,
   removeListeners,

@@ -26,7 +26,10 @@ data class ScanOptions(
   val timeout: Double?,
   @DoNotStrip
   @Keep
-  val interval: Double?
+  val interval: Double?,
+  @DoNotStrip
+  @Keep
+  val allowCached: Boolean?
 ) {
   /* primary constructor */
 
@@ -36,13 +39,15 @@ data class ScanOptions(
     return Objects.deepEquals(this.maxResults, other.maxResults)
       && Objects.deepEquals(this.timeout, other.timeout)
       && Objects.deepEquals(this.interval, other.interval)
+      && Objects.deepEquals(this.allowCached, other.allowCached)
   }
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
       maxResults,
       timeout,
-      interval
+      interval,
+      allowCached
     ).contentDeepHashCode()
   }
 
@@ -54,8 +59,8 @@ data class ScanOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(maxResults: Double?, timeout: Double?, interval: Double?): ScanOptions {
-      return ScanOptions(maxResults, timeout, interval)
+    private fun fromCpp(maxResults: Double?, timeout: Double?, interval: Double?, allowCached: Boolean?): ScanOptions {
+      return ScanOptions(maxResults, timeout, interval, allowCached)
     }
   }
 }

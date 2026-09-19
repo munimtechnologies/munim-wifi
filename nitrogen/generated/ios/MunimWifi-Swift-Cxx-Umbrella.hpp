@@ -44,6 +44,8 @@ namespace margelo::nitro::munimwifi { enum class NetworkState; }
 namespace margelo::nitro::munimwifi { enum class PermissionState; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `ScanResultInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -76,6 +78,7 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "NetworkState.hpp"
 #include "PermissionState.hpp"
 #include "ScanOptions.hpp"
+#include "ScanResultInfo.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "WifiCapabilityStatus.hpp"

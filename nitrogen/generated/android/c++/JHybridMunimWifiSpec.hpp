@@ -57,7 +57,7 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<bool>> isWifiEnabled() override;
     std::shared_ptr<Promise<bool>> requestWifiPermission() override;
     std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) override;
-    void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
+    void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
     void stopScan() override;
     std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() override;
     std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() override;

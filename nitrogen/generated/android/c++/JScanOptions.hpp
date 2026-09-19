@@ -37,10 +37,13 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JDouble> timeout = this->getFieldValue(fieldTimeout);
       static const auto fieldInterval = clazz->getField<jni::JDouble>("interval");
       jni::local_ref<jni::JDouble> interval = this->getFieldValue(fieldInterval);
+      static const auto fieldAllowCached = clazz->getField<jni::JBoolean>("allowCached");
+      jni::local_ref<jni::JBoolean> allowCached = this->getFieldValue(fieldAllowCached);
       return ScanOptions(
         maxResults != nullptr ? std::make_optional(maxResults->value()) : std::nullopt,
         timeout != nullptr ? std::make_optional(timeout->value()) : std::nullopt,
-        interval != nullptr ? std::make_optional(interval->value()) : std::nullopt
+        interval != nullptr ? std::make_optional(interval->value()) : std::nullopt,
+        allowCached != nullptr ? std::make_optional(static_cast<bool>(allowCached->value())) : std::nullopt
       );
     }
 
@@ -50,14 +53,15 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JScanOptions::javaobject> fromCpp(const ScanOptions& value) {
-      using JSignature = JScanOptions(jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>);
+      using JSignature = JScanOptions(jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         value.maxResults.has_value() ? jni::JDouble::valueOf(value.maxResults.value()) : nullptr,
         value.timeout.has_value() ? jni::JDouble::valueOf(value.timeout.value()) : nullptr,
-        value.interval.has_value() ? jni::JDouble::valueOf(value.interval.value()) : nullptr
+        value.interval.has_value() ? jni::JDouble::valueOf(value.interval.value()) : nullptr,
+        value.allowCached.has_value() ? jni::JBoolean::valueOf(value.allowCached.value()) : nullptr
       );
     }
   };

@@ -18,6 +18,8 @@ namespace margelo::nitro::munimwifi { struct WifiNetwork; }
 namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `ScanResultInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 // Forward declaration of `WifiFingerprint` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `Location` to properly resolve imports.
@@ -66,6 +68,7 @@ namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 #include <optional>
 #include "WifiSecurityType.hpp"
 #include "ScanOptions.hpp"
+#include "ScanResultInfo.hpp"
 #include <functional>
 #include "WifiFingerprint.hpp"
 #include "Location.hpp"
@@ -164,7 +167,7 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
+    inline void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
       auto __result = _swiftPart.startScan(options, onNetworks, onError);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());

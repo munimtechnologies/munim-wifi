@@ -177,14 +177,15 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
 
   func startScan(
     options: ScanOptions?,
-    onNetworks: @escaping (_ networks: [WifiNetwork]) -> Void,
+    onNetworks: @escaping (_ networks: [WifiNetwork], _ info: ScanResultInfo) -> Void,
     onError: ((_ message: String) -> Void)?
   ) throws {
     try validate(options: options)
     fetchCurrentNetwork { network in
       let networks = network.map { [self.toWifiNetwork($0)] } ?? []
       self.scanResults = networks
-      onNetworks(networks)
+      // iOS has no scan API: this is a live read of the current network only.
+      onNetworks(networks, ScanResultInfo(fresh: true, throttled: false, message: nil))
     }
   }
 

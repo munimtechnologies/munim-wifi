@@ -23,6 +23,7 @@ import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.provider.Settings
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
@@ -139,6 +140,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   override fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>> {
     val promise = Promise<Array<WifiNetwork>>()
     val settled = AtomicBoolean(false)
+    val allowCached = options?.allowCached != false
 
     try {
       ensureCanScan()
@@ -148,16 +150,26 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
           if (intent.action != WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) return
           if (settled.compareAndSet(false, true)) {
             unregisterReceiverSafely(this)
-            promise.resolve(readNetworks(options?.maxResults))
+            val updated = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
+            if (!updated && !allowCached) {
+              promise.reject(IllegalStateException(SCAN_FAILED_MESSAGE))
+            } else {
+              promise.resolve(readNetworks(options?.maxResults))
+            }
           }
         }
       }
 
       registerReceiver(receiver)
+      @Suppress("DEPRECATION")
       val started = wifiManager.startScan()
       if (!started && settled.compareAndSet(false, true)) {
         unregisterReceiverSafely(receiver)
-        promise.resolve(readNetworks(options?.maxResults))
+        if (allowCached) {
+          promise.resolve(readNetworks(options?.maxResults))
+        } else {
+          promise.reject(IllegalStateException(SCAN_THROTTLED_MESSAGE))
+        }
         return promise
       }
 
@@ -176,7 +188,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   override fun startScan(
     options: ScanOptions?,
-    onNetworks: (networks: Array<WifiNetwork>) -> Unit,
+    onNetworks: (networks: Array<WifiNetwork>, info: ScanResultInfo) -> Unit,
     onError: ((message: String) -> Unit)?,
   ) {
     stopScan()
@@ -187,7 +199,15 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         override fun onReceive(receiverContext: Context, intent: Intent) {
           if (intent.action != WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) return
           try {
-            onNetworks(readNetworks(options?.maxResults))
+            val updated = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
+            onNetworks(
+              readNetworks(options?.maxResults),
+              ScanResultInfo(
+                fresh = updated,
+                throttled = false,
+                message = if (updated) null else SCAN_FAILED_MESSAGE,
+              ),
+            )
           } catch (error: Throwable) {
             onError?.invoke(error.message ?: "munim-wifi: failed to read scan results")
           }
@@ -201,7 +221,12 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         if (continuousReceiver == null) return@Runnable
         try {
           if (!wifiManager.startScan()) {
-            onNetworks(readNetworks(options?.maxResults))
+            // Android refused a fresh scan (throttled). Deliver what is cached,
+            // flagged as such, instead of passing it off as a new scan.
+            onNetworks(
+              readNetworks(options?.maxResults),
+              ScanResultInfo(fresh = false, throttled = true, message = SCAN_THROTTLED_MESSAGE),
+            )
           }
         } catch (error: Throwable) {
           onError?.invoke(error.message ?: "munim-wifi: continuous scan failed")
@@ -1218,8 +1243,16 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       isSecure = capabilities.contains("WEP", true) ||
         capabilities.contains("WPA", true) || capabilities.contains("EAP", true),
       securityType = classifySecurity(capabilities),
-      timestamp = System.currentTimeMillis().toDouble(),
+      timestamp = lastSeenWallClockMillis(result),
     )
+  }
+
+  /** ScanResult.timestamp is microseconds since boot; convert it to wall-clock time. */
+  private fun lastSeenWallClockMillis(result: ScanResult): Double {
+    val now = System.currentTimeMillis()
+    if (result.timestamp <= 0L) return now.toDouble()
+    val ageMs = SystemClock.elapsedRealtime() - result.timestamp / 1_000L
+    return (now - ageMs.coerceAtLeast(0L)).toDouble()
   }
 
   private fun classifySecurity(capabilities: String): WifiSecurityType {
@@ -1328,5 +1361,10 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private companion object {
     const val PERMISSION_ACTIVITY_RETRIES = 20
     const val PERMISSION_ACTIVITY_RETRY_DELAY_MS = 250L
+    const val SCAN_THROTTLED_MESSAGE =
+      "munim-wifi: Android declined to start a Wi-Fi scan (foreground apps are limited to 4 scans " +
+        "every 2 minutes); results are cached"
+    const val SCAN_FAILED_MESSAGE =
+      "munim-wifi: the Wi-Fi scan did not complete; results are cached"
   }
 }

@@ -40,6 +40,8 @@ namespace margelo::nitro::munimwifi { enum class NetworkState; }
 namespace margelo::nitro::munimwifi { enum class PermissionState; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `ScanResultInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -74,6 +76,7 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "NetworkState.hpp"
 #include "PermissionState.hpp"
 #include "ScanOptions.hpp"
+#include "ScanResultInfo.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "WifiCapabilityStatus.hpp"
@@ -257,6 +260,28 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   }
   inline ScanOptions get_std__optional_ScanOptions_(const std::optional<ScanOptions>& optional) noexcept {
     return optional.value();
+  }
+  
+  // pragma MARK: std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>
+  /**
+   * Specialized version of `std::function<void(const std::vector<WifiNetwork>&, const ScanResultInfo&)>`.
+   */
+  using Func_void_std__vector_WifiNetwork__ScanResultInfo = std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::vector<WifiNetwork>& / * networks * /, const ScanResultInfo& / * info * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__vector_WifiNetwork__ScanResultInfo_Wrapper final {
+  public:
+    explicit Func_void_std__vector_WifiNetwork__ScanResultInfo_Wrapper(std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>&& func): _function(std::make_unique<std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>>(std::move(func))) {}
+    inline void call(std::vector<WifiNetwork> networks, ScanResultInfo info) const noexcept {
+      _function->operator()(networks, info);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__vector_WifiNetwork__ScanResultInfo create_Func_void_std__vector_WifiNetwork__ScanResultInfo(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__vector_WifiNetwork__ScanResultInfo_Wrapper wrap_Func_void_std__vector_WifiNetwork__ScanResultInfo(Func_void_std__vector_WifiNetwork__ScanResultInfo value) noexcept {
+    return Func_void_std__vector_WifiNetwork__ScanResultInfo_Wrapper(std::move(value));
   }
   
   // pragma MARK: std::function<void(const std::string& /* message */)>

@@ -33,6 +33,11 @@ export interface WifiNetwork {
   capabilities?: string
   isSecure?: boolean
   securityType: WifiSecurityType
+  /**
+   * Wall-clock time (ms since epoch) at which the radio last observed this
+   * network. On Android this comes from ScanResult.timestamp, so cached results
+   * carry their real age; on iOS it is the time of the current-network read.
+   */
   timestamp?: number
 }
 
@@ -214,9 +219,30 @@ export interface ScanOptions {
   maxResults?: number
   timeout?: number
   interval?: number
+  /**
+   * scanNetworks() only. When Android refuses to start a fresh scan (foreground
+   * apps are throttled to 4 scans every 2 minutes) or the scan fails, resolve
+   * with the cached results (true, the default) or reject (false).
+   */
+  allowCached?: boolean
 }
 
-export type WifiScanCallback = (networks: WifiNetwork[]) => void
+/** Describes one batch of scan results delivered by startScan(). */
+export interface ScanResultInfo {
+  /** True when these results come from a scan that completed successfully. */
+  fresh: boolean
+  /**
+   * True when Android declined to start a scan (throttling or a busy radio);
+   * the batch then holds cached results whose `timestamp`s show their age.
+   */
+  throttled: boolean
+  message?: string
+}
+
+export type WifiScanCallback = (
+  networks: WifiNetwork[],
+  info: ScanResultInfo
+) => void
 export type WifiScanErrorCallback = (message: string) => void
 export type NetworkObserverCallback = (diagnostics: NetworkDiagnostics) => void
 
