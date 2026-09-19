@@ -233,6 +233,36 @@ export interface SuggestionOutcome {
   message?: string
 }
 
+export type SuggestionConnectionEventType =
+  | 'postConnection'
+  | 'connectionFailure'
+  | 'error'
+
+export type SuggestionFailureReason =
+  | 'unknown'
+  | 'association'
+  | 'authentication'
+  | 'ipProvisioning'
+
+/** Android network-suggestion connection events. */
+export interface SuggestionConnectionEvent {
+  /**
+   * postConnection: the device connected to one of this app's suggestions
+   * (delivered only for suggestions with appInteractionRequired and when the
+   * app holds precise location). connectionFailure: Android 11+ reports that
+   * connecting to a suggestion failed. error: the listener could not be
+   * installed (for example missing location permission).
+   */
+  type: SuggestionConnectionEventType
+  ssid?: string
+  failureReason?: SuggestionFailureReason
+  message?: string
+}
+
+export type SuggestionConnectionCallback = (
+  event: SuggestionConnectionEvent
+) => void
+
 export type HotspotStatus =
   | 'started'
   | 'stopped'
@@ -522,6 +552,20 @@ export interface MunimWifi
   getNetworkSuggestionStatus(
     options: NativeNetworkSuggestionOptions
   ): Promise<SuggestionOutcome>
+
+  /**
+   * Android 10+: listen for connections to this app's network suggestions
+   * (ACTION_WIFI_NETWORK_SUGGESTION_POST_CONNECTION) and, on Android 11+,
+   * connection failures (addSuggestionConnectionStatusListener). Both require
+   * ACCESS_FINE_LOCATION.
+   *
+   * @returns false when unsupported (iOS, Android 9 and below).
+   */
+  startSuggestionConnectionListener(
+    onEvent: SuggestionConnectionCallback
+  ): boolean
+
+  stopSuggestionConnectionListener(): void
 
   startLocalOnlyHotspot(): Promise<HotspotOutcome>
 

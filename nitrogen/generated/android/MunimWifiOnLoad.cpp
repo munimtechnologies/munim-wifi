@@ -18,6 +18,7 @@
 #include "JHybridMunimWifiSpec.hpp"
 #include "JFunc_void_std__vector_WifiNetwork__ScanResultInfo.hpp"
 #include "JFunc_void_std__string.hpp"
+#include "JFunc_void_SuggestionConnectionEvent.hpp"
 #include "JFunc_void_NetworkDiagnostics.hpp"
 #include "JFunc_void_DiscoveredService.hpp"
 #include <NitroModules/DefaultConstructableObject.hpp>
@@ -47,6 +48,7 @@ void registerAllNatives() {
   margelo::nitro::munimwifi::JHybridMunimWifiSpec::CxxPart::registerNatives();
   margelo::nitro::munimwifi::JFunc_void_std__vector_WifiNetwork__ScanResultInfo_cxx::registerNatives();
   margelo::nitro::munimwifi::JFunc_void_std__string_cxx::registerNatives();
+  margelo::nitro::munimwifi::JFunc_void_SuggestionConnectionEvent_cxx::registerNatives();
   margelo::nitro::munimwifi::JFunc_void_NetworkDiagnostics_cxx::registerNatives();
   margelo::nitro::munimwifi::JFunc_void_DiscoveredService_cxx::registerNatives();
 

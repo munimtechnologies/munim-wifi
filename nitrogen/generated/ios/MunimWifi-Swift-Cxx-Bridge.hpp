@@ -58,6 +58,12 @@ namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `ServiceTxtEntry` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
+// Forward declaration of `SuggestionConnectionEventType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionConnectionEventType; }
+// Forward declaration of `SuggestionConnectionEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionConnectionEvent; }
+// Forward declaration of `SuggestionFailureReason` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionFailureReason; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -101,6 +107,9 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "ScanResultInfo.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "ServiceTxtEntry.hpp"
+#include "SuggestionConnectionEvent.hpp"
+#include "SuggestionConnectionEventType.hpp"
+#include "SuggestionFailureReason.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "WifiCapabilityStatus.hpp"
@@ -946,6 +955,43 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return Func_void_SuggestionOutcome_Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::optional<SuggestionFailureReason>
+  /**
+   * Specialized version of `std::optional<SuggestionFailureReason>`.
+   */
+  using std__optional_SuggestionFailureReason_ = std::optional<SuggestionFailureReason>;
+  inline std::optional<SuggestionFailureReason> create_std__optional_SuggestionFailureReason_(const SuggestionFailureReason& value) noexcept {
+    return std::optional<SuggestionFailureReason>(value);
+  }
+  inline bool has_value_std__optional_SuggestionFailureReason_(const std::optional<SuggestionFailureReason>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline SuggestionFailureReason get_std__optional_SuggestionFailureReason_(const std::optional<SuggestionFailureReason>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::function<void(const SuggestionConnectionEvent& /* event */)>
+  /**
+   * Specialized version of `std::function<void(const SuggestionConnectionEvent&)>`.
+   */
+  using Func_void_SuggestionConnectionEvent = std::function<void(const SuggestionConnectionEvent& /* event */)>;
+  /**
+   * Wrapper class for a `std::function<void(const SuggestionConnectionEvent& / * event * /)>`, this can be used from Swift.
+   */
+  class Func_void_SuggestionConnectionEvent_Wrapper final {
+  public:
+    explicit Func_void_SuggestionConnectionEvent_Wrapper(std::function<void(const SuggestionConnectionEvent& /* event */)>&& func): _function(std::make_unique<std::function<void(const SuggestionConnectionEvent& /* event */)>>(std::move(func))) {}
+    inline void call(SuggestionConnectionEvent event) const noexcept {
+      _function->operator()(event);
+    }
+  private:
+    std::unique_ptr<std::function<void(const SuggestionConnectionEvent& /* event */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_SuggestionConnectionEvent create_Func_void_SuggestionConnectionEvent(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_SuggestionConnectionEvent_Wrapper wrap_Func_void_SuggestionConnectionEvent(Func_void_SuggestionConnectionEvent value) noexcept {
+    return Func_void_SuggestionConnectionEvent_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<Promise<HotspotOutcome>>
   /**
    * Specialized version of `std::shared_ptr<Promise<HotspotOutcome>>`.
@@ -1350,6 +1396,15 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_SuggestionOutcome___ create_Result_std__shared_ptr_Promise_SuggestionOutcome___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<SuggestionOutcome>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<bool>
+  using Result_bool_ = Result<bool>;
+  inline Result_bool_ create_Result_bool_(bool value) noexcept {
+    return Result<bool>::withValue(std::move(value));
+  }
+  inline Result_bool_ create_Result_bool_(const std::exception_ptr& error) noexcept {
+    return Result<bool>::withError(error);
   }
   
   // pragma MARK: Result<std::shared_ptr<Promise<HotspotOutcome>>>

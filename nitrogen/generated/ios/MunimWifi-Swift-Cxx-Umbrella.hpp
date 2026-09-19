@@ -62,6 +62,12 @@ namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `ServiceTxtEntry` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
+// Forward declaration of `SuggestionConnectionEventType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionConnectionEventType; }
+// Forward declaration of `SuggestionConnectionEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionConnectionEvent; }
+// Forward declaration of `SuggestionFailureReason` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionFailureReason; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -103,6 +109,9 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "ScanResultInfo.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "ServiceTxtEntry.hpp"
+#include "SuggestionConnectionEvent.hpp"
+#include "SuggestionConnectionEventType.hpp"
+#include "SuggestionFailureReason.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "WifiCapabilityStatus.hpp"

@@ -34,6 +34,8 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func addNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
   func removeNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
   func getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
+  func startSuggestionConnectionListener(onEvent: @escaping (_ event: SuggestionConnectionEvent) -> Void) throws -> Bool
+  func stopSuggestionConnectionListener() throws -> Void
   func startLocalOnlyHotspot() throws -> Promise<HotspotOutcome>
   func stopLocalOnlyHotspot(reservationId: String) throws -> Promise<HotspotOutcome>
   func disconnect() throws -> Promise<Bool>

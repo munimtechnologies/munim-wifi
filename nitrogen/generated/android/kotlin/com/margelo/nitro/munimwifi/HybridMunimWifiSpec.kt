@@ -120,6 +120,19 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome>
   
+  abstract fun startSuggestionConnectionListener(onEvent: (event: SuggestionConnectionEvent) -> Unit): Boolean
+  
+  @DoNotStrip
+  @Keep
+  private fun startSuggestionConnectionListener_cxx(onEvent: Func_void_SuggestionConnectionEvent): Boolean {
+    val __result = startSuggestionConnectionListener(onEvent)
+    return __result
+  }
+  
+  @DoNotStrip
+  @Keep
+  abstract fun stopSuggestionConnectionListener(): Unit
+  
   @DoNotStrip
   @Keep
   abstract fun startLocalOnlyHotspot(): Promise<HotspotOutcome>
