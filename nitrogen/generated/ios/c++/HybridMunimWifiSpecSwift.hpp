@@ -290,6 +290,14 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
+    inline std::shared_ptr<Promise<std::vector<std::string>>> getConfiguredSSIDs() override {
+      auto __result = _swiftPart.getConfiguredSSIDs();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
     inline std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override {
       auto __result = _swiftPart.addNetworkSuggestion(std::forward<decltype(options)>(options));
       if (__result.hasError()) [[unlikely]] {

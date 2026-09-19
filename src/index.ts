@@ -100,6 +100,11 @@ export interface LocalNetworkRequestOptions extends BaseNetworkOptions {
   security: WifiSecurityOptions
   timeout?: number
   /**
+   * Treat `ssid` as a prefix and join the first network whose SSID starts with
+   * it (iOS 13+ personal/open networks, Android 10+).
+   */
+  ssidPrefix?: boolean
+  /**
    * Route all process traffic through the requested Android network.
    * Defaults to false and has no effect on iOS.
    */
@@ -109,6 +114,8 @@ export interface LocalNetworkRequestOptions extends BaseNetworkOptions {
 export interface NetworkConfigurationOptions extends BaseNetworkOptions {
   security: WifiSecurityOptions
   timeout?: number
+  /** iOS only: configure every network whose SSID starts with `ssid`. */
+  ssidPrefix?: boolean
 }
 
 export interface NetworkSuggestionOptions extends BaseNetworkOptions {
@@ -128,6 +135,7 @@ function toNativeConnectionOptions(
     timeout: options.timeout,
     bindProcess:
       'bindProcess' in options ? options.bindProcess ?? false : false,
+    ssidPrefix: options.ssidPrefix,
   }
   validateNativeConnectionOptions(nativeOptions)
   return nativeOptions
@@ -288,6 +296,11 @@ export function releaseConnection(
     )
   }
   return MunimWifi.releaseConnection(leaseOrConfigurationId)
+}
+
+/** Networks this app configured (iOS hotspot configurations, Android suggestions). */
+export function getConfiguredSSIDs(): Promise<string[]> {
+  return MunimWifi.getConfiguredSSIDs()
 }
 
 export function addNetworkSuggestion(
@@ -492,6 +505,7 @@ export default {
   configureNetwork,
   requestUserSavedNetwork,
   releaseConnection,
+  getConfiguredSSIDs,
   addNetworkSuggestion,
   removeNetworkSuggestion,
   getNetworkSuggestionStatus,
