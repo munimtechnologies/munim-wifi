@@ -309,9 +309,10 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     }
   }
 
-  override fun disconnect(): Promise<Unit> = Promise.parallel {
+  override fun disconnect(): Promise<Boolean> = Promise.parallel {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-      requestedNetworkCallback?.let {
+      val callback = requestedNetworkCallback
+      callback?.let {
         try {
           connectivityManager.unregisterNetworkCallback(it)
         } catch (_: IllegalArgumentException) {
@@ -320,16 +321,17 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       }
       requestedNetworkCallback = null
       restoreSpecifierBinding()
+      callback != null
     } else {
-      temporaryLegacyNetworkId?.let {
+      val removed = temporaryLegacyNetworkId?.let {
         @Suppress("DEPRECATION")
         wifiManager.removeNetwork(it)
-      }
+      } ?: false
       temporaryLegacyNetworkId = null
       @Suppress("DEPRECATION")
-      wifiManager.disconnect()
+      val disconnected = wifiManager.disconnect()
+      removed || disconnected
     }
-    Unit
   }
 
   override fun getIPAddress(): Promise<Variant_NullType_String> = Promise.parallel {

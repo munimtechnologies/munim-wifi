@@ -502,13 +502,14 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
-  std::shared_ptr<Promise<void>> JHybridMunimWifiSpec::disconnect() {
+  std::shared_ptr<Promise<bool>> JHybridMunimWifiSpec::disconnect() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("disconnect");
     auto __result = method(_javaPart);
     return [&]() {
-      auto __promise = Promise<void>::create();
-      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& /* unit */) {
-        __promise->resolve();
+      auto __promise = Promise<bool>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<jni::JBoolean>(__boxedResult);
+        __promise->resolve(static_cast<bool>(__result->value()));
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

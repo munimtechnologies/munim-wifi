@@ -322,7 +322,11 @@ export function stopLocalOnlyHotspot(
   return MunimWifi.stopLocalOnlyHotspot(reservationId)
 }
 
-export function disconnect(): Promise<void> {
+/**
+ * Resolves true when a connection or configuration created by this app was
+ * released, false when there was nothing this app could remove.
+ */
+export function disconnect(): Promise<boolean> {
   return MunimWifi.disconnect()
 }
 

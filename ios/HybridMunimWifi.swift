@@ -129,11 +129,22 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   private var pathMonitor: NWPathMonitor?
   private let observerLock = NSLock()
   private let observerQueue = DispatchQueue(label: "com.munimwifi.network-observer")
+  private let stateLock = NSLock()
+  /// SSID this app last joined, used by disconnect() when fetchCurrent is unavailable.
+  private var _lastJoinedSSID: String?
 
+  private var lastJoinedSSID: String? {
+    get { stateLock.lock(); defer { stateLock.unlock() }; return _lastJoinedSSID }
+    set { stateLock.lock(); _lastJoinedSSID = newValue; stateLock.unlock() }
+  }
+
+  /// iOS has no public API for the Wi-Fi radio state. The most truthful signal
+  /// is whether a Wi-Fi interface currently offers a usable path, which does
+  /// not depend on location authorization the way NEHotspotNetwork does.
   func isWifiEnabled() throws -> Promise<Bool> {
     let promise = Promise<Bool>()
-    fetchCurrentNetwork { network in
-      promise.resolve(withResult: network != nil)
+    Self.snapshotPath(requiredInterfaceType: .wifi) { path in
+      promise.resolve(withResult: path?.status == .satisfied)
     }
     return promise
   }
@@ -284,19 +295,41 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       ssid: options.ssid,
       configuration: configuration,
       isTemporary: isTemporary,
-      onSuccess: { promise.resolve() },
+      onSuccess: { [weak self] in
+        self?.lastJoinedSSID = options.ssid
+        promise.resolve()
+      },
       onFailure: { error in promise.reject(withError: error) }
     ).start(timeout: try normalizedConnectionTimeout(options.timeout))
     return promise
   }
 
-  func disconnect() throws -> Promise<Void> {
-    let promise = Promise<Void>()
-    fetchCurrentNetwork { network in
-      if let network {
-        NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: network.ssid)
+  func disconnect() throws -> Promise<Bool> {
+    let promise = Promise<Bool>()
+    let manager = NEHotspotConfigurationManager.shared
+    manager.getConfiguredSSIDs { [weak self] configuredSSIDs in
+      guard let self else {
+        promise.resolve(withResult: false)
+        return
       }
-      promise.resolve()
+      self.fetchCurrentNetwork { network in
+        let lastJoined = self.lastJoinedSSID
+        // Without location/entitlement access fetchCurrent returns nil; fall
+        // back to the network this app itself joined.
+        let candidate = network?.ssid ?? lastJoined
+        guard
+          let ssid = candidate,
+          configuredSSIDs.contains(ssid) || ssid == lastJoined
+        else {
+          // The current network was configured by the user or another app;
+          // iOS gives apps no way to leave it.
+          promise.resolve(withResult: false)
+          return
+        }
+        manager.removeConfiguration(forSSID: ssid)
+        if ssid == lastJoined { self.lastJoinedSSID = nil }
+        promise.resolve(withResult: true)
+      }
     }
     return promise
   }
@@ -332,7 +365,8 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       ssid: options.ssid,
       configuration: configuration,
       isTemporary: true,
-      onSuccess: {
+      onSuccess: { [weak self] in
+        self?.lastJoinedSSID = options.ssid
         promise.resolve(withResult: ConnectionOutcome(
           status: .connected,
           mode: .localnetwork,
@@ -378,7 +412,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       return promise
     }
     configuration.joinOnce = false
-    NEHotspotConfigurationManager.shared.apply(configuration) { error in
+    NEHotspotConfigurationManager.shared.apply(configuration) { [weak self] error in
       if let error = error as NSError?,
          !(error.domain == NEHotspotConfigurationErrorDomain &&
            error.code == NEHotspotConfigurationError.alreadyAssociated.rawValue) {
@@ -393,6 +427,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
         ))
         return
       }
+      self?.lastJoinedSSID = options.ssid
       promise.resolve(withResult: ConnectionOutcome(
         status: .configured,
         mode: .managedconfiguration,
@@ -420,6 +455,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
 
   func releaseConnection(leaseOrConfigurationId: String) throws -> Promise<ConnectionOutcome> {
     NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: leaseOrConfigurationId)
+    if lastJoinedSSID == leaseOrConfigurationId { lastJoinedSSID = nil }
     return Promise.resolved(withResult: ConnectionOutcome(
       status: .released,
       mode: .managedconfiguration,
@@ -476,19 +512,57 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
 
   func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics> {
     let promise = Promise<NetworkDiagnostics>()
-    let monitor = NWPathMonitor()
-    let queue = DispatchQueue(label: "com.munimwifi.diagnostics")
-    var delivered = false
-    monitor.pathUpdateHandler = { path in
-      guard !delivered else { return }
-      delivered = true
-      monitor.cancel()
+    Self.snapshotPath { [weak self] path in
+      guard let self else {
+        promise.reject(withError: MunimWifiError.released)
+        return
+      }
       self.fetchCurrentNetwork { network in
-        promise.resolve(withResult: self.buildDiagnostics(path: path, network: network))
+        if let path {
+          promise.resolve(withResult: self.buildDiagnostics(path: path, network: network))
+        } else {
+          promise.resolve(withResult: NetworkDiagnostics(
+            timestamp: Date().timeIntervalSince1970 * 1_000,
+            state: .unavailable,
+            validated: nil,
+            captivePortal: nil,
+            metered: nil,
+            constrained: nil,
+            currentNetwork: network.map(self.toCurrentNetworkInfo),
+            linkProperties: nil
+          ))
+        }
       }
     }
-    monitor.start(queue: queue)
     return promise
+  }
+
+  /// Delivers the first path an NWPathMonitor reports (or nil after `timeout`)
+  /// exactly once, then tears the monitor down. The handler captures the
+  /// monitor weakly, and the claim flag is lock-protected, so neither the
+  /// monitor nor the completion can leak or fire twice.
+  static func snapshotPath(
+    requiredInterfaceType: NWInterface.InterfaceType? = nil,
+    timeout: TimeInterval = 3,
+    completion: @escaping (Network.NWPath?) -> Void
+  ) {
+    let monitor = requiredInterfaceType.map { NWPathMonitor(requiredInterfaceType: $0) } ?? NWPathMonitor()
+    let queue = DispatchQueue(label: "com.munimwifi.path-snapshot")
+    let once = OnceFlag()
+    monitor.pathUpdateHandler = { [weak monitor] path in
+      guard once.claim() else { return }
+      monitor?.pathUpdateHandler = nil
+      monitor?.cancel()
+      completion(path)
+    }
+    monitor.start(queue: queue)
+    // Holds the monitor strongly only until the deadline.
+    queue.asyncAfter(deadline: .now() + timeout) {
+      guard once.claim() else { return }
+      monitor.pathUpdateHandler = nil
+      monitor.cancel()
+      completion(nil)
+    }
   }
 
   func startNetworkObserver(onUpdate: @escaping (_ diagnostics: NetworkDiagnostics) -> Void) throws {
@@ -722,6 +796,20 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 }
 
+final class OnceFlag {
+  private let lock = NSLock()
+  private var claimed = false
+
+  /// Returns true for the first caller only.
+  func claim() -> Bool {
+    lock.lock()
+    defer { lock.unlock() }
+    if claimed { return false }
+    claimed = true
+    return true
+  }
+}
+
 private final class LocationPermissionDelegate: NSObject, CLLocationManagerDelegate {
   private var promise: Promise<Bool>?
 
@@ -759,6 +847,7 @@ private enum MunimWifiError: LocalizedError {
   case invalidConnectionTimeout
   case connectionTimeout(String)
   case unexpectedNetwork(expected: String, actual: String)
+  case released
 
   var errorDescription: String? {
     switch self {
@@ -778,6 +867,8 @@ private enum MunimWifiError: LocalizedError {
       return "munim-wifi: connection to \(ssid) timed out"
     case .unexpectedNetwork(let expected, let actual):
       return "munim-wifi: connected to \(actual) instead of requested network \(expected)"
+    case .released:
+      return "munim-wifi: the module was released before the operation finished"
     }
   }
 }

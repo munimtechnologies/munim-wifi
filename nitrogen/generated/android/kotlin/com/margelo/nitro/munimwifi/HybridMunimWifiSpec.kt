@@ -126,7 +126,7 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun disconnect(): Promise<Unit>
+  abstract fun disconnect(): Promise<Boolean>
   
   @DoNotStrip
   @Keep
