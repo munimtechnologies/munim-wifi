@@ -10,10 +10,19 @@
 #include <fbjni/fbjni.h>
 #include "NativeConnectionOptions.hpp"
 
+#include "EapMethod.hpp"
+#include "EapPhase2Method.hpp"
+#include "EnterpriseCredentials.hpp"
+#include "JEapMethod.hpp"
+#include "JEapPhase2Method.hpp"
+#include "JEnterpriseCredentials.hpp"
+#include "JPasspointConfig.hpp"
 #include "JWifiSecurityType.hpp"
+#include "PasspointConfig.hpp"
 #include "WifiSecurityType.hpp"
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace margelo::nitro::munimwifi {
 
@@ -46,13 +55,19 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JDouble> timeout = this->getFieldValue(fieldTimeout);
       static const auto fieldBindProcess = clazz->getField<jni::JBoolean>("bindProcess");
       jni::local_ref<jni::JBoolean> bindProcess = this->getFieldValue(fieldBindProcess);
+      static const auto fieldEnterprise = clazz->getField<JEnterpriseCredentials>("enterprise");
+      jni::local_ref<JEnterpriseCredentials> enterprise = this->getFieldValue(fieldEnterprise);
+      static const auto fieldPasspoint = clazz->getField<JPasspointConfig>("passpoint");
+      jni::local_ref<JPasspointConfig> passpoint = this->getFieldValue(fieldPasspoint);
       return NativeConnectionOptions(
         ssid->toStdString(),
         securityType->toCpp(),
         passphrase != nullptr ? std::make_optional(passphrase->toStdString()) : std::nullopt,
         bssid != nullptr ? std::make_optional(bssid->toStdString()) : std::nullopt,
         timeout != nullptr ? std::make_optional(timeout->value()) : std::nullopt,
-        bindProcess != nullptr ? std::make_optional(static_cast<bool>(bindProcess->value())) : std::nullopt
+        bindProcess != nullptr ? std::make_optional(static_cast<bool>(bindProcess->value())) : std::nullopt,
+        enterprise != nullptr ? std::make_optional(enterprise->toCpp()) : std::nullopt,
+        passpoint != nullptr ? std::make_optional(passpoint->toCpp()) : std::nullopt
       );
     }
 
@@ -62,7 +77,7 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JNativeConnectionOptions::javaobject> fromCpp(const NativeConnectionOptions& value) {
-      using JSignature = JNativeConnectionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>);
+      using JSignature = JNativeConnectionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JEnterpriseCredentials>, jni::alias_ref<JPasspointConfig>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -72,7 +87,9 @@ namespace margelo::nitro::munimwifi {
         value.passphrase.has_value() ? jni::make_jstring(value.passphrase.value()) : nullptr,
         value.bssid.has_value() ? jni::make_jstring(value.bssid.value()) : nullptr,
         value.timeout.has_value() ? jni::JDouble::valueOf(value.timeout.value()) : nullptr,
-        value.bindProcess.has_value() ? jni::JBoolean::valueOf(value.bindProcess.value()) : nullptr
+        value.bindProcess.has_value() ? jni::JBoolean::valueOf(value.bindProcess.value()) : nullptr,
+        value.enterprise.has_value() ? JEnterpriseCredentials::fromCpp(value.enterprise.value()) : nullptr,
+        value.passpoint.has_value() ? JPasspointConfig::fromCpp(value.passpoint.value()) : nullptr
       );
     }
   };

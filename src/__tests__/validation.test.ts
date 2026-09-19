@@ -177,10 +177,120 @@ describe('validateSecurity', () => {
     })
   })
 
-  it('rejects credential types this API does not model', () => {
+  it('rejects passphrases for EAP types and the unknown type', () => {
     expect(() => validateSecurity('enterprise', 'secret')).toThrow(TypeError)
     expect(() => validateSecurity('passpoint', 'secret')).toThrow(TypeError)
     expect(() => validateSecurity('unknown', 'secret')).toThrow(TypeError)
+  })
+
+  describe('enterprise', () => {
+    const peap = {
+      method: 'peap' as const,
+      phase2: 'mschapv2' as const,
+      identity: 'user@example.com',
+      password: 'pa55word',
+      serverDomain: 'radius.example.com',
+    }
+
+    it('requires EAP credentials', () => {
+      expect(() => validateSecurity('enterprise', undefined)).toThrow(TypeError)
+    })
+
+    it('accepts PEAP with identity and password', () => {
+      expect(() =>
+        validateSecurity('enterprise', undefined, peap)
+      ).not.toThrow()
+    })
+
+    it('requires identity and password for PEAP/TTLS', () => {
+      expect(() =>
+        validateSecurity('enterprise', undefined, { ...peap, password: undefined })
+      ).toThrow(TypeError)
+    })
+
+    it('requires a client certificate for EAP-TLS', () => {
+      expect(() =>
+        validateSecurity('enterprise', undefined, { method: 'tls', identity: 'device' })
+      ).toThrow(TypeError)
+      expect(() =>
+        validateSecurity('enterprise', undefined, {
+          method: 'tls',
+          identity: 'device',
+          clientCertificate: 'MIIKZgIBAzCCCi8=',
+        })
+      ).not.toThrow()
+    })
+
+    it('rejects unknown methods and malformed certificates', () => {
+      expect(() =>
+        validateSecurity('enterprise', undefined, {
+          method: 'leap' as 'peap',
+          identity: 'a',
+          password: 'b',
+        })
+      ).toThrow(TypeError)
+      expect(() =>
+        validateSecurity('enterprise', undefined, {
+          ...peap,
+          caCertificates: ['not base64!'],
+        })
+      ).toThrow(TypeError)
+      expect(() =>
+        validateSecurity('enterprise', undefined, {
+          ...peap,
+          caCertificates: [
+            '-----BEGIN CERTIFICATE-----\nMIIBszCCAVmgAwIBAgIU\n-----END CERTIFICATE-----',
+          ],
+        })
+      ).not.toThrow()
+    })
+  })
+
+  describe('passpoint', () => {
+    const eap = { method: 'ttls' as const, identity: 'user', password: 'secret' }
+
+    it('requires a domain name', () => {
+      expect(() => validateSecurity('passpoint', undefined, eap)).toThrow(TypeError)
+      expect(() =>
+        validateSecurity('passpoint', undefined, eap, { domainName: '' })
+      ).toThrow(TypeError)
+    })
+
+    it('accepts a provider with roaming consortium OIs', () => {
+      expect(() =>
+        validateSecurity('passpoint', undefined, eap, {
+          domainName: 'example.com',
+          roamingConsortiumOIs: ['5A03BA0000'],
+          mccAndMncs: ['310026'],
+        })
+      ).not.toThrow()
+    })
+
+    it('rejects malformed OIs and MCC/MNC codes', () => {
+      expect(() =>
+        validateSecurity('passpoint', undefined, eap, {
+          domainName: 'example.com',
+          roamingConsortiumOIs: ['XYZ'],
+        })
+      ).toThrow(TypeError)
+      expect(() =>
+        validateSecurity('passpoint', undefined, eap, {
+          domainName: 'example.com',
+          mccAndMncs: ['31'],
+        })
+      ).toThrow(TypeError)
+    })
+
+    it('treats the SSID as a free-form identifier', () => {
+      expect(() =>
+        validateNativeConnectionOptions({
+          ssid: 'a Passpoint provider identifier longer than 32 bytes',
+          securityType: 'passpoint',
+          enterprise: eap,
+          passpoint: { domainName: 'example.com' },
+        })
+      ).not.toThrow()
+    })
   })
 })
 

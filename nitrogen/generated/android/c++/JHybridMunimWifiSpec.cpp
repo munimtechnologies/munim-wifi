@@ -55,6 +55,14 @@ namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 // Forward declaration of `NativeConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `EnterpriseCredentials` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct EnterpriseCredentials; }
+// Forward declaration of `EapMethod` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapMethod; }
+// Forward declaration of `EapPhase2Method` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapPhase2Method; }
+// Forward declaration of `PasspointConfig` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 
@@ -125,6 +133,14 @@ namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 #include "JConnectionOptions.hpp"
 #include "NativeConnectionOptions.hpp"
 #include "JNativeConnectionOptions.hpp"
+#include "EnterpriseCredentials.hpp"
+#include "JEnterpriseCredentials.hpp"
+#include "EapMethod.hpp"
+#include "JEapMethod.hpp"
+#include "EapPhase2Method.hpp"
+#include "JEapPhase2Method.hpp"
+#include "PasspointConfig.hpp"
+#include "JPasspointConfig.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"
 #include "JNativeNetworkSuggestionOptions.hpp"
 #include "JFunc_void_NetworkDiagnostics.hpp"

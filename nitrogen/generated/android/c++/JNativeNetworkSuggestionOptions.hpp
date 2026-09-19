@@ -10,10 +10,19 @@
 #include <fbjni/fbjni.h>
 #include "NativeNetworkSuggestionOptions.hpp"
 
+#include "EapMethod.hpp"
+#include "EapPhase2Method.hpp"
+#include "EnterpriseCredentials.hpp"
+#include "JEapMethod.hpp"
+#include "JEapPhase2Method.hpp"
+#include "JEnterpriseCredentials.hpp"
+#include "JPasspointConfig.hpp"
 #include "JWifiSecurityType.hpp"
+#include "PasspointConfig.hpp"
 #include "WifiSecurityType.hpp"
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace margelo::nitro::munimwifi {
 
@@ -46,13 +55,19 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JBoolean> hidden = this->getFieldValue(fieldHidden);
       static const auto fieldAppInteractionRequired = clazz->getField<jni::JBoolean>("appInteractionRequired");
       jni::local_ref<jni::JBoolean> appInteractionRequired = this->getFieldValue(fieldAppInteractionRequired);
+      static const auto fieldEnterprise = clazz->getField<JEnterpriseCredentials>("enterprise");
+      jni::local_ref<JEnterpriseCredentials> enterprise = this->getFieldValue(fieldEnterprise);
+      static const auto fieldPasspoint = clazz->getField<JPasspointConfig>("passpoint");
+      jni::local_ref<JPasspointConfig> passpoint = this->getFieldValue(fieldPasspoint);
       return NativeNetworkSuggestionOptions(
         ssid->toStdString(),
         securityType->toCpp(),
         passphrase != nullptr ? std::make_optional(passphrase->toStdString()) : std::nullopt,
         bssid != nullptr ? std::make_optional(bssid->toStdString()) : std::nullopt,
         hidden != nullptr ? std::make_optional(static_cast<bool>(hidden->value())) : std::nullopt,
-        appInteractionRequired != nullptr ? std::make_optional(static_cast<bool>(appInteractionRequired->value())) : std::nullopt
+        appInteractionRequired != nullptr ? std::make_optional(static_cast<bool>(appInteractionRequired->value())) : std::nullopt,
+        enterprise != nullptr ? std::make_optional(enterprise->toCpp()) : std::nullopt,
+        passpoint != nullptr ? std::make_optional(passpoint->toCpp()) : std::nullopt
       );
     }
 
@@ -62,7 +77,7 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JNativeNetworkSuggestionOptions::javaobject> fromCpp(const NativeNetworkSuggestionOptions& value) {
-      using JSignature = JNativeNetworkSuggestionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>);
+      using JSignature = JNativeNetworkSuggestionOptions(jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<JEnterpriseCredentials>, jni::alias_ref<JPasspointConfig>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -72,7 +87,9 @@ namespace margelo::nitro::munimwifi {
         value.passphrase.has_value() ? jni::make_jstring(value.passphrase.value()) : nullptr,
         value.bssid.has_value() ? jni::make_jstring(value.bssid.value()) : nullptr,
         value.hidden.has_value() ? jni::JBoolean::valueOf(value.hidden.value()) : nullptr,
-        value.appInteractionRequired.has_value() ? jni::JBoolean::valueOf(value.appInteractionRequired.value()) : nullptr
+        value.appInteractionRequired.has_value() ? jni::JBoolean::valueOf(value.appInteractionRequired.value()) : nullptr,
+        value.enterprise.has_value() ? JEnterpriseCredentials::fromCpp(value.enterprise.value()) : nullptr,
+        value.passpoint.has_value() ? JPasspointConfig::fromCpp(value.passpoint.value()) : nullptr
       );
     }
   };

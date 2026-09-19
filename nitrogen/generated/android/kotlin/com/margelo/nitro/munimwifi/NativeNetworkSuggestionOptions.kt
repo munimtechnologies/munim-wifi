@@ -35,7 +35,13 @@ data class NativeNetworkSuggestionOptions(
   val hidden: Boolean?,
   @DoNotStrip
   @Keep
-  val appInteractionRequired: Boolean?
+  val appInteractionRequired: Boolean?,
+  @DoNotStrip
+  @Keep
+  val enterprise: EnterpriseCredentials?,
+  @DoNotStrip
+  @Keep
+  val passpoint: PasspointConfig?
 ) {
   /* primary constructor */
 
@@ -48,6 +54,8 @@ data class NativeNetworkSuggestionOptions(
       && Objects.deepEquals(this.bssid, other.bssid)
       && Objects.deepEquals(this.hidden, other.hidden)
       && Objects.deepEquals(this.appInteractionRequired, other.appInteractionRequired)
+      && Objects.deepEquals(this.enterprise, other.enterprise)
+      && Objects.deepEquals(this.passpoint, other.passpoint)
   }
 
   override fun hashCode(): Int {
@@ -57,7 +65,9 @@ data class NativeNetworkSuggestionOptions(
       passphrase,
       bssid,
       hidden,
-      appInteractionRequired
+      appInteractionRequired,
+      enterprise,
+      passpoint
     ).contentDeepHashCode()
   }
 
@@ -69,8 +79,8 @@ data class NativeNetworkSuggestionOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, hidden: Boolean?, appInteractionRequired: Boolean?): NativeNetworkSuggestionOptions {
-      return NativeNetworkSuggestionOptions(ssid, securityType, passphrase, bssid, hidden, appInteractionRequired)
+    private fun fromCpp(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, hidden: Boolean?, appInteractionRequired: Boolean?, enterprise: EnterpriseCredentials?, passpoint: PasspointConfig?): NativeNetworkSuggestionOptions {
+      return NativeNetworkSuggestionOptions(ssid, securityType, passphrase, bssid, hidden, appInteractionRequired, enterprise, passpoint)
     }
   }
 }
