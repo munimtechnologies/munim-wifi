@@ -1,10 +1,32 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <!-- Required by ConnectivityManager.requestNetwork() for requestLocalNetwork/configureNetwork -->
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
+    <!--
+      Wi-Fi scans need location only through Android 12L (API 32). From Android 13
+      they are gated by NEARBY_WIFI_DEVICES instead, which this library declares as
+      neverForLocation.
+
+      Apps that still need location on 13+ (reading the connected network's
+      SSID/BSSID, or deriving location from scans) declare it themselves and drop
+      the cap, e.g.:
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"
+            tools:remove="android:maxSdkVersion" />
+      Apps that derive location from Wi-Fi scans must also remove the flag:
+        <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
+            tools:remove="android:usesPermissionFlags" />
+    -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION"
+        android:maxSdkVersion="32" />
+    <uses-permission
+        android:name="android.permission.NEARBY_WIFI_DEVICES"
+        android:usesPermissionFlags="neverForLocation"
+        tools:targetApi="s" />
 </manifest>

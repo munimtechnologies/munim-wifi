@@ -1,4 +1,3 @@
-import { PermissionsAndroid, Platform } from 'react-native'
 import { NitroModules } from 'react-native-nitro-modules'
 import type {
   CapabilityAvailability,
@@ -152,23 +151,17 @@ export function isWifiEnabled(): Promise<boolean> {
   return MunimWifi.isWifiEnabled()
 }
 
-export async function requestWifiPermission(): Promise<boolean> {
-  if (Platform.OS !== 'android') {
-    return MunimWifi.requestWifiPermission()
-  }
-
-  const permissions: Array<(typeof PermissionsAndroid.PERMISSIONS)[keyof typeof PermissionsAndroid.PERMISSIONS]> = [
-    PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-  ]
-
-  if (Platform.Version >= 33) {
-    permissions.push(PermissionsAndroid.PERMISSIONS.NEARBY_WIFI_DEVICES)
-  }
-
-  const results = await PermissionsAndroid.requestMultiple(permissions)
-  return permissions.every(
-    (permission) => results[permission] === PermissionsAndroid.RESULTS.GRANTED
-  )
+/**
+ * Prompts for the permissions Wi-Fi scanning needs and resolves true when
+ * scanning is allowed afterwards.
+ *
+ * - Android 13+: NEARBY_WIFI_DEVICES, plus location when the app declares it
+ *   (needed to read the connected network's SSID/BSSID).
+ * - Android 12L and below: precise location.
+ * - iOS: When-In-Use location, which gates the current network's SSID/BSSID.
+ */
+export function requestWifiPermission(): Promise<boolean> {
+  return MunimWifi.requestWifiPermission()
 }
 
 export function scanNetworks(options?: ScanOptions): Promise<WifiNetwork[]> {
