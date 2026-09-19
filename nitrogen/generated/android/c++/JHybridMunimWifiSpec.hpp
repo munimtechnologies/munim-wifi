@@ -84,6 +84,7 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() override;
     std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() override;
     std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() override;
+    std::shared_ptr<Promise<bool>> isInternetReachable(const std::optional<ReachabilityOptions>& options) override;
     void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) override;
     void stopNetworkObserver() override;
     std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;

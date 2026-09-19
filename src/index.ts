@@ -23,6 +23,7 @@ import type {
   NetworkState,
   PasspointConfig,
   PermissionState,
+  ReachabilityOptions,
   ScanOptions,
   ScanResultInfo,
   ServiceDiscoveryOptions,
@@ -41,6 +42,7 @@ import type {
 import {
   validateBSSID,
   validateNativeConnectionOptions,
+  validateReachabilityOptions,
   validateResolveTimeout,
   validateSecurity,
   validateServiceType,
@@ -394,6 +396,21 @@ export function getNetworkDiagnostics(): Promise<NetworkDiagnostics> {
   return MunimWifi.getNetworkDiagnostics()
 }
 
+/**
+ * Whether the default network reaches the internet (Android: validated by the
+ * OS; iOS: satisfied path). Pass `probeUrl` for an end-to-end HTTP check.
+ */
+export function isInternetReachable(
+  options?: ReachabilityOptions
+): Promise<boolean> {
+  try {
+    validateReachabilityOptions(options)
+    return MunimWifi.isInternetReachable(options)
+  } catch (error) {
+    return Promise.reject(error)
+  }
+}
+
 export function startNetworkObserver(
   callback: (diagnostics: NetworkDiagnostics) => void
 ): void {
@@ -564,6 +581,7 @@ export type {
   NetworkState,
   PasspointConfig,
   PermissionState,
+  ReachabilityOptions,
   ScanOptions,
   ScanResultInfo,
   ServiceDiscoveryOptions,
@@ -610,6 +628,7 @@ export default {
   getIPAddresses,
   getWifiCapabilityStatus,
   getNetworkDiagnostics,
+  isInternetReachable,
   startNetworkObserver,
   stopNetworkObserver,
   addNetworkObserverListener,

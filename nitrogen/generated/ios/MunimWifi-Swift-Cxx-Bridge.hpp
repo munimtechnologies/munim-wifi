@@ -50,6 +50,8 @@ namespace margelo::nitro::munimwifi { enum class NetworkState; }
 namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `PermissionState` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class PermissionState; }
+// Forward declaration of `ReachabilityOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
 // Forward declaration of `ScanResultInfo` to properly resolve imports.
@@ -103,6 +105,7 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "NetworkState.hpp"
 #include "PasspointConfig.hpp"
 #include "PermissionState.hpp"
+#include "ReachabilityOptions.hpp"
 #include "ScanOptions.hpp"
 #include "ScanResultInfo.hpp"
 #include "ServiceDiscoveryOptions.hpp"
@@ -1185,6 +1188,21 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   Func_void_NetworkDiagnostics create_Func_void_NetworkDiagnostics(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_NetworkDiagnostics_Wrapper wrap_Func_void_NetworkDiagnostics(Func_void_NetworkDiagnostics value) noexcept {
     return Func_void_NetworkDiagnostics_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<ReachabilityOptions>
+  /**
+   * Specialized version of `std::optional<ReachabilityOptions>`.
+   */
+  using std__optional_ReachabilityOptions_ = std::optional<ReachabilityOptions>;
+  inline std::optional<ReachabilityOptions> create_std__optional_ReachabilityOptions_(const ReachabilityOptions& value) noexcept {
+    return std::optional<ReachabilityOptions>(value);
+  }
+  inline bool has_value_std__optional_ReachabilityOptions_(const std::optional<ReachabilityOptions>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline ReachabilityOptions get_std__optional_ReachabilityOptions_(const std::optional<ReachabilityOptions>& optional) noexcept {
+    return optional.value();
   }
   
   // pragma MARK: std::optional<ServiceDiscoveryOptions>

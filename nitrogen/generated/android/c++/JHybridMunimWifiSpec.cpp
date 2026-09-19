@@ -71,6 +71,8 @@ namespace margelo::nitro::munimwifi { struct SuggestionConnectionEvent; }
 namespace margelo::nitro::munimwifi { enum class SuggestionConnectionEventType; }
 // Forward declaration of `SuggestionFailureReason` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class SuggestionFailureReason; }
+// Forward declaration of `ReachabilityOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
 // Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `DiscoveredService` to properly resolve imports.
@@ -162,6 +164,8 @@ namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 #include "JSuggestionConnectionEventType.hpp"
 #include "SuggestionFailureReason.hpp"
 #include "JSuggestionFailureReason.hpp"
+#include "ReachabilityOptions.hpp"
+#include "JReachabilityOptions.hpp"
 #include "JFunc_void_NetworkDiagnostics.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "JServiceDiscoveryOptions.hpp"
@@ -655,6 +659,22 @@ namespace margelo::nitro::munimwifi {
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<JNetworkDiagnostics>(__boxedResult);
         __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<bool>> JHybridMunimWifiSpec::isInternetReachable(const std::optional<ReachabilityOptions>& options) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JReachabilityOptions> /* options */)>("isInternetReachable");
+    auto __result = method(_javaPart, options.has_value() ? JReachabilityOptions::fromCpp(options.value()) : nullptr);
+    return [&]() {
+      auto __promise = Promise<bool>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<jni::JBoolean>(__boxedResult);
+        __promise->resolve(static_cast<bool>(__result->value()));
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
         jni::JniException __jniError(__throwable);

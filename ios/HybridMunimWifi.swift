@@ -602,6 +602,37 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     return promise
   }
 
+  func isInternetReachable(options: ReachabilityOptions?) throws -> Promise<Bool> {
+    let timeout = options?.timeout ?? 5_000
+    guard timeout.isFinite, timeout >= 1_000, timeout <= 30_000 else {
+      throw MunimWifiError.invalidTimeout
+    }
+    let probe: URL?
+    if let probeUrl = options?.probeUrl {
+      guard let url = URL(string: probeUrl), url.scheme == "https" || url.scheme == "http" else {
+        throw MunimWifiError.invalidProbeURL
+      }
+      probe = url
+    } else {
+      probe = nil
+    }
+    let promise = Promise<Bool>()
+    Self.snapshotPath { path in
+      guard let path, path.status == .satisfied else {
+        promise.resolve(withResult: false)
+        return
+      }
+      guard let probe else {
+        promise.resolve(withResult: true)
+        return
+      }
+      ReachabilityProbe.run(url: probe, timeout: timeout / 1_000) { reachable in
+        promise.resolve(withResult: reachable)
+      }
+    }
+    return promise
+  }
+
   /// Delivers the first path an NWPathMonitor reports (or nil after `timeout`)
   /// exactly once, then tears the monitor down. The handler captures the
   /// monitor weakly, and the claim flag is lock-protected, so neither the
@@ -1051,6 +1082,35 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 }
 
+/// One GET that refuses redirects, so a captive portal's 302 counts as unreachable.
+private final class ReachabilityProbe: NSObject, URLSessionTaskDelegate {
+  static func run(url: URL, timeout: TimeInterval, completion: @escaping (Bool) -> Void) {
+    let configuration = URLSessionConfiguration.ephemeral
+    configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+    configuration.timeoutIntervalForRequest = timeout
+    configuration.timeoutIntervalForResource = timeout
+    let session = URLSession(configuration: configuration, delegate: ReachabilityProbe(), delegateQueue: nil)
+    var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: timeout)
+    request.httpMethod = "GET"
+    session.dataTask(with: request) { _, response, error in
+      let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+      completion(error == nil && (200..<300).contains(status))
+    }.resume()
+    // Releases the delegate once the task completes.
+    session.finishTasksAndInvalidate()
+  }
+
+  func urlSession(
+    _ session: URLSession,
+    task: URLSessionTask,
+    willPerformHTTPRedirection response: HTTPURLResponse,
+    newRequest request: URLRequest,
+    completionHandler: @escaping (URLRequest?) -> Void
+  ) {
+    completionHandler(nil)
+  }
+}
+
 final class OnceFlag {
   private let lock = NSLock()
   private var claimed = false
@@ -1104,6 +1164,7 @@ private enum MunimWifiError: LocalizedError {
   case unexpectedNetwork(expected: String, actual: String)
   case released
   case invalidServiceType
+  case invalidProbeURL
   case invalidResolveTimeout
 
   var errorDescription: String? {
@@ -1126,6 +1187,8 @@ private enum MunimWifiError: LocalizedError {
       return "munim-wifi: connected to \(actual) instead of requested network \(expected)"
     case .invalidServiceType:
       return "munim-wifi: service type must look like \"_name._tcp\" or \"_name._udp\""
+    case .invalidProbeURL:
+      return "munim-wifi: probeUrl must be an absolute http(s) URL"
     case .invalidResolveTimeout:
       return "munim-wifi: resolveTimeout must be between 1000 and 30000 milliseconds"
     case .released:

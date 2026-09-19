@@ -43,6 +43,7 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func getIPAddresses() throws -> Promise<Variant_NullType_IPAddressInfo>
   func getWifiCapabilityStatus() throws -> Promise<WifiCapabilityStatus>
   func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics>
+  func isInternetReachable(options: ReachabilityOptions?) throws -> Promise<Bool>
   func startNetworkObserver(onUpdate: @escaping (_ diagnostics: NetworkDiagnostics) -> Void) throws -> Void
   func stopNetworkObserver() throws -> Void
   func startServiceDiscovery(type: String, options: ServiceDiscoveryOptions?, onFound: @escaping (_ service: DiscoveredService) -> Void, onLost: @escaping (_ service: DiscoveredService) -> Void, onError: ((_ message: String) -> Void)?) throws -> String

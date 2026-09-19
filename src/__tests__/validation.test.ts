@@ -2,6 +2,7 @@ import {
   utf8ByteLength,
   validateBSSID,
   validateNativeConnectionOptions,
+  validateReachabilityOptions,
   validateSecurity,
   validateSSID,
   validateSuggestionOptions,
@@ -404,5 +405,24 @@ describe('validateResolveTimeout', () => {
   it('rejects values out of range', () => {
     expect(() => validateResolveTimeout(999)).toThrow(RangeError)
     expect(() => validateResolveTimeout(1500.5)).toThrow(RangeError)
+  })
+})
+
+describe('validateReachabilityOptions', () => {
+  it('accepts no options and https probes', () => {
+    expect(() => validateReachabilityOptions(undefined)).not.toThrow()
+    expect(() =>
+      validateReachabilityOptions({
+        probeUrl: 'https://www.google.com/generate_204',
+        timeout: 3000,
+      })
+    ).not.toThrow()
+  })
+
+  it('rejects non-http URLs and bad timeouts', () => {
+    expect(() =>
+      validateReachabilityOptions({ probeUrl: 'ftp://example.com' })
+    ).toThrow(TypeError)
+    expect(() => validateReachabilityOptions({ timeout: 100 })).toThrow(RangeError)
   })
 })

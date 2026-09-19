@@ -54,6 +54,9 @@ import com.margelo.nitro.munimwifi.Variant_NullType_WifiNetwork
 import com.margelo.nitro.munimwifi.WifiFingerprint
 import com.margelo.nitro.munimwifi.WifiNetwork
 import java.io.ByteArrayInputStream
+import java.io.IOException
+import java.net.HttpURLConnection
+import java.net.URL
 import java.net.Inet4Address
 import java.net.Inet6Address
 import java.security.KeyStore
@@ -988,6 +991,41 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   override fun getNetworkDiagnostics(): Promise<NetworkDiagnostics> = Promise.parallel {
     buildDiagnostics(connectivityManager.activeNetwork, null)
+  }
+
+  override fun isInternetReachable(options: ReachabilityOptions?): Promise<Boolean> = Promise.parallel {
+    val timeout = options?.timeout ?: 5_000.0
+    require(timeout.isFinite() && timeout in 1_000.0..30_000.0) {
+      "munim-wifi: reachability timeout must be between 1000 and 30000 milliseconds"
+    }
+    val network = connectivityManager.activeNetwork ?: return@parallel false
+    val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return@parallel false
+    val probeUrl = options?.probeUrl
+    if (probeUrl == null) {
+      return@parallel capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED) &&
+        !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_CAPTIVE_PORTAL)
+    }
+    val url = URL(probeUrl)
+    require(url.protocol == "https" || url.protocol == "http") {
+      "munim-wifi: probeUrl must be an http(s) URL"
+    }
+    var connection: HttpURLConnection? = null
+    try {
+      connection = (network.openConnection(url) as HttpURLConnection).apply {
+        instanceFollowRedirects = false
+        useCaches = false
+        connectTimeout = timeout.toInt()
+        readTimeout = timeout.toInt()
+        requestMethod = "GET"
+        setRequestProperty("Cache-Control", "no-cache")
+      }
+      connection.responseCode in 200..299
+    } catch (_: IOException) {
+      false
+    } finally {
+      connection?.disconnect()
+    }
   }
 
   override fun startNetworkObserver(onUpdate: (diagnostics: NetworkDiagnostics) -> Unit) {
