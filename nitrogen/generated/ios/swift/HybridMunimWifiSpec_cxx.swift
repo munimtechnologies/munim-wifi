@@ -163,9 +163,9 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func scanNetworks(options: bridge.std__optional_ScanOptions_) -> bridge.Result_std__shared_ptr_Promise_std__vector_WifiNetwork____ {
+  public final func scanNetworks(options: ScanOptions) -> bridge.Result_std__shared_ptr_Promise_std__vector_WifiNetwork____ {
     do {
-      let __result = try self.__implementation.scanNetworks(options: options.value)
+      let __result = try self.__implementation.scanNetworks(options: options)
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_std__vector_WifiNetwork___ in
         let __promise = bridge.create_std__shared_ptr_Promise_std__vector_WifiNetwork___()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_std__vector_WifiNetwork___(__promise)
@@ -188,9 +188,9 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func startScan(options: bridge.std__optional_ScanOptions_, onNetworks: bridge.Func_void_std__vector_WifiNetwork__ScanResultInfo, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_void_ {
+  public final func startScan(options: ScanOptions, onNetworks: bridge.Func_void_std__vector_WifiNetwork__ScanResultInfo, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_void_ {
     do {
-      try self.__implementation.startScan(options: options.value, onNetworks: { () -> ([WifiNetwork], ScanResultInfo) -> Void in
+      try self.__implementation.startScan(options: options, onNetworks: { () -> ([WifiNetwork], ScanResultInfo) -> Void in
         let __wrappedFunction = bridge.wrap_Func_void_std__vector_WifiNetwork__ScanResultInfo(onNetworks)
         return { (__networks: [WifiNetwork], __info: ScanResultInfo) -> Void in
           __wrappedFunction.call({ () -> bridge.std__vector_WifiNetwork_ in
@@ -464,9 +464,9 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func requestUserSavedNetwork(options: bridge.std__optional_NativeConnectionOptions_) -> bridge.Result_std__shared_ptr_Promise_ConnectionOutcome___ {
+  public final func requestUserSavedNetwork(options: NativeConnectionOptions, hasOptions: Bool) -> bridge.Result_std__shared_ptr_Promise_ConnectionOutcome___ {
     do {
-      let __result = try self.__implementation.requestUserSavedNetwork(options: options.value)
+      let __result = try self.__implementation.requestUserSavedNetwork(options: options, hasOptions: hasOptions)
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_ConnectionOutcome__ in
         let __promise = bridge.create_std__shared_ptr_Promise_ConnectionOutcome__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_ConnectionOutcome__(__promise)
@@ -759,9 +759,9 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func isInternetReachable(options: bridge.std__optional_ReachabilityOptions_) -> bridge.Result_std__shared_ptr_Promise_bool___ {
+  public final func isInternetReachable(options: ReachabilityOptions) -> bridge.Result_std__shared_ptr_Promise_bool___ {
     do {
-      let __result = try self.__implementation.isInternetReachable(options: options.value)
+      let __result = try self.__implementation.isInternetReachable(options: options)
       let __resultCpp = { () -> bridge.std__shared_ptr_Promise_bool__ in
         let __promise = bridge.create_std__shared_ptr_Promise_bool__()
         let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_bool__(__promise)
@@ -805,9 +805,9 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func startServiceDiscovery(type: std.string, options: bridge.std__optional_ServiceDiscoveryOptions_, onFound: bridge.Func_void_DiscoveredService, onLost: bridge.Func_void_DiscoveredService, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_std__string_ {
+  public final func startServiceDiscovery(type: std.string, options: ServiceDiscoveryOptions, onFound: bridge.Func_void_DiscoveredService, onLost: bridge.Func_void_DiscoveredService, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_std__string_ {
     do {
-      let __result = try self.__implementation.startServiceDiscovery(type: String(type), options: options.value, onFound: { () -> (DiscoveredService) -> Void in
+      let __result = try self.__implementation.startServiceDiscovery(type: String(type), options: options, onFound: { () -> (DiscoveredService) -> Void in
         let __wrappedFunction = bridge.wrap_Func_void_DiscoveredService(onFound)
         return { (__service: DiscoveredService) -> Void in
           __wrappedFunction.call(__service)

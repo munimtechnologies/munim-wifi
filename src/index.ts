@@ -199,12 +199,12 @@ export function requestWifiPermission(): Promise<boolean> {
 }
 
 export function scanNetworks(options?: ScanOptions): Promise<WifiNetwork[]> {
-  return MunimWifi.scanNetworks(options)
+  return MunimWifi.scanNetworks(options ?? {})
 }
 
 export function startScan(options?: ScanOptions): void {
   MunimWifi.startScan(
-    options,
+    options ?? {},
     (networks, info) => {
       if (info.throttled) {
         throttledListeners.forEach((listener) => listener(info))
@@ -286,9 +286,17 @@ export function requestUserSavedNetwork(
   options?: NetworkConfigurationOptions
 ): Promise<ConnectionOutcome> {
   try {
-    return MunimWifi.requestUserSavedNetwork(
-      options === undefined ? undefined : toNativeConnectionOptions(options)
-    )
+    // Nitro cannot pass an optional struct safely in iOS Release builds
+    // (margelo/nitro#1319), so "no network" is a placeholder plus a flag.
+    return options === undefined
+      ? MunimWifi.requestUserSavedNetwork(
+          { ssid: '', securityType: 'open' },
+          false
+        )
+      : MunimWifi.requestUserSavedNetwork(
+          toNativeConnectionOptions(options),
+          true
+        )
   } catch (error) {
     return Promise.reject(error)
   }
@@ -405,7 +413,7 @@ export function isInternetReachable(
 ): Promise<boolean> {
   try {
     validateReachabilityOptions(options)
-    return MunimWifi.isInternetReachable(options)
+    return MunimWifi.isInternetReachable(options ?? {})
   } catch (error) {
     return Promise.reject(error)
   }
@@ -509,7 +517,7 @@ export function startServiceDiscovery(
   }
   const id = MunimWifi.startServiceDiscovery(
     type.replace(/\.$/, ''),
-    options,
+    options ?? {},
     handlers.onFound,
     handlers.onLost,
     handlers.onError

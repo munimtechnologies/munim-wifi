@@ -101,7 +101,7 @@ public extension EnterpriseCredentials {
   
   @inline(__always)
   var phase2: EapPhase2Method? {
-    return self.__phase2.value
+    return (bridge.has_value_std__optional_EapPhase2Method_(self.__phase2) ? bridge.get_std__optional_EapPhase2Method_(self.__phase2) : nil)
   }
   
   @inline(__always)

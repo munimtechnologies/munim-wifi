@@ -89,7 +89,7 @@ public extension ConnectionOptions {
   
   @inline(__always)
   var security: WifiSecurityType? {
-    return self.__security.value
+    return (bridge.has_value_std__optional_WifiSecurityType_(self.__security) ? bridge.get_std__optional_WifiSecurityType_(self.__security) : nil)
   }
   
   @inline(__always)

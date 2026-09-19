@@ -46,6 +46,6 @@ public extension WifiFingerprint {
   
   @inline(__always)
   var location: Location? {
-    return self.__location.value
+    return (bridge.has_value_std__optional_Location_(self.__location) ? bridge.get_std__optional_Location_(self.__location) : nil)
   }
 }

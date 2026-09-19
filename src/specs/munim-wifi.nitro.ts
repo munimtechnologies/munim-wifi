@@ -446,7 +446,7 @@ export interface MunimWifi
    * @param options - Optional scan configuration including max results and timeout.
    * @returns Promise resolving to array of discovered Wi-Fi networks.
    */
-  scanNetworks(options?: ScanOptions): Promise<WifiNetwork[]>
+  scanNetworks(options: ScanOptions): Promise<WifiNetwork[]>
 
   /**
    * Start continuous Wi-Fi scanning. Results will be emitted via events.
@@ -454,7 +454,7 @@ export interface MunimWifi
    * @param options - Optional scan configuration.
    */
   startScan(
-    options: ScanOptions | undefined,
+    options: ScanOptions,
     onNetworks: WifiScanCallback,
     onError?: WifiScanErrorCallback
   ): void
@@ -540,8 +540,13 @@ export interface MunimWifi
     options: NativeConnectionOptions
   ): Promise<ConnectionOutcome>
 
+  /**
+   * `hasOptions` false means "no network": `options` is then a placeholder
+   * and native code opens the generic Wi-Fi panel.
+   */
   requestUserSavedNetwork(
-    options?: NativeConnectionOptions
+    options: NativeConnectionOptions,
+    hasOptions: boolean
   ): Promise<ConnectionOutcome>
 
   releaseConnection(leaseOrConfigurationId: string): Promise<ConnectionOutcome>
@@ -618,7 +623,7 @@ export interface MunimWifi
    * portal). iOS: NWPath status is satisfied. With `probeUrl`, the result is
    * the outcome of an HTTP request over that network instead.
    */
-  isInternetReachable(options?: ReachabilityOptions): Promise<boolean>
+  isInternetReachable(options: ReachabilityOptions): Promise<boolean>
 
   startNetworkObserver(onUpdate: NetworkObserverCallback): void
 
@@ -635,7 +640,7 @@ export interface MunimWifi
    */
   startServiceDiscovery(
     type: string,
-    options: ServiceDiscoveryOptions | undefined,
+    options: ServiceDiscoveryOptions,
     onFound: ServiceFoundCallback,
     onLost: ServiceLostCallback,
     onError?: WifiScanErrorCallback

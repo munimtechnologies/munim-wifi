@@ -58,10 +58,10 @@ namespace margelo::nitro::munimwifi { enum class PermissionState; }
 #include "WifiNetwork.hpp"
 #include <vector>
 #include "ScanOptions.hpp"
-#include <optional>
 #include "ScanResultInfo.hpp"
 #include <functional>
 #include <string>
+#include <optional>
 #include "WifiFingerprint.hpp"
 #include <NitroModules/Null.hpp>
 #include <variant>
@@ -115,8 +115,8 @@ namespace margelo::nitro::munimwifi {
       // Methods
       virtual std::shared_ptr<Promise<bool>> isWifiEnabled() = 0;
       virtual std::shared_ptr<Promise<bool>> requestWifiPermission() = 0;
-      virtual std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) = 0;
-      virtual void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;
+      virtual std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const ScanOptions& options) = 0;
+      virtual void startScan(const ScanOptions& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;
       virtual void stopScan() = 0;
       virtual std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() = 0;
       virtual std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() = 0;
@@ -128,7 +128,7 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<void>> connectToNetwork(const ConnectionOptions& options) = 0;
       virtual std::shared_ptr<Promise<ConnectionOutcome>> requestLocalNetwork(const NativeConnectionOptions& options) = 0;
       virtual std::shared_ptr<Promise<ConnectionOutcome>> configureNetwork(const NativeConnectionOptions& options) = 0;
-      virtual std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) = 0;
+      virtual std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const NativeConnectionOptions& options, bool hasOptions) = 0;
       virtual std::shared_ptr<Promise<ConnectionOutcome>> releaseConnection(const std::string& leaseOrConfigurationId) = 0;
       virtual std::shared_ptr<Promise<std::vector<std::string>>> getConfiguredSSIDs() = 0;
       virtual std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) = 0;
@@ -143,10 +143,10 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() = 0;
       virtual std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() = 0;
       virtual std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() = 0;
-      virtual std::shared_ptr<Promise<bool>> isInternetReachable(const std::optional<ReachabilityOptions>& options) = 0;
+      virtual std::shared_ptr<Promise<bool>> isInternetReachable(const ReachabilityOptions& options) = 0;
       virtual void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) = 0;
       virtual void stopNetworkObserver() = 0;
-      virtual std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;
+      virtual std::string startServiceDiscovery(const std::string& type, const ServiceDiscoveryOptions& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;
       virtual void stopServiceDiscovery(const std::string& discoveryId) = 0;
       virtual std::shared_ptr<Promise<PermissionState>> requestLocalNetworkPermission(std::optional<double> timeoutMs) = 0;
       virtual void addListener(const std::string& eventName) = 0;

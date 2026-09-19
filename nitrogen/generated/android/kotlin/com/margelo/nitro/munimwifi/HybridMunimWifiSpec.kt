@@ -41,13 +41,13 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>>
+  abstract fun scanNetworks(options: ScanOptions): Promise<Array<WifiNetwork>>
   
-  abstract fun startScan(options: ScanOptions?, onNetworks: (networks: Array<WifiNetwork>, info: ScanResultInfo) -> Unit, onError: ((message: String) -> Unit)?): Unit
+  abstract fun startScan(options: ScanOptions, onNetworks: (networks: Array<WifiNetwork>, info: ScanResultInfo) -> Unit, onError: ((message: String) -> Unit)?): Unit
   
   @DoNotStrip
   @Keep
-  private fun startScan_cxx(options: ScanOptions?, onNetworks: Func_void_std__vector_WifiNetwork__ScanResultInfo, onError: Func_void_std__string?): Unit {
+  private fun startScan_cxx(options: ScanOptions, onNetworks: Func_void_std__vector_WifiNetwork__ScanResultInfo, onError: Func_void_std__string?): Unit {
     val __result = startScan(options, onNetworks, onError?.let { it })
     return __result
   }
@@ -98,7 +98,7 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun requestUserSavedNetwork(options: NativeConnectionOptions?): Promise<ConnectionOutcome>
+  abstract fun requestUserSavedNetwork(options: NativeConnectionOptions, hasOptions: Boolean): Promise<ConnectionOutcome>
   
   @DoNotStrip
   @Keep
@@ -163,7 +163,7 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
-  abstract fun isInternetReachable(options: ReachabilityOptions?): Promise<Boolean>
+  abstract fun isInternetReachable(options: ReachabilityOptions): Promise<Boolean>
   
   abstract fun startNetworkObserver(onUpdate: (diagnostics: NetworkDiagnostics) -> Unit): Unit
   
@@ -178,11 +178,11 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun stopNetworkObserver(): Unit
   
-  abstract fun startServiceDiscovery(type: String, options: ServiceDiscoveryOptions?, onFound: (service: DiscoveredService) -> Unit, onLost: (service: DiscoveredService) -> Unit, onError: ((message: String) -> Unit)?): String
+  abstract fun startServiceDiscovery(type: String, options: ServiceDiscoveryOptions, onFound: (service: DiscoveredService) -> Unit, onLost: (service: DiscoveredService) -> Unit, onError: ((message: String) -> Unit)?): String
   
   @DoNotStrip
   @Keep
-  private fun startServiceDiscovery_cxx(type: String, options: ServiceDiscoveryOptions?, onFound: Func_void_DiscoveredService, onLost: Func_void_DiscoveredService, onError: Func_void_std__string?): String {
+  private fun startServiceDiscovery_cxx(type: String, options: ServiceDiscoveryOptions, onFound: Func_void_DiscoveredService, onLost: Func_void_DiscoveredService, onError: Func_void_std__string?): String {
     val __result = startServiceDiscovery(type, options, onFound, onLost, onError?.let { it })
     return __result
   }

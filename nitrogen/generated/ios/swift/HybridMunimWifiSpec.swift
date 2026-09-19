@@ -15,8 +15,8 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   // Methods
   func isWifiEnabled() throws -> Promise<Bool>
   func requestWifiPermission() throws -> Promise<Bool>
-  func scanNetworks(options: ScanOptions?) throws -> Promise<[WifiNetwork]>
-  func startScan(options: ScanOptions?, onNetworks: @escaping (_ networks: [WifiNetwork], _ info: ScanResultInfo) -> Void, onError: ((_ message: String) -> Void)?) throws -> Void
+  func scanNetworks(options: ScanOptions) throws -> Promise<[WifiNetwork]>
+  func startScan(options: ScanOptions, onNetworks: @escaping (_ networks: [WifiNetwork], _ info: ScanResultInfo) -> Void, onError: ((_ message: String) -> Void)?) throws -> Void
   func stopScan() throws -> Void
   func getSSIDs() throws -> Promise<[String]>
   func getWifiFingerprint() throws -> Promise<WifiFingerprint>
@@ -28,7 +28,7 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func connectToNetwork(options: ConnectionOptions) throws -> Promise<Void>
   func requestLocalNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome>
   func configureNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome>
-  func requestUserSavedNetwork(options: NativeConnectionOptions?) throws -> Promise<ConnectionOutcome>
+  func requestUserSavedNetwork(options: NativeConnectionOptions, hasOptions: Bool) throws -> Promise<ConnectionOutcome>
   func releaseConnection(leaseOrConfigurationId: String) throws -> Promise<ConnectionOutcome>
   func getConfiguredSSIDs() throws -> Promise<[String]>
   func addNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
@@ -43,10 +43,10 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func getIPAddresses() throws -> Promise<Variant_NullType_IPAddressInfo>
   func getWifiCapabilityStatus() throws -> Promise<WifiCapabilityStatus>
   func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics>
-  func isInternetReachable(options: ReachabilityOptions?) throws -> Promise<Bool>
+  func isInternetReachable(options: ReachabilityOptions) throws -> Promise<Bool>
   func startNetworkObserver(onUpdate: @escaping (_ diagnostics: NetworkDiagnostics) -> Void) throws -> Void
   func stopNetworkObserver() throws -> Void
-  func startServiceDiscovery(type: String, options: ServiceDiscoveryOptions?, onFound: @escaping (_ service: DiscoveredService) -> Void, onLost: @escaping (_ service: DiscoveredService) -> Void, onError: ((_ message: String) -> Void)?) throws -> String
+  func startServiceDiscovery(type: String, options: ServiceDiscoveryOptions, onFound: @escaping (_ service: DiscoveredService) -> Void, onLost: @escaping (_ service: DiscoveredService) -> Void, onError: ((_ message: String) -> Void)?) throws -> String
   func stopServiceDiscovery(discoveryId: String) throws -> Void
   func requestLocalNetworkPermission(timeoutMs: Double?) throws -> Promise<PermissionState>
   func addListener(eventName: String) throws -> Void

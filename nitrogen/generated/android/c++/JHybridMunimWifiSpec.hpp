@@ -56,8 +56,8 @@ namespace margelo::nitro::munimwifi {
     // Methods
     std::shared_ptr<Promise<bool>> isWifiEnabled() override;
     std::shared_ptr<Promise<bool>> requestWifiPermission() override;
-    std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) override;
-    void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
+    std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const ScanOptions& options) override;
+    void startScan(const ScanOptions& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
     void stopScan() override;
     std::shared_ptr<Promise<std::vector<std::string>>> getSSIDs() override;
     std::shared_ptr<Promise<WifiFingerprint>> getWifiFingerprint() override;
@@ -69,7 +69,7 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<void>> connectToNetwork(const ConnectionOptions& options) override;
     std::shared_ptr<Promise<ConnectionOutcome>> requestLocalNetwork(const NativeConnectionOptions& options) override;
     std::shared_ptr<Promise<ConnectionOutcome>> configureNetwork(const NativeConnectionOptions& options) override;
-    std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) override;
+    std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const NativeConnectionOptions& options, bool hasOptions) override;
     std::shared_ptr<Promise<ConnectionOutcome>> releaseConnection(const std::string& leaseOrConfigurationId) override;
     std::shared_ptr<Promise<std::vector<std::string>>> getConfiguredSSIDs() override;
     std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override;
@@ -84,10 +84,10 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() override;
     std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() override;
     std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() override;
-    std::shared_ptr<Promise<bool>> isInternetReachable(const std::optional<ReachabilityOptions>& options) override;
+    std::shared_ptr<Promise<bool>> isInternetReachable(const ReachabilityOptions& options) override;
     void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) override;
     void stopNetworkObserver() override;
-    std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
+    std::string startServiceDiscovery(const std::string& type, const ServiceDiscoveryOptions& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
     void stopServiceDiscovery(const std::string& discoveryId) override;
     std::shared_ptr<Promise<PermissionState>> requestLocalNetworkPermission(std::optional<double> timeoutMs) override;
     void addListener(const std::string& eventName) override;

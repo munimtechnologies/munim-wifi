@@ -59,7 +59,7 @@ public extension SuggestionConnectionEvent {
   
   @inline(__always)
   var failureReason: SuggestionFailureReason? {
-    return self.__failureReason.value
+    return (bridge.has_value_std__optional_SuggestionFailureReason_(self.__failureReason) ? bridge.get_std__optional_SuggestionFailureReason_(self.__failureReason) : nil)
   }
   
   @inline(__always)

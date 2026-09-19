@@ -136,11 +136,11 @@ public extension NativeConnectionOptions {
   
   @inline(__always)
   var enterprise: EnterpriseCredentials? {
-    return self.__enterprise.value
+    return (bridge.has_value_std__optional_EnterpriseCredentials_(self.__enterprise) ? bridge.get_std__optional_EnterpriseCredentials_(self.__enterprise) : nil)
   }
   
   @inline(__always)
   var passpoint: PasspointConfig? {
-    return self.__passpoint.value
+    return (bridge.has_value_std__optional_PasspointConfig_(self.__passpoint) ? bridge.get_std__optional_PasspointConfig_(self.__passpoint) : nil)
   }
 }

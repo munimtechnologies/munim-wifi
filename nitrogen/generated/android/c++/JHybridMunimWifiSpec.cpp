@@ -240,9 +240,9 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
-  std::shared_ptr<Promise<std::vector<WifiNetwork>>> JHybridMunimWifiSpec::scanNetworks(const std::optional<ScanOptions>& options) {
+  std::shared_ptr<Promise<std::vector<WifiNetwork>>> JHybridMunimWifiSpec::scanNetworks(const ScanOptions& options) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JScanOptions> /* options */)>("scanNetworks");
-    auto __result = method(_javaPart, options.has_value() ? JScanOptions::fromCpp(options.value()) : nullptr);
+    auto __result = method(_javaPart, JScanOptions::fromCpp(options));
     return [&]() {
       auto __promise = Promise<std::vector<WifiNetwork>>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
@@ -265,9 +265,9 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
-  void JHybridMunimWifiSpec::startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
+  void JHybridMunimWifiSpec::startScan(const ScanOptions& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JScanOptions> /* options */, jni::alias_ref<JFunc_void_std__vector_WifiNetwork__ScanResultInfo::javaobject> /* onNetworks */, jni::alias_ref<JFunc_void_std__string::javaobject> /* onError */)>("startScan_cxx");
-    method(_javaPart, options.has_value() ? JScanOptions::fromCpp(options.value()) : nullptr, JFunc_void_std__vector_WifiNetwork__ScanResultInfo_cxx::fromCpp(onNetworks), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
+    method(_javaPart, JScanOptions::fromCpp(options), JFunc_void_std__vector_WifiNetwork__ScanResultInfo_cxx::fromCpp(onNetworks), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
   }
   void JHybridMunimWifiSpec::stopScan() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("stopScan");
@@ -441,9 +441,9 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
-  std::shared_ptr<Promise<ConnectionOutcome>> JHybridMunimWifiSpec::requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeConnectionOptions> /* options */)>("requestUserSavedNetwork");
-    auto __result = method(_javaPart, options.has_value() ? JNativeConnectionOptions::fromCpp(options.value()) : nullptr);
+  std::shared_ptr<Promise<ConnectionOutcome>> JHybridMunimWifiSpec::requestUserSavedNetwork(const NativeConnectionOptions& options, bool hasOptions) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JNativeConnectionOptions> /* options */, jboolean /* hasOptions */)>("requestUserSavedNetwork");
+    auto __result = method(_javaPart, JNativeConnectionOptions::fromCpp(options), hasOptions);
     return [&]() {
       auto __promise = Promise<ConnectionOutcome>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
@@ -667,9 +667,9 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
-  std::shared_ptr<Promise<bool>> JHybridMunimWifiSpec::isInternetReachable(const std::optional<ReachabilityOptions>& options) {
+  std::shared_ptr<Promise<bool>> JHybridMunimWifiSpec::isInternetReachable(const ReachabilityOptions& options) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<JReachabilityOptions> /* options */)>("isInternetReachable");
-    auto __result = method(_javaPart, options.has_value() ? JReachabilityOptions::fromCpp(options.value()) : nullptr);
+    auto __result = method(_javaPart, JReachabilityOptions::fromCpp(options));
     return [&]() {
       auto __promise = Promise<bool>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
@@ -691,9 +691,9 @@ namespace margelo::nitro::munimwifi {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("stopNetworkObserver");
     method(_javaPart);
   }
-  std::string JHybridMunimWifiSpec::startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
+  std::string JHybridMunimWifiSpec::startServiceDiscovery(const std::string& type, const ServiceDiscoveryOptions& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JString>(jni::alias_ref<jni::JString> /* type */, jni::alias_ref<JServiceDiscoveryOptions> /* options */, jni::alias_ref<JFunc_void_DiscoveredService::javaobject> /* onFound */, jni::alias_ref<JFunc_void_DiscoveredService::javaobject> /* onLost */, jni::alias_ref<JFunc_void_std__string::javaobject> /* onError */)>("startServiceDiscovery_cxx");
-    auto __result = method(_javaPart, jni::make_jstring(type), options.has_value() ? JServiceDiscoveryOptions::fromCpp(options.value()) : nullptr, JFunc_void_DiscoveredService_cxx::fromCpp(onFound), JFunc_void_DiscoveredService_cxx::fromCpp(onLost), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
+    auto __result = method(_javaPart, jni::make_jstring(type), JServiceDiscoveryOptions::fromCpp(options), JFunc_void_DiscoveredService_cxx::fromCpp(onFound), JFunc_void_DiscoveredService_cxx::fromCpp(onLost), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
     return __result->toStdString();
   }
   void JHybridMunimWifiSpec::stopServiceDiscovery(const std::string& discoveryId) {
