@@ -35,6 +35,8 @@ namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `SuggestionConnectionEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionConnectionEvent; }
 // Forward declaration of `HotspotOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 // Forward declaration of `IPAddressInfo` to properly resolve imports.
@@ -68,6 +70,7 @@ namespace margelo::nitro::munimwifi { enum class PermissionState; }
 #include "NativeConnectionOptions.hpp"
 #include "SuggestionOutcome.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"
+#include "SuggestionConnectionEvent.hpp"
 #include "HotspotOutcome.hpp"
 #include "IPAddressInfo.hpp"
 #include "WifiCapabilityStatus.hpp"
@@ -128,6 +131,8 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) = 0;
       virtual std::shared_ptr<Promise<SuggestionOutcome>> removeNetworkSuggestion(const NativeNetworkSuggestionOptions& options) = 0;
       virtual std::shared_ptr<Promise<SuggestionOutcome>> getNetworkSuggestionStatus(const NativeNetworkSuggestionOptions& options) = 0;
+      virtual bool startSuggestionConnectionListener(const std::function<void(const SuggestionConnectionEvent& /* event */)>& onEvent) = 0;
+      virtual void stopSuggestionConnectionListener() = 0;
       virtual std::shared_ptr<Promise<HotspotOutcome>> startLocalOnlyHotspot() = 0;
       virtual std::shared_ptr<Promise<HotspotOutcome>> stopLocalOnlyHotspot(const std::string& reservationId) = 0;
       virtual std::shared_ptr<Promise<bool>> disconnect() = 0;

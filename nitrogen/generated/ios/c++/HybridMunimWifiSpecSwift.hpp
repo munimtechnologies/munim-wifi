@@ -52,6 +52,12 @@ namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 namespace margelo::nitro::munimwifi { enum class SuggestionStatus; }
 // Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `SuggestionConnectionEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionConnectionEvent; }
+// Forward declaration of `SuggestionConnectionEventType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionConnectionEventType; }
+// Forward declaration of `SuggestionFailureReason` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionFailureReason; }
 // Forward declaration of `HotspotOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 // Forward declaration of `HotspotStatus` to properly resolve imports.
@@ -104,6 +110,9 @@ namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"
+#include "SuggestionConnectionEvent.hpp"
+#include "SuggestionConnectionEventType.hpp"
+#include "SuggestionFailureReason.hpp"
 #include "HotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
 #include "IPAddressInfo.hpp"
@@ -330,6 +339,20 @@ namespace margelo::nitro::munimwifi {
       }
       auto __value = std::move(__result.value());
       return __value;
+    }
+    inline bool startSuggestionConnectionListener(const std::function<void(const SuggestionConnectionEvent& /* event */)>& onEvent) override {
+      auto __result = _swiftPart.startSuggestionConnectionListener(onEvent);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline void stopSuggestionConnectionListener() override {
+      auto __result = _swiftPart.stopSuggestionConnectionListener();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
     }
     inline std::shared_ptr<Promise<HotspotOutcome>> startLocalOnlyHotspot() override {
       auto __result = _swiftPart.startLocalOnlyHotspot();

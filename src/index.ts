@@ -27,6 +27,9 @@ import type {
   ScanResultInfo,
   ServiceDiscoveryOptions,
   ServiceTxtEntry,
+  SuggestionConnectionEvent,
+  SuggestionConnectionEventType,
+  SuggestionFailureReason,
   SuggestionOutcome,
   SuggestionStatus,
   WifiCapabilityStatus,
@@ -340,6 +343,19 @@ export function getNetworkSuggestionStatus(
   }
 }
 
+/**
+ * Android 10+: be told when the device connects to one of this app's network
+ * suggestions, and (Android 11+) when connecting to one fails. Returns an
+ * unsubscribe function, or null where unsupported (iOS, Android 9-).
+ */
+export function addSuggestionConnectionListener(
+  callback: (event: SuggestionConnectionEvent) => void
+): (() => void) | null {
+  const supported = MunimWifi.startSuggestionConnectionListener(callback)
+  if (!supported) return null
+  return () => MunimWifi.stopSuggestionConnectionListener()
+}
+
 export function startLocalOnlyHotspot(): Promise<HotspotOutcome> {
   return MunimWifi.startLocalOnlyHotspot()
 }
@@ -552,6 +568,9 @@ export type {
   ScanResultInfo,
   ServiceDiscoveryOptions,
   ServiceTxtEntry,
+  SuggestionConnectionEvent,
+  SuggestionConnectionEventType,
+  SuggestionFailureReason,
   SuggestionOutcome,
   SuggestionStatus,
   WifiCapabilityStatus,
@@ -583,6 +602,7 @@ export default {
   addNetworkSuggestion,
   removeNetworkSuggestion,
   getNetworkSuggestionStatus,
+  addSuggestionConnectionListener,
   startLocalOnlyHotspot,
   stopLocalOnlyHotspot,
   disconnect,

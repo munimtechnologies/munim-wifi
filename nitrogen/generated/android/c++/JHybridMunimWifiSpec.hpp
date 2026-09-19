@@ -75,6 +75,8 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override;
     std::shared_ptr<Promise<SuggestionOutcome>> removeNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override;
     std::shared_ptr<Promise<SuggestionOutcome>> getNetworkSuggestionStatus(const NativeNetworkSuggestionOptions& options) override;
+    bool startSuggestionConnectionListener(const std::function<void(const SuggestionConnectionEvent& /* event */)>& onEvent) override;
+    void stopSuggestionConnectionListener() override;
     std::shared_ptr<Promise<HotspotOutcome>> startLocalOnlyHotspot() override;
     std::shared_ptr<Promise<HotspotOutcome>> stopLocalOnlyHotspot(const std::string& reservationId) override;
     std::shared_ptr<Promise<bool>> disconnect() override;

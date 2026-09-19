@@ -65,6 +65,12 @@ namespace margelo::nitro::munimwifi { enum class EapPhase2Method; }
 namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `SuggestionConnectionEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct SuggestionConnectionEvent; }
+// Forward declaration of `SuggestionConnectionEventType` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionConnectionEventType; }
+// Forward declaration of `SuggestionFailureReason` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class SuggestionFailureReason; }
 // Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `DiscoveredService` to properly resolve imports.
@@ -149,6 +155,13 @@ namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 #include "JPasspointConfig.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"
 #include "JNativeNetworkSuggestionOptions.hpp"
+#include "SuggestionConnectionEvent.hpp"
+#include "JFunc_void_SuggestionConnectionEvent.hpp"
+#include "JSuggestionConnectionEvent.hpp"
+#include "SuggestionConnectionEventType.hpp"
+#include "JSuggestionConnectionEventType.hpp"
+#include "SuggestionFailureReason.hpp"
+#include "JSuggestionFailureReason.hpp"
 #include "JFunc_void_NetworkDiagnostics.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "JServiceDiscoveryOptions.hpp"
@@ -528,6 +541,15 @@ namespace margelo::nitro::munimwifi {
       });
       return __promise;
     }();
+  }
+  bool JHybridMunimWifiSpec::startSuggestionConnectionListener(const std::function<void(const SuggestionConnectionEvent& /* event */)>& onEvent) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jboolean(jni::alias_ref<JFunc_void_SuggestionConnectionEvent::javaobject> /* onEvent */)>("startSuggestionConnectionListener_cxx");
+    auto __result = method(_javaPart, JFunc_void_SuggestionConnectionEvent_cxx::fromCpp(onEvent));
+    return static_cast<bool>(__result);
+  }
+  void JHybridMunimWifiSpec::stopSuggestionConnectionListener() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("stopSuggestionConnectionListener");
+    method(_javaPart);
   }
   std::shared_ptr<Promise<HotspotOutcome>> JHybridMunimWifiSpec::startLocalOnlyHotspot() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("startLocalOnlyHotspot");

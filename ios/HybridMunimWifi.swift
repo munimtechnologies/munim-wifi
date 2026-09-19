@@ -535,6 +535,15 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     Promise.resolved(withResult: unsupportedSuggestionOutcome())
   }
 
+  func startSuggestionConnectionListener(
+    onEvent: @escaping (_ event: SuggestionConnectionEvent) -> Void
+  ) throws -> Bool {
+    // iOS has no network-suggestion API.
+    false
+  }
+
+  func stopSuggestionConnectionListener() throws {}
+
   func startLocalOnlyHotspot() throws -> Promise<HotspotOutcome> {
     Promise.resolved(withResult: unsupportedHotspotOutcome(reservationId: nil))
   }

@@ -102,6 +102,9 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     ConcurrentHashMap<String, WifiManager.LocalOnlyHotspotReservation>()
   private var networkObserverCallback: ConnectivityManager.NetworkCallback? = null
   private val discoverySessions = ConcurrentHashMap<String, NsdDiscoverySession>()
+  private var suggestionPostConnectionReceiver: BroadcastReceiver? = null
+  /** WifiManager.SuggestionConnectionStatusListener (API 30), typed Any for older class loading. */
+  private var suggestionStatusListener: Any? = null
   @Volatile
   private var networkObserverEmit: ((NetworkDiagnostics) -> Unit)? = null
   private val observerLock = Any()
@@ -765,6 +768,107 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       else -> SuggestionOutcome(SuggestionStatus.INACTIVE, options.ssid, null)
     }
   }
+
+  override fun startSuggestionConnectionListener(
+    onEvent: (event: SuggestionConnectionEvent) -> Unit,
+  ): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return false
+    stopSuggestionConnectionListener()
+    val emit: (SuggestionConnectionEvent) -> Unit = { event ->
+      try {
+        onEvent(event)
+      } catch (_: Throwable) {
+        // Never crash because a JS listener threw.
+      }
+    }
+
+    // Delivered only for suggestions with appInteractionRequired, only to apps
+    // holding ACCESS_FINE_LOCATION, and only to runtime-registered receivers.
+    val receiver = object : BroadcastReceiver() {
+      override fun onReceive(receiverContext: Context, intent: Intent) {
+        if (intent.action != WifiManager.ACTION_WIFI_NETWORK_SUGGESTION_POST_CONNECTION) return
+        val suggestion = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_SUGGESTION, WifiNetworkSuggestion::class.java)
+        } else {
+          @Suppress("DEPRECATION")
+          intent.getParcelableExtra<WifiNetworkSuggestion>(WifiManager.EXTRA_NETWORK_SUGGESTION)
+        }
+        emit(SuggestionConnectionEvent(
+          type = SuggestionConnectionEventType.POSTCONNECTION,
+          ssid = suggestion?.let(::suggestionIdentifier),
+          failureReason = null,
+          message = null,
+        ))
+      }
+    }
+    val filter = IntentFilter(WifiManager.ACTION_WIFI_NETWORK_SUGGESTION_POST_CONNECTION)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+    } else {
+      @Suppress("UnspecifiedRegisterReceiverFlag")
+      context.registerReceiver(receiver, filter)
+    }
+    suggestionPostConnectionReceiver = receiver
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      val listener = WifiManager.SuggestionConnectionStatusListener { suggestion, failureReason ->
+        emit(SuggestionConnectionEvent(
+          type = SuggestionConnectionEventType.CONNECTIONFAILURE,
+          ssid = suggestionIdentifier(suggestion),
+          failureReason = when (failureReason) {
+            WifiManager.STATUS_SUGGESTION_CONNECTION_FAILURE_ASSOCIATION -> SuggestionFailureReason.ASSOCIATION
+            WifiManager.STATUS_SUGGESTION_CONNECTION_FAILURE_AUTHENTICATION -> SuggestionFailureReason.AUTHENTICATION
+            WifiManager.STATUS_SUGGESTION_CONNECTION_FAILURE_IP_PROVISIONING -> SuggestionFailureReason.IPPROVISIONING
+            else -> SuggestionFailureReason.UNKNOWN
+          },
+          message = null,
+        ))
+      }
+      try {
+        wifiManager.addSuggestionConnectionStatusListener(context.mainExecutor, listener)
+        suggestionStatusListener = listener
+      } catch (error: SecurityException) {
+        emit(SuggestionConnectionEvent(
+          type = SuggestionConnectionEventType.ERROR,
+          ssid = null,
+          failureReason = null,
+          message = "munim-wifi: connection-failure events need ACCESS_FINE_LOCATION (${error.message})",
+        ))
+      }
+    }
+    if (!hasLocationPermission()) {
+      emit(SuggestionConnectionEvent(
+        type = SuggestionConnectionEventType.ERROR,
+        ssid = null,
+        failureReason = null,
+        message = "munim-wifi: post-connection broadcasts are only delivered to apps holding ACCESS_FINE_LOCATION",
+      ))
+    }
+    return true
+  }
+
+  override fun stopSuggestionConnectionListener() {
+    suggestionPostConnectionReceiver?.let(::unregisterReceiverSafely)
+    suggestionPostConnectionReceiver = null
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      (suggestionStatusListener as? WifiManager.SuggestionConnectionStatusListener)?.let {
+        try {
+          wifiManager.removeSuggestionConnectionStatusListener(it)
+        } catch (_: Throwable) {
+          // Already removed.
+        }
+      }
+    }
+    suggestionStatusListener = null
+  }
+
+  @RequiresApi(Build.VERSION_CODES.Q)
+  private fun suggestionIdentifier(suggestion: WifiNetworkSuggestion): String? =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      suggestion.ssid ?: suggestion.passpointConfig?.homeSp?.fqdn
+    } else {
+      suggestions.entries.firstOrNull { it.value == suggestion }?.key
+    }
 
   override fun startLocalOnlyHotspot(): Promise<HotspotOutcome> {
     val promise = Promise<HotspotOutcome>()

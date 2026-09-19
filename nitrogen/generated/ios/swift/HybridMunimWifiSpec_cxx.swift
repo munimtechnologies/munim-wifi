@@ -584,6 +584,34 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
+  public final func startSuggestionConnectionListener(onEvent: bridge.Func_void_SuggestionConnectionEvent) -> bridge.Result_bool_ {
+    do {
+      let __result = try self.__implementation.startSuggestionConnectionListener(onEvent: { () -> (SuggestionConnectionEvent) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_SuggestionConnectionEvent(onEvent)
+        return { (__event: SuggestionConnectionEvent) -> Void in
+          __wrappedFunction.call(__event)
+        }
+      }())
+      let __resultCpp = __result
+      return bridge.create_Result_bool_(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_bool_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func stopSuggestionConnectionListener() -> bridge.Result_void_ {
+    do {
+      try self.__implementation.stopSuggestionConnectionListener()
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
   public final func startLocalOnlyHotspot() -> bridge.Result_std__shared_ptr_Promise_HotspotOutcome___ {
     do {
       let __result = try self.__implementation.startLocalOnlyHotspot()
