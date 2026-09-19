@@ -7,6 +7,12 @@ const {
 const DEFAULT_LOCATION_MESSAGE =
   'Allow this app to access Wi-Fi network information and scan nearby networks.'
 
+const DEFAULT_LOCAL_NETWORK_MESSAGE =
+  'Allow this app to find and connect to devices on your local network.'
+
+// Browsed by requestLocalNetworkPermission() to trigger the iOS prompt.
+const PERMISSION_PROBE_SERVICE = '_munimwifi._tcp'
+
 const TOOLS_NAMESPACE = 'http://schemas.android.com/tools'
 
 /**
@@ -37,7 +43,20 @@ function withMunimWifi(config, props = {}) {
   const neverForLocation = android.neverForLocation !== false
 
   config = withInfoPlist(config, (current) => {
-    current.modResults.NSLocationWhenInUseUsageDescription = locationMessage
+    const plist = current.modResults
+    plist.NSLocationWhenInUseUsageDescription = locationMessage
+    if (props.localNetworkPermission || !plist.NSLocalNetworkUsageDescription) {
+      plist.NSLocalNetworkUsageDescription =
+        props.localNetworkPermission || DEFAULT_LOCAL_NETWORK_MESSAGE
+    }
+    // Service types for startServiceDiscovery() must be declared up front.
+    const services = new Set(
+      Array.isArray(plist.NSBonjourServices) ? plist.NSBonjourServices : []
+    )
+    for (const type of [PERMISSION_PROBE_SERVICE, ...(props.bonjourServices || [])]) {
+      services.add(String(type).replace(/\.$/, ''))
+    }
+    plist.NSBonjourServices = Array.from(services)
     return current
   })
 

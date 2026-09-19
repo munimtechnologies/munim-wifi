@@ -5,6 +5,8 @@ import {
   validateSecurity,
   validateSSID,
   validateSuggestionOptions,
+  validateResolveTimeout,
+  validateServiceType,
   validateTimeout,
 } from '../validation'
 
@@ -374,5 +376,33 @@ describe('validateSuggestionOptions', () => {
         passphrase: 'short',
       })
     ).toThrow(RangeError)
+  })
+})
+
+describe('validateServiceType', () => {
+  it('accepts DNS-SD service types', () => {
+    expect(() => validateServiceType('_http._tcp')).not.toThrow()
+    expect(() => validateServiceType('_googlecast._tcp.')).not.toThrow()
+    expect(() => validateServiceType('_munimwifi._udp')).not.toThrow()
+  })
+
+  it('rejects malformed types', () => {
+    expect(() => validateServiceType('http._tcp')).toThrow(TypeError)
+    expect(() => validateServiceType('_http._sctp')).toThrow(TypeError)
+    expect(() => validateServiceType('_a-name-that-is-too-long._tcp')).toThrow(TypeError)
+    expect(() => validateServiceType('_bad-._tcp')).toThrow(TypeError)
+  })
+})
+
+describe('validateResolveTimeout', () => {
+  it('accepts undefined and integers from 1000 through 30000', () => {
+    expect(() => validateResolveTimeout(undefined)).not.toThrow()
+    expect(() => validateResolveTimeout(1000)).not.toThrow()
+    expect(() => validateResolveTimeout(30000)).not.toThrow()
+  })
+
+  it('rejects values out of range', () => {
+    expect(() => validateResolveTimeout(999)).toThrow(RangeError)
+    expect(() => validateResolveTimeout(1500.5)).toThrow(RangeError)
   })
 })

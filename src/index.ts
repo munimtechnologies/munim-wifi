@@ -7,6 +7,7 @@ import type {
   ConnectionOptions,
   ConnectionStatus,
   CurrentNetworkInfo,
+  DiscoveredService,
   EapMethod,
   EapPhase2Method,
   EnterpriseCredentials,
@@ -24,6 +25,8 @@ import type {
   PermissionState,
   ScanOptions,
   ScanResultInfo,
+  ServiceDiscoveryOptions,
+  ServiceTxtEntry,
   SuggestionOutcome,
   SuggestionStatus,
   WifiCapabilityStatus,
@@ -35,7 +38,9 @@ import type {
 import {
   validateBSSID,
   validateNativeConnectionOptions,
+  validateResolveTimeout,
   validateSecurity,
+  validateServiceType,
   validateSSID,
   validateSuggestionOptions,
   validateTimeout,
@@ -443,6 +448,72 @@ export function addEventListener(
   return addScanErrorListener(callback as ErrorListener)
 }
 
+export interface ServiceDiscoveryHandlers {
+  onFound: (service: DiscoveredService) => void
+  onLost: (service: DiscoveredService) => void
+  onError?: (message: string) => void
+}
+
+export interface ServiceDiscoveryHandle {
+  id: string
+  stop(): void
+}
+
+/**
+ * Browse the local network for DNS-SD (Bonjour/mDNS) services such as
+ * "_http._tcp". iOS apps must list the type in NSBonjourServices and set
+ * NSLocalNetworkUsageDescription (the config plugin's `bonjourServices`).
+ */
+export function startServiceDiscovery(
+  type: string,
+  handlers: ServiceDiscoveryHandlers,
+  options?: ServiceDiscoveryOptions
+): ServiceDiscoveryHandle {
+  validateServiceType(type)
+  validateResolveTimeout(options?.resolveTimeout)
+  if (!handlers || typeof handlers.onFound !== 'function' || typeof handlers.onLost !== 'function') {
+    throw new TypeError('onFound and onLost handlers are required')
+  }
+  const id = MunimWifi.startServiceDiscovery(
+    type.replace(/\.$/, ''),
+    options,
+    handlers.onFound,
+    handlers.onLost,
+    handlers.onError
+  )
+  return { id, stop: () => MunimWifi.stopServiceDiscovery(id) }
+}
+
+export function stopServiceDiscovery(discoveryId: string): void {
+  MunimWifi.stopServiceDiscovery(discoveryId)
+}
+
+/** Converts a service's TXT entries to a plain object. */
+export function txtRecordToObject(
+  txt: ServiceTxtEntry[]
+): Record<string, string | undefined> {
+  const record: Record<string, string | undefined> = {}
+  for (const entry of txt) record[entry.key] = entry.value
+  return record
+}
+
+/**
+ * iOS: triggers the Local Network privacy prompt (requires
+ * NSLocalNetworkUsageDescription and "_munimwifi._tcp" in NSBonjourServices,
+ * both added by the config plugin). Android: always 'granted'.
+ */
+export function requestLocalNetworkPermission(
+  timeoutMs?: number
+): Promise<PermissionState> {
+  if (
+    timeoutMs !== undefined &&
+    (!Number.isInteger(timeoutMs) || timeoutMs < 1000 || timeoutMs > 120000)
+  ) {
+    return Promise.reject(new RangeError('timeoutMs must be 1000-120000'))
+  }
+  return MunimWifi.requestLocalNetworkPermission(timeoutMs)
+}
+
 /** @deprecated Subscribe with addNetworkFoundListener instead. */
 export function addListener(eventName: string): void {
   MunimWifi.addListener(eventName)
@@ -461,6 +532,7 @@ export type {
   ConnectionOptions,
   ConnectionStatus,
   CurrentNetworkInfo,
+  DiscoveredService,
   EapMethod,
   EapPhase2Method,
   EnterpriseCredentials,
@@ -478,6 +550,8 @@ export type {
   PermissionState,
   ScanOptions,
   ScanResultInfo,
+  ServiceDiscoveryOptions,
+  ServiceTxtEntry,
   SuggestionOutcome,
   SuggestionStatus,
   WifiCapabilityStatus,
@@ -524,6 +598,10 @@ export default {
   addScanErrorListener,
   addScanThrottledListener,
   addEventListener,
+  startServiceDiscovery,
+  stopServiceDiscovery,
+  txtRecordToObject,
+  requestLocalNetworkPermission,
   addListener,
   removeListeners,
 }

@@ -334,6 +334,42 @@ export interface ScanResultInfo {
   message?: string
 }
 
+/** One TXT record entry; `value` is absent for boolean (key-only) entries. */
+export interface ServiceTxtEntry {
+  key: string
+  value?: string
+}
+
+/** A DNS-SD (Bonjour/mDNS) service instance. */
+export interface DiscoveredService {
+  /** `name.type.domain`; identical for the found and lost events of one instance. */
+  id: string
+  name: string
+  /** Service type without the trailing dot, for example "_http._tcp". */
+  type: string
+  domain: string
+  /** Resolved address (Android: host address; iOS: address the resolver reached). */
+  host?: string
+  port?: number
+  addresses: string[]
+  txt: ServiceTxtEntry[]
+  interfaceName?: string
+  /** False when resolution was disabled, failed or timed out. */
+  resolved: boolean
+}
+
+export interface ServiceDiscoveryOptions {
+  /** Browse domain. Defaults to "local.". */
+  domain?: string
+  /** Resolve host/port/addresses before reporting a service. Defaults to true. */
+  resolve?: boolean
+  /** Per-service resolution timeout in ms (1000-30000, default 5000). */
+  resolveTimeout?: number
+}
+
+export type ServiceFoundCallback = (service: DiscoveredService) => void
+export type ServiceLostCallback = (service: DiscoveredService) => void
+
 export type WifiScanCallback = (
   networks: WifiNetwork[],
   info: ScanResultInfo
@@ -523,6 +559,34 @@ export interface MunimWifi
   startNetworkObserver(onUpdate: NetworkObserverCallback): void
 
   stopNetworkObserver(): void
+
+  // ========== Local network ==========
+
+  /**
+   * Browse for DNS-SD services of `type` (for example "_http._tcp") on the
+   * local network. Android: NsdManager. iOS: NWBrowser; the type must be
+   * listed in NSBonjourServices and NSLocalNetworkUsageDescription set.
+   *
+   * @returns A discovery ID for stopServiceDiscovery().
+   */
+  startServiceDiscovery(
+    type: string,
+    options: ServiceDiscoveryOptions | undefined,
+    onFound: ServiceFoundCallback,
+    onLost: ServiceLostCallback,
+    onError?: WifiScanErrorCallback
+  ): string
+
+  stopServiceDiscovery(discoveryId: string): void
+
+  /**
+   * iOS: trigger (or re-check) the Local Network privacy prompt by publishing
+   * and browsing a private Bonjour service ("_munimwifi._tcp", which must be in
+   * NSBonjourServices). Resolves 'granted', 'denied', or 'notDetermined' if the
+   * user has not answered within `timeoutMs` (default 30000).
+   * Android: no runtime permission is required; resolves 'granted'.
+   */
+  requestLocalNetworkPermission(timeoutMs?: number): Promise<PermissionState>
 
   // ========== Event Management ==========
 

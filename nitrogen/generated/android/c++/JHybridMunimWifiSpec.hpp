@@ -84,6 +84,9 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() override;
     void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) override;
     void stopNetworkObserver() override;
+    std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override;
+    void stopServiceDiscovery(const std::string& discoveryId) override;
+    std::shared_ptr<Promise<PermissionState>> requestLocalNetworkPermission(std::optional<double> timeoutMs) override;
     void addListener(const std::string& eventName) override;
     void removeListeners(double count) override;
 

@@ -16,7 +16,16 @@
       [
         "munim-wifi",
         {
-          "locationPermission": "Allow Munim Wi-Fi Example to find nearby Wi-Fi networks."
+          "locationPermission": "Allow Munim Wi-Fi Example to find nearby Wi-Fi networks.",
+          "localNetworkPermission": "Allow Munim Wi-Fi Example to discover services on your local network.",
+          "bonjourServices": [
+            "_http._tcp",
+            "_ipp._tcp",
+            "_airplay._tcp",
+            "_googlecast._tcp",
+            "_raop._tcp",
+            "_companion-link._tcp"
+          ]
         }
       ]
     ]

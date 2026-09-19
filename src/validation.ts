@@ -302,3 +302,23 @@ export function validateSuggestionOptions(
     options.passpoint
   )
 }
+
+const SERVICE_TYPE_PATTERN = /^_[A-Za-z0-9](?:[A-Za-z0-9-]{0,13}[A-Za-z0-9])?\._(?:tcp|udp)\.?$/
+
+/** DNS-SD service types look like "_http._tcp" (service names are 1-15 characters). */
+export function validateServiceType(type: string): void {
+  if (typeof type !== 'string' || !SERVICE_TYPE_PATTERN.test(type)) {
+    throw new TypeError(
+      'Service type must look like "_name._tcp" or "_name._udp" (name: 1-15 letters, digits or hyphens)'
+    )
+  }
+}
+
+export function validateResolveTimeout(timeout: number | undefined): void {
+  if (
+    timeout !== undefined &&
+    (!Number.isInteger(timeout) || timeout < 1000 || timeout > 30000)
+  ) {
+    throw new RangeError('resolveTimeout must be an integer from 1000 through 30000 ms')
+  }
+}

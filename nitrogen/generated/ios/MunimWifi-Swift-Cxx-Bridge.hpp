@@ -20,6 +20,8 @@ namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
 namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `DiscoveredService` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct DiscoveredService; }
 // Forward declaration of `EapMethod` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class EapMethod; }
 // Forward declaration of `EapPhase2Method` to properly resolve imports.
@@ -52,6 +54,10 @@ namespace margelo::nitro::munimwifi { enum class PermissionState; }
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
 // Forward declaration of `ScanResultInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
+// Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
+// Forward declaration of `ServiceTxtEntry` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -76,6 +82,7 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "ConnectionOutcome.hpp"
 #include "ConnectionStatus.hpp"
 #include "CurrentNetworkInfo.hpp"
+#include "DiscoveredService.hpp"
 #include "EapMethod.hpp"
 #include "EapPhase2Method.hpp"
 #include "EnterpriseCredentials.hpp"
@@ -92,6 +99,8 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "PermissionState.hpp"
 #include "ScanOptions.hpp"
 #include "ScanResultInfo.hpp"
+#include "ServiceDiscoveryOptions.hpp"
+#include "ServiceTxtEntry.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "WifiCapabilityStatus.hpp"
@@ -1132,6 +1141,88 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return Func_void_NetworkDiagnostics_Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::optional<ServiceDiscoveryOptions>
+  /**
+   * Specialized version of `std::optional<ServiceDiscoveryOptions>`.
+   */
+  using std__optional_ServiceDiscoveryOptions_ = std::optional<ServiceDiscoveryOptions>;
+  inline std::optional<ServiceDiscoveryOptions> create_std__optional_ServiceDiscoveryOptions_(const ServiceDiscoveryOptions& value) noexcept {
+    return std::optional<ServiceDiscoveryOptions>(value);
+  }
+  inline bool has_value_std__optional_ServiceDiscoveryOptions_(const std::optional<ServiceDiscoveryOptions>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline ServiceDiscoveryOptions get_std__optional_ServiceDiscoveryOptions_(const std::optional<ServiceDiscoveryOptions>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::vector<ServiceTxtEntry>
+  /**
+   * Specialized version of `std::vector<ServiceTxtEntry>`.
+   */
+  using std__vector_ServiceTxtEntry_ = std::vector<ServiceTxtEntry>;
+  inline std::vector<ServiceTxtEntry> create_std__vector_ServiceTxtEntry_(size_t size) noexcept {
+    std::vector<ServiceTxtEntry> vector;
+    vector.reserve(size);
+    return vector;
+  }
+  
+  // pragma MARK: std::function<void(const DiscoveredService& /* service */)>
+  /**
+   * Specialized version of `std::function<void(const DiscoveredService&)>`.
+   */
+  using Func_void_DiscoveredService = std::function<void(const DiscoveredService& /* service */)>;
+  /**
+   * Wrapper class for a `std::function<void(const DiscoveredService& / * service * /)>`, this can be used from Swift.
+   */
+  class Func_void_DiscoveredService_Wrapper final {
+  public:
+    explicit Func_void_DiscoveredService_Wrapper(std::function<void(const DiscoveredService& /* service */)>&& func): _function(std::make_unique<std::function<void(const DiscoveredService& /* service */)>>(std::move(func))) {}
+    inline void call(DiscoveredService service) const noexcept {
+      _function->operator()(service);
+    }
+  private:
+    std::unique_ptr<std::function<void(const DiscoveredService& /* service */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_DiscoveredService create_Func_void_DiscoveredService(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_DiscoveredService_Wrapper wrap_Func_void_DiscoveredService(Func_void_DiscoveredService value) noexcept {
+    return Func_void_DiscoveredService_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<PermissionState>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<PermissionState>>`.
+   */
+  using std__shared_ptr_Promise_PermissionState__ = std::shared_ptr<Promise<PermissionState>>;
+  inline std::shared_ptr<Promise<PermissionState>> create_std__shared_ptr_Promise_PermissionState__() noexcept {
+    return Promise<PermissionState>::create();
+  }
+  inline PromiseHolder<PermissionState> wrap_std__shared_ptr_Promise_PermissionState__(std::shared_ptr<Promise<PermissionState>> promise) noexcept {
+    return PromiseHolder<PermissionState>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(PermissionState /* result */)>
+  /**
+   * Specialized version of `std::function<void(PermissionState)>`.
+   */
+  using Func_void_PermissionState = std::function<void(PermissionState /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(PermissionState / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_PermissionState_Wrapper final {
+  public:
+    explicit Func_void_PermissionState_Wrapper(std::function<void(PermissionState /* result */)>&& func): _function(std::make_unique<std::function<void(PermissionState /* result */)>>(std::move(func))) {}
+    inline void call(int result) const noexcept {
+      _function->operator()(static_cast<PermissionState>(result));
+    }
+  private:
+    std::unique_ptr<std::function<void(PermissionState /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_PermissionState create_Func_void_PermissionState(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_PermissionState_Wrapper wrap_Func_void_PermissionState(Func_void_PermissionState value) noexcept {
+    return Func_void_PermissionState_Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<HybridMunimWifiSpec>
   /**
    * Specialized version of `std::shared_ptr<HybridMunimWifiSpec>`.
@@ -1295,6 +1386,24 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_NetworkDiagnostics___ create_Result_std__shared_ptr_Promise_NetworkDiagnostics___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<NetworkDiagnostics>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::string>
+  using Result_std__string_ = Result<std::string>;
+  inline Result_std__string_ create_Result_std__string_(const std::string& value) noexcept {
+    return Result<std::string>::withValue(value);
+  }
+  inline Result_std__string_ create_Result_std__string_(const std::exception_ptr& error) noexcept {
+    return Result<std::string>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<PermissionState>>>
+  using Result_std__shared_ptr_Promise_PermissionState___ = Result<std::shared_ptr<Promise<PermissionState>>>;
+  inline Result_std__shared_ptr_Promise_PermissionState___ create_Result_std__shared_ptr_Promise_PermissionState___(const std::shared_ptr<Promise<PermissionState>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<PermissionState>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_PermissionState___ create_Result_std__shared_ptr_Promise_PermissionState___(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<PermissionState>>>::withError(error);
   }
 
 } // namespace margelo::nitro::munimwifi::bridge::swift

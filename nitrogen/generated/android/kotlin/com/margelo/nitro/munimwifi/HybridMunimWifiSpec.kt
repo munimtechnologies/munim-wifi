@@ -161,6 +161,23 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun stopNetworkObserver(): Unit
   
+  abstract fun startServiceDiscovery(type: String, options: ServiceDiscoveryOptions?, onFound: (service: DiscoveredService) -> Unit, onLost: (service: DiscoveredService) -> Unit, onError: ((message: String) -> Unit)?): String
+  
+  @DoNotStrip
+  @Keep
+  private fun startServiceDiscovery_cxx(type: String, options: ServiceDiscoveryOptions?, onFound: Func_void_DiscoveredService, onLost: Func_void_DiscoveredService, onError: Func_void_std__string?): String {
+    val __result = startServiceDiscovery(type, options, onFound, onLost, onError?.let { it })
+    return __result
+  }
+  
+  @DoNotStrip
+  @Keep
+  abstract fun stopServiceDiscovery(discoveryId: String): Unit
+  
+  @DoNotStrip
+  @Keep
+  abstract fun requestLocalNetworkPermission(timeoutMs: Double?): Promise<PermissionState>
+  
   @DoNotStrip
   @Keep
   abstract fun addListener(eventName: String): Unit

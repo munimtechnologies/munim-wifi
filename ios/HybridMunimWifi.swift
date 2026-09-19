@@ -170,6 +170,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   private let stateLock = NSLock()
   /// SSID this app last joined, used by disconnect() when fetchCurrent is unavailable.
   private var _lastJoinedSSID: String?
+  private var discoverySessions: [String: BonjourDiscoverySession] = [:]
 
   private var lastJoinedSSID: String? {
     get { stateLock.lock(); defer { stateLock.unlock() }; return _lastJoinedSSID }
@@ -642,6 +643,61 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     pathMonitor = nil
   }
 
+  func startServiceDiscovery(
+    type: String,
+    options: ServiceDiscoveryOptions?,
+    onFound: @escaping (_ service: DiscoveredService) -> Void,
+    onLost: @escaping (_ service: DiscoveredService) -> Void,
+    onError: ((_ message: String) -> Void)?
+  ) throws -> String {
+    let serviceType = type.hasSuffix(".") ? String(type.dropLast()) : type
+    guard serviceType.range(
+      of: "^_[A-Za-z0-9](?:[A-Za-z0-9-]{0,13}[A-Za-z0-9])?\\._(?:tcp|udp)$",
+      options: .regularExpression
+    ) != nil else {
+      throw MunimWifiError.invalidServiceType
+    }
+    let resolveTimeout = options?.resolveTimeout ?? 5_000
+    guard resolveTimeout.isFinite, resolveTimeout >= 1_000, resolveTimeout <= 30_000 else {
+      throw MunimWifiError.invalidResolveTimeout
+    }
+    let id = UUID().uuidString
+    let session = BonjourDiscoverySession(
+      id: id,
+      type: serviceType,
+      domain: options?.domain.flatMap { $0.isEmpty ? nil : $0 } ?? "local.",
+      resolve: options?.resolve ?? true,
+      resolveTimeout: resolveTimeout / 1_000,
+      onFound: onFound,
+      onLost: onLost,
+      onError: onError
+    )
+    stateLock.lock()
+    discoverySessions[id] = session
+    stateLock.unlock()
+    session.start()
+    return id
+  }
+
+  func stopServiceDiscovery(discoveryId: String) throws {
+    stateLock.lock()
+    let session = discoverySessions.removeValue(forKey: discoveryId)
+    stateLock.unlock()
+    session?.stop()
+  }
+
+  func requestLocalNetworkPermission(timeoutMs: Double?) throws -> Promise<PermissionState> {
+    let timeout = timeoutMs ?? 30_000
+    guard timeout.isFinite, timeout >= 1_000, timeout <= 120_000 else {
+      throw MunimWifiError.invalidTimeout
+    }
+    let promise = Promise<PermissionState>()
+    LocalNetworkPermissionProbe().run(timeout: timeout / 1_000) { state in
+      promise.resolve(withResult: state)
+    }
+    return promise
+  }
+
   func addListener(eventName: String) throws {}
 
   func removeListeners(count: Double) throws {}
@@ -1038,6 +1094,8 @@ private enum MunimWifiError: LocalizedError {
   case connectionTimeout(String)
   case unexpectedNetwork(expected: String, actual: String)
   case released
+  case invalidServiceType
+  case invalidResolveTimeout
 
   var errorDescription: String? {
     switch self {
@@ -1057,6 +1115,10 @@ private enum MunimWifiError: LocalizedError {
       return "munim-wifi: connection to \(ssid) timed out"
     case .unexpectedNetwork(let expected, let actual):
       return "munim-wifi: connected to \(actual) instead of requested network \(expected)"
+    case .invalidServiceType:
+      return "munim-wifi: service type must look like \"_name._tcp\" or \"_name._udp\""
+    case .invalidResolveTimeout:
+      return "munim-wifi: resolveTimeout must be between 1000 and 30000 milliseconds"
     case .released:
       return "munim-wifi: the module was released before the operation finished"
     }
