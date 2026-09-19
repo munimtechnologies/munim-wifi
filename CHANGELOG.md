@@ -1,3 +1,31 @@
+## [0.4.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.3...v0.4.0) (2026-09-19)
+
+### ✨ Features
+
+* add DNS-SD service discovery and the iOS local network permission request ([a6fa4e2](https://github.com/munimtechnologies/munim-wifi/commit/a6fa4e29121c55049ba4d5f0d7ae89b5a6191e52))
+* add isInternetReachable with an optional HTTP probe ([b10f1eb](https://github.com/munimtechnologies/munim-wifi/commit/b10f1ebbcb719608bbf827a3013bf45024095430))
+* **android:** report network-suggestion connections and connection failures ([df03717](https://github.com/munimtechnologies/munim-wifi/commit/df037178e9a732548e08803ad351cfaa8e6f9e7b))
+* join networks by SSID prefix and list configured SSIDs ([0a8c423](https://github.com/munimtechnologies/munim-wifi/commit/0a8c42302992cd014c3e6e7ba9ba6cafe782f9ba))
+* return IPv6 addresses for the Wi-Fi interface ([5360042](https://github.com/munimtechnologies/munim-wifi/commit/536004270d14d97e95a478704b8992ff174fa2ad))
+* support WPA2/WPA3-Enterprise and Passpoint networks ([5980fc6](https://github.com/munimtechnologies/munim-wifi/commit/5980fc6b4ca40c61eca8ec71d2bc4caeef08d4bd)), closes [PKCS#12](https://github.com/munimtechnologies/PKCS/issues/12)
+
+### 🐛 Bug Fixes
+
+* **android:** report scan throttling instead of passing cached results off as fresh ([e3805fc](https://github.com/munimtechnologies/munim-wifi/commit/e3805fc2e79910e07d59c126bfa1ae328957fac1))
+* **android:** request Wi-Fi permissions natively and stop requiring location on 13+ ([24e208b](https://github.com/munimtechnologies/munim-wifi/commit/24e208b07a4596b26d49b72a3869f8c055552cbe))
+* **android:** restore the previous process binding when a connectToNetwork network is lost ([660cf3b](https://github.com/munimtechnologies/munim-wifi/commit/660cf3b3cd6bbb1e2c4757b3c6dd6d3e0569feb3))
+* **ios:** fix path-monitor leak, truthful isWifiEnabled, accurate disconnect result ([880a292](https://github.com/munimtechnologies/munim-wifi/commit/880a292b346c6eb1f7467127f9cc3170f45f2a76))
+
+### 📚 Documentation
+
+* document per-API permissions, throttling flags and the new Wi-Fi APIs ([0184dbf](https://github.com/munimtechnologies/munim-wifi/commit/0184dbfc6ae33bbd41d8df43e61900100115389e))
+
+### 🛠️ Other changes
+
+* **deps:** bump expo 57.0.24, react-native 0.86.3, jest 30, builder-bob 0.43 ([739a7d1](https://github.com/munimtechnologies/munim-wifi/commit/739a7d1005c944b606c8fecec2e9dadd586e5294))
+* **example:** adopt the UIScene lifecycle for Xcode 27 / iOS 27 ([8326eb3](https://github.com/munimtechnologies/munim-wifi/commit/8326eb382030a9ee3c434b70007ffda11ddfdbd1)), closes [expo/expo#46664](https://github.com/expo/expo/issues/46664)
+* **example:** sign the example with the Lackin LLC team under a unique bundle id ([2bfdc41](https://github.com/munimtechnologies/munim-wifi/commit/2bfdc4145e9dfeac0c529ab7cf96a044f5c36a68))
+
 ## [0.3.3](https://github.com/munimtechnologies/munim-wifi/compare/v0.3.2...v0.3.3) (2026-09-14)
 
 ### 🛠️ Other changes
