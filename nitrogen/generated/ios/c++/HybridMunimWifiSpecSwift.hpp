@@ -70,6 +70,12 @@ namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 namespace margelo::nitro::munimwifi { enum class NetworkState; }
 // Forward declaration of `NetworkLinkProperties` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
+// Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
+// Forward declaration of `DiscoveredService` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct DiscoveredService; }
+// Forward declaration of `ServiceTxtEntry` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 
 #include <NitroModules/Promise.hpp>
 #include "WifiNetwork.hpp"
@@ -107,6 +113,9 @@ namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 #include "NetworkDiagnostics.hpp"
 #include "NetworkState.hpp"
 #include "NetworkLinkProperties.hpp"
+#include "ServiceDiscoveryOptions.hpp"
+#include "DiscoveredService.hpp"
+#include "ServiceTxtEntry.hpp"
 
 #include "MunimWifi-Swift-Cxx-Umbrella.hpp"
 
@@ -389,6 +398,28 @@ namespace margelo::nitro::munimwifi {
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
+    }
+    inline std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
+      auto __result = _swiftPart.startServiceDiscovery(type, options, onFound, onLost, onError);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline void stopServiceDiscovery(const std::string& discoveryId) override {
+      auto __result = _swiftPart.stopServiceDiscovery(discoveryId);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline std::shared_ptr<Promise<PermissionState>> requestLocalNetworkPermission(std::optional<double> timeoutMs) override {
+      auto __result = _swiftPart.requestLocalNetworkPermission(timeoutMs);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
     }
     inline void addListener(const std::string& eventName) override {
       auto __result = _swiftPart.addListener(eventName);

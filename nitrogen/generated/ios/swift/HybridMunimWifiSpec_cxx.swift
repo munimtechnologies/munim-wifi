@@ -758,6 +758,77 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
+  public final func startServiceDiscovery(type: std.string, options: bridge.std__optional_ServiceDiscoveryOptions_, onFound: bridge.Func_void_DiscoveredService, onLost: bridge.Func_void_DiscoveredService, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_std__string_ {
+    do {
+      let __result = try self.__implementation.startServiceDiscovery(type: String(type), options: options.value, onFound: { () -> (DiscoveredService) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_DiscoveredService(onFound)
+        return { (__service: DiscoveredService) -> Void in
+          __wrappedFunction.call(__service)
+        }
+      }(), onLost: { () -> (DiscoveredService) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_DiscoveredService(onLost)
+        return { (__service: DiscoveredService) -> Void in
+          __wrappedFunction.call(__service)
+        }
+      }(), onError: { () -> ((_ message: String) -> Void)? in
+        if bridge.has_value_std__optional_std__function_void_const_std__string_____message______(onError) {
+          let __unwrapped = bridge.get_std__optional_std__function_void_const_std__string_____message______(onError)
+          return { () -> (String) -> Void in
+            let __wrappedFunction = bridge.wrap_Func_void_std__string(__unwrapped)
+            return { (__message: String) -> Void in
+              __wrappedFunction.call(std.string(__message))
+            }
+          }()
+        } else {
+          return nil
+        }
+      }())
+      let __resultCpp = std.string(__result)
+      return bridge.create_Result_std__string_(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__string_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func stopServiceDiscovery(discoveryId: std.string) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.stopServiceDiscovery(discoveryId: String(discoveryId))
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func requestLocalNetworkPermission(timeoutMs: bridge.std__optional_double_) -> bridge.Result_std__shared_ptr_Promise_PermissionState___ {
+    do {
+      let __result = try self.__implementation.requestLocalNetworkPermission(timeoutMs: { () -> Double? in
+        if bridge.has_value_std__optional_double_(timeoutMs) {
+          let __unwrapped = bridge.get_std__optional_double_(timeoutMs)
+          return __unwrapped
+        } else {
+          return nil
+        }
+      }())
+      let __resultCpp = { () -> bridge.std__shared_ptr_Promise_PermissionState__ in
+        let __promise = bridge.create_std__shared_ptr_Promise_PermissionState__()
+        let __promiseHolder = bridge.wrap_std__shared_ptr_Promise_PermissionState__(__promise)
+        __result
+          .then({ __result in __promiseHolder.resolve(__result) })
+          .catch({ __error in __promiseHolder.reject(__error.toCpp()) })
+        return __promise
+      }()
+      return bridge.create_Result_std__shared_ptr_Promise_PermissionState___(__resultCpp)
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_std__shared_ptr_Promise_PermissionState___(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
   public final func addListener(eventName: std.string) -> bridge.Result_void_ {
     do {
       try self.__implementation.addListener(eventName: String(eventName))

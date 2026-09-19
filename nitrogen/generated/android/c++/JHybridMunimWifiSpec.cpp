@@ -65,6 +65,12 @@ namespace margelo::nitro::munimwifi { enum class EapPhase2Method; }
 namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `NativeNetworkSuggestionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
+// Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
+// Forward declaration of `DiscoveredService` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct DiscoveredService; }
+// Forward declaration of `ServiceTxtEntry` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/JPromise.hpp>
@@ -144,6 +150,13 @@ namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 #include "NativeNetworkSuggestionOptions.hpp"
 #include "JNativeNetworkSuggestionOptions.hpp"
 #include "JFunc_void_NetworkDiagnostics.hpp"
+#include "ServiceDiscoveryOptions.hpp"
+#include "JServiceDiscoveryOptions.hpp"
+#include "DiscoveredService.hpp"
+#include "JFunc_void_DiscoveredService.hpp"
+#include "JDiscoveredService.hpp"
+#include "ServiceTxtEntry.hpp"
+#include "JServiceTxtEntry.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -635,6 +648,31 @@ namespace margelo::nitro::munimwifi {
   void JHybridMunimWifiSpec::stopNetworkObserver() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("stopNetworkObserver");
     method(_javaPart);
+  }
+  std::string JHybridMunimWifiSpec::startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<jni::JString>(jni::alias_ref<jni::JString> /* type */, jni::alias_ref<JServiceDiscoveryOptions> /* options */, jni::alias_ref<JFunc_void_DiscoveredService::javaobject> /* onFound */, jni::alias_ref<JFunc_void_DiscoveredService::javaobject> /* onLost */, jni::alias_ref<JFunc_void_std__string::javaobject> /* onError */)>("startServiceDiscovery_cxx");
+    auto __result = method(_javaPart, jni::make_jstring(type), options.has_value() ? JServiceDiscoveryOptions::fromCpp(options.value()) : nullptr, JFunc_void_DiscoveredService_cxx::fromCpp(onFound), JFunc_void_DiscoveredService_cxx::fromCpp(onLost), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
+    return __result->toStdString();
+  }
+  void JHybridMunimWifiSpec::stopServiceDiscovery(const std::string& discoveryId) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JString> /* discoveryId */)>("stopServiceDiscovery");
+    method(_javaPart, jni::make_jstring(discoveryId));
+  }
+  std::shared_ptr<Promise<PermissionState>> JHybridMunimWifiSpec::requestLocalNetworkPermission(std::optional<double> timeoutMs) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>(jni::alias_ref<jni::JDouble> /* timeoutMs */)>("requestLocalNetworkPermission");
+    auto __result = method(_javaPart, timeoutMs.has_value() ? jni::JDouble::valueOf(timeoutMs.value()) : nullptr);
+    return [&]() {
+      auto __promise = Promise<PermissionState>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JPermissionState>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
   }
   void JHybridMunimWifiSpec::addListener(const std::string& eventName) {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<jni::JString> /* eventName */)>("addListener");

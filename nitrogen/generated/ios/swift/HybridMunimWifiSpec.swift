@@ -43,6 +43,9 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics>
   func startNetworkObserver(onUpdate: @escaping (_ diagnostics: NetworkDiagnostics) -> Void) throws -> Void
   func stopNetworkObserver() throws -> Void
+  func startServiceDiscovery(type: String, options: ServiceDiscoveryOptions?, onFound: @escaping (_ service: DiscoveredService) -> Void, onLost: @escaping (_ service: DiscoveredService) -> Void, onError: ((_ message: String) -> Void)?) throws -> String
+  func stopServiceDiscovery(discoveryId: String) throws -> Void
+  func requestLocalNetworkPermission(timeoutMs: Double?) throws -> Promise<PermissionState>
   func addListener(eventName: String) throws -> Void
   func removeListeners(count: Double) throws -> Void
 }

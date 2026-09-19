@@ -22,6 +22,8 @@ namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
 namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `DiscoveredService` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct DiscoveredService; }
 // Forward declaration of `EapMethod` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class EapMethod; }
 // Forward declaration of `EapPhase2Method` to properly resolve imports.
@@ -56,6 +58,10 @@ namespace margelo::nitro::munimwifi { enum class PermissionState; }
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
 // Forward declaration of `ScanResultInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
+// Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
+// Forward declaration of `ServiceTxtEntry` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -77,6 +83,7 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "ConnectionOutcome.hpp"
 #include "ConnectionStatus.hpp"
 #include "CurrentNetworkInfo.hpp"
+#include "DiscoveredService.hpp"
 #include "EapMethod.hpp"
 #include "EapPhase2Method.hpp"
 #include "EnterpriseCredentials.hpp"
@@ -94,6 +101,8 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "PermissionState.hpp"
 #include "ScanOptions.hpp"
 #include "ScanResultInfo.hpp"
+#include "ServiceDiscoveryOptions.hpp"
+#include "ServiceTxtEntry.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "WifiCapabilityStatus.hpp"

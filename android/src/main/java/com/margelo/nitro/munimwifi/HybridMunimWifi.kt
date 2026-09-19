@@ -12,6 +12,7 @@ import android.net.MacAddress
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
+import android.net.nsd.NsdManager
 import android.net.wifi.ScanResult
 import android.net.wifi.SoftApConfiguration
 import android.net.wifi.WifiConfiguration
@@ -100,6 +101,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private val hotspotReservations =
     ConcurrentHashMap<String, WifiManager.LocalOnlyHotspotReservation>()
   private var networkObserverCallback: ConnectivityManager.NetworkCallback? = null
+  private val discoverySessions = ConcurrentHashMap<String, NsdDiscoverySession>()
   @Volatile
   private var networkObserverEmit: ((NetworkDiagnostics) -> Unit)? = null
   private val observerLock = Any()
@@ -939,6 +941,48 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     networkObserverCallback = null
   }
 
+  override fun startServiceDiscovery(
+    type: String,
+    options: ServiceDiscoveryOptions?,
+    onFound: (service: DiscoveredService) -> Unit,
+    onLost: (service: DiscoveredService) -> Unit,
+    onError: ((message: String) -> Unit)?,
+  ): String {
+    val serviceType = type.trimEnd('.')
+    require(SERVICE_TYPE_PATTERN.matches(serviceType)) {
+      "munim-wifi: service type must look like \"_name._tcp\" or \"_name._udp\""
+    }
+    val resolveTimeout = options?.resolveTimeout ?: 5_000.0
+    require(resolveTimeout.isFinite() && resolveTimeout in 1_000.0..30_000.0) {
+      "munim-wifi: resolveTimeout must be between 1000 and 30000 milliseconds"
+    }
+    val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
+    val id = UUID.randomUUID().toString()
+    val session = NsdDiscoverySession(
+      nsdManager = nsdManager,
+      handler = mainHandler,
+      id = id,
+      type = serviceType,
+      domain = options?.domain?.takeIf { it.isNotBlank() } ?: "local.",
+      resolve = options?.resolve != false,
+      resolveTimeoutMs = resolveTimeout.toLong(),
+      onFound = onFound,
+      onLost = onLost,
+      onError = onError,
+    )
+    discoverySessions[id] = session
+    session.start()
+    return id
+  }
+
+  override fun stopServiceDiscovery(discoveryId: String) {
+    discoverySessions.remove(discoveryId)?.stop()
+  }
+
+  /** Android has no runtime permission for mDNS/NSD on current releases. */
+  override fun requestLocalNetworkPermission(timeoutMs: Double?): Promise<PermissionState> =
+    Promise.resolved(PermissionState.GRANTED)
+
   override fun addListener(eventName: String) = Unit
 
   override fun removeListeners(count: Double) = Unit
@@ -1698,6 +1742,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     const val SCAN_THROTTLED_MESSAGE =
       "munim-wifi: Android declined to start a Wi-Fi scan (foreground apps are limited to 4 scans " +
         "every 2 minutes); results are cached"
+    val SERVICE_TYPE_PATTERN = Regex("^_[A-Za-z0-9](?:[A-Za-z0-9-]{0,13}[A-Za-z0-9])?\\._(?:tcp|udp)$")
     const val EAP_TYPE_SIM = 18
     const val EAP_TYPE_TTLS = 21
     const val EAP_TYPE_AKA = 23
