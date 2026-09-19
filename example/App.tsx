@@ -12,7 +12,20 @@ import {
 import {
   addNetworkObserverListener,
   addNetworkSuggestion,
+  addNetworksFoundListener,
+  addScanErrorListener,
+  addScanThrottledListener,
+  addSuggestionConnectionListener,
+  disconnect,
+  getConfiguredSSIDs,
   getCurrentNetwork,
+  getIPAddresses,
+  isInternetReachable,
+  requestLocalNetworkPermission,
+  startScan,
+  startServiceDiscovery,
+  stopScan,
+  txtRecordToObject,
   getNetworkDiagnostics,
   getNetworkSuggestionStatus,
   getWifiCapabilityStatus,
@@ -26,6 +39,7 @@ import {
   stopLocalOnlyHotspot,
   type ConnectionOutcome,
   type CurrentNetworkInfo,
+  type DiscoveredService,
   type NetworkDiagnostics,
   type WifiCapabilityStatus,
   type WifiNetwork,
@@ -45,10 +59,22 @@ export default function App() {
   const [connection, setConnection] = useState<ConnectionOutcome | null>(null)
   const [message, setMessage] = useState('Request permission, then scan nearby networks.')
   const stopObserving = useRef<(() => void) | null>(null)
+  const [services, setServices] = useState<Record<string, DiscoveredService>>({})
+  const stopBrowsing = useRef<(() => void) | null>(null)
+  const stopContinuous = useRef<(() => void) | null>(null)
+  const stopSuggestionEvents = useRef<(() => void) | null>(null)
+  const [browsing, setBrowsing] = useState(false)
+  const [scanning, setScanning] = useState(false)
+  const [suggestionEvents, setSuggestionEvents] = useState(false)
 
   useEffect(() => {
     void isWifiEnabled().then(setEnabled).catch(() => setEnabled(false))
-    return () => stopObserving.current?.()
+    return () => {
+      stopObserving.current?.()
+      stopBrowsing.current?.()
+      stopContinuous.current?.()
+      stopSuggestionEvents.current?.()
+    }
   }, [])
 
   const guard = async (work: () => Promise<void>) => {
@@ -150,6 +176,121 @@ export default function App() {
       )
     })
 
+  const runReachability = () =>
+    guard(async () => {
+      const os = await isInternetReachable()
+      const probed = await isInternetReachable({
+        probeUrl: 'https://www.google.com/generate_204',
+        timeout: 5000,
+      })
+      setMessage(`Internet reachable: OS says ${os}, HTTP probe says ${probed}.`)
+    })
+
+  const runAddresses = () =>
+    guard(async () => {
+      const info = await getIPAddresses()
+      setMessage(
+        info
+          ? `${info.interfaceName ?? 'wifi'} IPv4 [${info.ipv4.join(', ')}] IPv6 [${info.ipv6.join(', ')}]`
+          : 'No Wi-Fi addresses.'
+      )
+    })
+
+  const runLocalNetworkPermission = () =>
+    guard(async () => {
+      setMessage('Requesting local network access…')
+      setMessage(`Local network permission: ${await requestLocalNetworkPermission()}`)
+    })
+
+  const runConfigured = () =>
+    guard(async () => {
+      const ssids = await getConfiguredSSIDs()
+      setMessage(`Configured by this app: ${ssids.join(', ') || 'none'}`)
+    })
+
+  const runDisconnect = () =>
+    guard(async () => {
+      setMessage(`disconnect() released something: ${await disconnect()}`)
+    })
+
+  const toggleBrowse = () => {
+    if (stopBrowsing.current) {
+      stopBrowsing.current()
+      stopBrowsing.current = null
+      setBrowsing(false)
+      setMessage('Service discovery stopped.')
+      return
+    }
+    setServices({})
+    try {
+      const handle = startServiceDiscovery('_http._tcp', {
+        onFound: (service) => setServices((all) => ({ ...all, [service.id]: service })),
+        onLost: (service) =>
+          setServices((all) => {
+            const next = { ...all }
+            delete next[service.id]
+            return next
+          }),
+        onError: (error) => setMessage(error),
+      })
+      stopBrowsing.current = handle.stop
+      setBrowsing(true)
+      setMessage('Browsing for _http._tcp services…')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error))
+    }
+  }
+
+  const toggleContinuousScan = () => {
+    if (stopContinuous.current) {
+      stopContinuous.current()
+      stopContinuous.current = null
+      setScanning(false)
+      setMessage('Continuous scan stopped.')
+      return
+    }
+    const unsubscribers = [
+      addNetworksFoundListener((found, info) => {
+        setNetworks(found)
+        setMessage(
+          `Batch of ${found.length}: fresh=${info.fresh} throttled=${info.throttled}` +
+            (info.message ? ` (${info.message})` : '')
+        )
+      }),
+      addScanThrottledListener((info) => setMessage(`Throttled: ${info.message ?? ''}`)),
+      addScanErrorListener((error) => setMessage(`Scan error: ${error}`)),
+    ]
+    startScan({ interval: 10_000 })
+    stopContinuous.current = () => {
+      stopScan()
+      unsubscribers.forEach((unsubscribe) => unsubscribe())
+    }
+    setScanning(true)
+    setMessage('Continuous scan every 10 s (Android throttles after 4 per 2 min).')
+  }
+
+  const toggleSuggestionEvents = () => {
+    if (stopSuggestionEvents.current) {
+      stopSuggestionEvents.current()
+      stopSuggestionEvents.current = null
+      setSuggestionEvents(false)
+      setMessage('Suggestion events stopped.')
+      return
+    }
+    const unsubscribe = addSuggestionConnectionListener((event) =>
+      setMessage(
+        `Suggestion event: ${event.type} ${event.ssid ?? ''} ${event.failureReason ?? ''} ${event.message ?? ''}`
+      )
+    )
+    if (!unsubscribe) {
+      setMessage('Suggestion connection events are unsupported here.')
+      return
+    }
+    stopSuggestionEvents.current = unsubscribe
+    setSuggestionEvents(true)
+    setMessage('Listening for suggestion connection events.')
+  }
+
   const toggleObserver = () => {
     if (stopObserving.current) {
       stopObserving.current()
@@ -216,6 +357,30 @@ export default function App() {
           <Pressable onPress={toggleObserver} style={({ pressed }) => [styles.smallButton, observing && styles.smallButtonActive, pressed && styles.buttonPressed]}>
             <Text style={styles.smallButtonText}>{observing ? 'Stop observer' : 'Observe'}</Text>
           </Pressable>
+          <Pressable disabled={busy} onPress={runReachability} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Internet?</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runAddresses} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>IP addresses</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runLocalNetworkPermission} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Local network</Text>
+          </Pressable>
+          <Pressable onPress={toggleBrowse} style={({ pressed }) => [styles.smallButton, browsing && styles.smallButtonActive, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>{browsing ? 'Stop Bonjour' : 'Bonjour _http'}</Text>
+          </Pressable>
+          <Pressable onPress={toggleContinuousScan} style={({ pressed }) => [styles.smallButton, scanning && styles.smallButtonActive, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>{scanning ? 'Stop scan loop' : 'Scan loop'}</Text>
+          </Pressable>
+          <Pressable onPress={toggleSuggestionEvents} style={({ pressed }) => [styles.smallButton, suggestionEvents && styles.smallButtonActive, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>{suggestionEvents ? 'Stop events' : 'Suggest events'}</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runConfigured} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Configured</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runDisconnect} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Disconnect</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.message}>{message}</Text>
@@ -265,11 +430,26 @@ export default function App() {
           </View>
         )}
 
+        {Object.values(services).map((service) => (
+          <View key={service.id} style={styles.networkCard}>
+            <Text numberOfLines={1} style={styles.networkName}>{service.name}</Text>
+            <Text style={styles.meta}>
+              {service.type} · {service.resolved ? `${service.host}:${service.port}` : 'unresolved'}
+            </Text>
+            {service.txt.length > 0 && (
+              <Text numberOfLines={2} style={styles.meta}>{JSON.stringify(txtRecordToObject(service.txt))}</Text>
+            )}
+          </View>
+        ))}
+
         {current && (
           <View style={styles.currentCard}>
             <Text style={styles.cardLabel}>CURRENT NETWORK</Text>
             <Text style={styles.networkName}>{current.ssid}</Text>
             <Text style={styles.meta}>{current.ipAddress ?? 'IP address unavailable'}</Text>
+            {current.ipv6Addresses && current.ipv6Addresses.length > 0 && (
+              <Text style={styles.meta}>{current.ipv6Addresses.join(', ')}</Text>
+            )}
             <Text style={styles.meta}>security: {current.securityType}</Text>
           </View>
         )}
@@ -284,6 +464,7 @@ export default function App() {
             <Text style={styles.meta}>
               {network.channel == null ? 'Channel unavailable' : `Channel ${network.channel}`}
               {` · ${network.securityType}`}
+              {network.timestamp == null ? '' : ` · seen ${Math.round((Date.now() - network.timestamp) / 1000)}s ago`}
             </Text>
           </View>
         ))}
