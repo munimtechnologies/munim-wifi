@@ -134,6 +134,10 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun getIPAddresses(): Promise<Variant_NullType_IPAddressInfo>
+  
+  @DoNotStrip
+  @Keep
   abstract fun getWifiCapabilityStatus(): Promise<WifiCapabilityStatus>
   
   @DoNotStrip

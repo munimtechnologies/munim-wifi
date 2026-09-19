@@ -43,6 +43,8 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<JWifiSecurityType> securityType = this->getFieldValue(fieldSecurityType);
       static const auto fieldIpAddress = clazz->getField<jni::JString>("ipAddress");
       jni::local_ref<jni::JString> ipAddress = this->getFieldValue(fieldIpAddress);
+      static const auto fieldIpv6Addresses = clazz->getField<jni::JArrayClass<jni::JString>>("ipv6Addresses");
+      jni::local_ref<jni::JArrayClass<jni::JString>> ipv6Addresses = this->getFieldValue(fieldIpv6Addresses);
       static const auto fieldSubnetMask = clazz->getField<jni::JString>("subnetMask");
       jni::local_ref<jni::JString> subnetMask = this->getFieldValue(fieldSubnetMask);
       static const auto fieldGateway = clazz->getField<jni::JString>("gateway");
@@ -54,6 +56,16 @@ namespace margelo::nitro::munimwifi {
         bssid->toStdString(),
         securityType->toCpp(),
         ipAddress != nullptr ? std::make_optional(ipAddress->toStdString()) : std::nullopt,
+        ipv6Addresses != nullptr ? std::make_optional([&](auto&& __input) {
+          size_t __size = __input->size();
+          std::vector<std::string> __vector;
+          __vector.reserve(__size);
+          for (size_t __i = 0; __i < __size; __i++) {
+            auto __element = __input->getElement(__i);
+            __vector.push_back(__element->toStdString());
+          }
+          return __vector;
+        }(ipv6Addresses)) : std::nullopt,
         subnetMask != nullptr ? std::make_optional(subnetMask->toStdString()) : std::nullopt,
         gateway != nullptr ? std::make_optional(gateway->toStdString()) : std::nullopt,
         dnsServers != nullptr ? std::make_optional([&](auto&& __input) {
@@ -75,7 +87,7 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JCurrentNetworkInfo::javaobject> fromCpp(const CurrentNetworkInfo& value) {
-      using JSignature = JCurrentNetworkInfo(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>);
+      using JSignature = JCurrentNetworkInfo(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<JWifiSecurityType>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JString>, jni::alias_ref<jni::JArrayClass<jni::JString>>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -84,6 +96,16 @@ namespace margelo::nitro::munimwifi {
         jni::make_jstring(value.bssid),
         JWifiSecurityType::fromCpp(value.securityType),
         value.ipAddress.has_value() ? jni::make_jstring(value.ipAddress.value()) : nullptr,
+        value.ipv6Addresses.has_value() ? [&](auto&& __input) {
+          size_t __size = __input.size();
+          jni::local_ref<jni::JArrayClass<jni::JString>> __array = jni::JArrayClass<jni::JString>::newArray(__size);
+          for (size_t __i = 0; __i < __size; __i++) {
+            const auto& __element = __input[__i];
+            auto __elementJni = jni::make_jstring(__element);
+            __array->setElement(__i, *__elementJni);
+          }
+          return __array;
+        }(value.ipv6Addresses.value()) : nullptr,
         value.subnetMask.has_value() ? jni::make_jstring(value.subnetMask.value()) : nullptr,
         value.gateway.has_value() ? jni::make_jstring(value.gateway.value()) : nullptr,
         value.dnsServers.has_value() ? [&](auto&& __input) {

@@ -341,6 +341,14 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     return Promise.resolved(withResult: .first(NullType.null))
   }
 
+  func getIPAddresses() throws -> Promise<Variant_NullType_IPAddressInfo> {
+    let info = wifiInterfaceAddresses()
+    if info.ipv4.isEmpty && info.ipv6.isEmpty {
+      return Promise.resolved(withResult: .first(NullType.null))
+    }
+    return Promise.resolved(withResult: .second(info))
+  }
+
   func requestLocalNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome> {
     try validateSSID(options.ssid)
     let promise = Promise<ConnectionOutcome>()
@@ -693,6 +701,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       bssid: network.bssid,
       securityType: securityType(of: network),
       ipAddress: getIPAddressSync(),
+      ipv6Addresses: wifiInterfaceAddresses().ipv6,
       subnetMask: nil,
       gateway: nil,
       dnsServers: nil
@@ -766,9 +775,19 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 
   private func getIPAddressSync() -> String? {
+    wifiInterfaceAddresses().ipv4.first
+  }
+
+  /// Wi-Fi is en0 on iPhone and iPad (en1 on some Mac Catalyst hosts). Only
+  /// interfaces that are up and running are considered.
+  private func wifiInterfaceAddresses() -> IPAddressInfo {
+    var ipv4: [String] = []
+    var ipv6: [(address: String, rank: Int)] = []
+    var interfaceName: String?
+
     var interfaceAddresses: UnsafeMutablePointer<ifaddrs>?
     guard getifaddrs(&interfaceAddresses) == 0, let first = interfaceAddresses else {
-      return nil
+      return IPAddressInfo(interfaceName: nil, ipv4: [], ipv6: [])
     }
     defer { freeifaddrs(interfaceAddresses) }
 
@@ -776,9 +795,14 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     while let current = pointer {
       defer { pointer = current.pointee.ifa_next }
       guard let socketAddress = current.pointee.ifa_addr else { continue }
-      guard socketAddress.pointee.sa_family == UInt8(AF_INET) else { continue }
-      let interfaceName = String(cString: current.pointee.ifa_name)
-      guard interfaceName == "en0" || interfaceName == "en1" else { continue }
+      let family = socketAddress.pointee.sa_family
+      guard family == UInt8(AF_INET) || family == UInt8(AF_INET6) else { continue }
+      let flags = Int32(current.pointee.ifa_flags)
+      guard flags & IFF_UP != 0, flags & IFF_RUNNING != 0 else { continue }
+      let name = String(cString: current.pointee.ifa_name)
+      guard name == "en0" || name == "en1" else { continue }
+      // Stick to the first Wi-Fi interface that has addresses.
+      if let interfaceName, interfaceName != name { continue }
 
       var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
       let result = getnameinfo(
@@ -790,9 +814,33 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
         0,
         NI_NUMERICHOST
       )
-      if result == 0 { return String(cString: hostname) }
+      guard result == 0 else { continue }
+      let address = String(cString: hostname)
+      interfaceName = name
+      if family == UInt8(AF_INET) {
+        ipv4.append(address)
+      } else {
+        ipv6.append((address, Self.ipv6Rank(address)))
+      }
     }
-    return nil
+
+    return IPAddressInfo(
+      interfaceName: interfaceName,
+      ipv4: ipv4,
+      ipv6: ipv6.enumerated()
+        .sorted { ($0.element.rank, $0.offset) < ($1.element.rank, $1.offset) }
+        .map { $0.element.address }
+    )
+  }
+
+  /// 0 = global, 1 = unique local (fc00::/7), 2 = link-local (fe80::/10).
+  private static func ipv6Rank(_ address: String) -> Int {
+    let lower = address.lowercased()
+    if lower.hasPrefix("fe8") || lower.hasPrefix("fe9") || lower.hasPrefix("fea") || lower.hasPrefix("feb") {
+      return 2
+    }
+    if lower.hasPrefix("fc") || lower.hasPrefix("fd") { return 1 }
+    return 0
   }
 }
 

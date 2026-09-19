@@ -41,6 +41,7 @@ target_sources(
   ../nitrogen/generated/android/c++/JVariant_NullType_ChannelInfo.cpp
   ../nitrogen/generated/android/c++/JVariant_NullType_WifiNetwork.cpp
   ../nitrogen/generated/android/c++/JVariant_NullType_CurrentNetworkInfo.cpp
+  ../nitrogen/generated/android/c++/JVariant_NullType_IPAddressInfo.cpp
 )
 
 # From node_modules/react-native/ReactAndroid/cmake-utils/folly-flags.cmake

@@ -45,6 +45,8 @@ import com.margelo.nitro.munimwifi.Variant_NullType_String
 import com.margelo.nitro.munimwifi.Variant_NullType_WifiNetwork
 import com.margelo.nitro.munimwifi.WifiFingerprint
 import com.margelo.nitro.munimwifi.WifiNetwork
+import java.net.Inet4Address
+import java.net.Inet6Address
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.concurrent.TimeoutException
@@ -335,8 +337,22 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun getIPAddress(): Promise<Variant_NullType_String> = Promise.parallel {
-    currentNetworkInfo()?.ipAddress?.let(Variant_NullType_String::create)
+    // Read from LinkProperties so no location permission is needed; fall back
+    // to WifiInfo for devices that report nothing there.
+    (wifiAddresses()?.ipv4?.firstOrNull() ?: legacyWifiIpv4())
+      ?.let(Variant_NullType_String::create)
       ?: Variant_NullType_String.create(NullType.NULL)
+  }
+
+  override fun getIPAddresses(): Promise<Variant_NullType_IPAddressInfo> = Promise.parallel {
+    val info = wifiAddresses()
+    val ipv4 = info?.ipv4?.takeIf { it.isNotEmpty() } ?: listOfNotNull(legacyWifiIpv4()).toTypedArray()
+    val ipv6 = info?.ipv6 ?: emptyArray()
+    if (ipv4.isEmpty() && ipv6.isEmpty()) {
+      Variant_NullType_IPAddressInfo.create(NullType.NULL)
+    } else {
+      Variant_NullType_IPAddressInfo.create(IPAddressInfo(info?.interfaceName, ipv4, ipv6))
+    }
   }
 
   override fun requestLocalNetwork(options: NativeConnectionOptions): Promise<ConnectionOutcome> {
@@ -1309,6 +1325,45 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     }
   }
 
+  /** The Wi-Fi network: the active one when it is Wi-Fi, else any connected Wi-Fi network. */
+  private fun wifiNetwork(): Network? {
+    val active = connectivityManager.activeNetwork
+    if (active != null &&
+      connectivityManager.getNetworkCapabilities(active)
+        ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+    ) {
+      return active
+    }
+    @Suppress("DEPRECATION")
+    return connectivityManager.allNetworks.firstOrNull {
+      connectivityManager.getNetworkCapabilities(it)
+        ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+    }
+  }
+
+  private fun wifiAddresses(): IPAddressInfo? {
+    val network = wifiNetwork() ?: return null
+    val linkProperties = connectivityManager.getLinkProperties(network) ?: return null
+    val addresses = linkProperties.linkAddresses.mapNotNull { it.address }
+    val ipv4 = addresses.filterIsInstance<Inet4Address>().mapNotNull { it.hostAddress }
+    val ipv6 = addresses.filterIsInstance<Inet6Address>()
+      .sortedBy { address ->
+        when {
+          address.isLinkLocalAddress -> 2
+          (address.address[0].toInt() and 0xfe) == 0xfc -> 1
+          else -> 0
+        }
+      }
+      .mapNotNull { address ->
+        val host = address.hostAddress?.substringBefore('%') ?: return@mapNotNull null
+        if (address.isLinkLocalAddress) "$host%${linkProperties.interfaceName}" else host
+      }
+    return IPAddressInfo(linkProperties.interfaceName, ipv4.toTypedArray(), ipv6.toTypedArray())
+  }
+
+  @Suppress("DEPRECATION")
+  private fun legacyWifiIpv4(): String? = ipv4(wifiManager.connectionInfo?.ipAddress ?: 0)
+
   @Suppress("DEPRECATION")
   private fun currentNetworkInfo(): CurrentNetworkInfo? {
     if (!hasLocationPermission()) return null
@@ -1321,6 +1376,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       bssid = info.bssid?.takeUnless { it == "02:00:00:00:00:00" }.orEmpty(),
       securityType = currentSecurityType(info),
       ipAddress = ipv4(info.ipAddress),
+      ipv6Addresses = wifiAddresses()?.ipv6,
       subnetMask = ipv4(dhcp?.netmask ?: 0),
       gateway = ipv4(dhcp?.gateway ?: 0),
       dnsServers = listOfNotNull(ipv4(dhcp?.dns1 ?: 0), ipv4(dhcp?.dns2 ?: 0)).toTypedArray(),

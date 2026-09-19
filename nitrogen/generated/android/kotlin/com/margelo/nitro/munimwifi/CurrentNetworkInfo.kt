@@ -32,6 +32,9 @@ data class CurrentNetworkInfo(
   val ipAddress: String?,
   @DoNotStrip
   @Keep
+  val ipv6Addresses: Array<String>?,
+  @DoNotStrip
+  @Keep
   val subnetMask: String?,
   @DoNotStrip
   @Keep
@@ -49,6 +52,7 @@ data class CurrentNetworkInfo(
       && Objects.deepEquals(this.bssid, other.bssid)
       && Objects.deepEquals(this.securityType, other.securityType)
       && Objects.deepEquals(this.ipAddress, other.ipAddress)
+      && Objects.deepEquals(this.ipv6Addresses, other.ipv6Addresses)
       && Objects.deepEquals(this.subnetMask, other.subnetMask)
       && Objects.deepEquals(this.gateway, other.gateway)
       && Objects.deepEquals(this.dnsServers, other.dnsServers)
@@ -60,6 +64,7 @@ data class CurrentNetworkInfo(
       bssid,
       securityType,
       ipAddress,
+      ipv6Addresses,
       subnetMask,
       gateway,
       dnsServers
@@ -74,8 +79,8 @@ data class CurrentNetworkInfo(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, bssid: String, securityType: WifiSecurityType, ipAddress: String?, subnetMask: String?, gateway: String?, dnsServers: Array<String>?): CurrentNetworkInfo {
-      return CurrentNetworkInfo(ssid, bssid, securityType, ipAddress, subnetMask, gateway, dnsServers)
+    private fun fromCpp(ssid: String, bssid: String, securityType: WifiSecurityType, ipAddress: String?, ipv6Addresses: Array<String>?, subnetMask: String?, gateway: String?, dnsServers: Array<String>?): CurrentNetworkInfo {
+      return CurrentNetworkInfo(ssid, bssid, securityType, ipAddress, ipv6Addresses, subnetMask, gateway, dnsServers)
     }
   }
 }

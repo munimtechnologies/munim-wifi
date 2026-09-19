@@ -9,6 +9,7 @@ import type {
   CurrentNetworkInfo,
   HotspotOutcome,
   HotspotStatus,
+  IPAddressInfo,
   Location,
   MunimWifi as MunimWifiSpec,
   NativeConnectionOptions,
@@ -334,6 +335,11 @@ export function getIPAddress(): Promise<string | null> {
   return MunimWifi.getIPAddress()
 }
 
+/** IPv4 and IPv6 addresses of the Wi-Fi interface, or null when it has none. */
+export function getIPAddresses(): Promise<IPAddressInfo | null> {
+  return MunimWifi.getIPAddresses()
+}
+
 export function getWifiCapabilityStatus(): Promise<WifiCapabilityStatus> {
   return MunimWifi.getWifiCapabilityStatus()
 }
@@ -432,6 +438,7 @@ export type {
   CurrentNetworkInfo,
   HotspotOutcome,
   HotspotStatus,
+  IPAddressInfo,
   Location,
   MunimWifiSpec,
   NativeConnectionOptions,
@@ -476,6 +483,7 @@ export default {
   stopLocalOnlyHotspot,
   disconnect,
   getIPAddress,
+  getIPAddresses,
   getWifiCapabilityStatus,
   getNetworkDiagnostics,
   startNetworkObserver,

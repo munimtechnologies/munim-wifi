@@ -26,6 +26,8 @@ namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
+// Forward declaration of `IPAddressInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 // Forward declaration of `Location` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct Location; }
 // Forward declaration of `NativeConnectionOptions` to properly resolve imports.
@@ -69,6 +71,7 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "HotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
 #include "HybridMunimWifiSpec.hpp"
+#include "IPAddressInfo.hpp"
 #include "Location.hpp"
 #include "NativeConnectionOptions.hpp"
 #include "NetworkDiagnostics.hpp"
@@ -911,6 +914,69 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return Func_void_HotspotOutcome_Wrapper(std::move(value));
   }
   
+  // pragma MARK: std::variant<nitro::NullType, IPAddressInfo>
+  /**
+   * Wrapper struct for `std::variant<nitro::NullType, IPAddressInfo>`.
+   * std::variant cannot be used in Swift because of a Swift bug.
+   * Not even specializing it works. So we create a wrapper struct.
+   */
+  struct std__variant_nitro__NullType__IPAddressInfo_ final {
+    std::variant<nitro::NullType, IPAddressInfo> variant;
+    std__variant_nitro__NullType__IPAddressInfo_(std::variant<nitro::NullType, IPAddressInfo> variant): variant(variant) { }
+    operator std::variant<nitro::NullType, IPAddressInfo>() const noexcept {
+      return variant;
+    }
+    inline size_t index() const noexcept {
+      return variant.index();
+    }
+    inline nitro::NullType get_0() const noexcept {
+      return std::get<0>(variant);
+    }
+    inline IPAddressInfo get_1() const noexcept {
+      return std::get<1>(variant);
+    }
+  };
+  inline std__variant_nitro__NullType__IPAddressInfo_ create_std__variant_nitro__NullType__IPAddressInfo_(nitro::NullType value) noexcept {
+    return std__variant_nitro__NullType__IPAddressInfo_(value);
+  }
+  inline std__variant_nitro__NullType__IPAddressInfo_ create_std__variant_nitro__NullType__IPAddressInfo_(const IPAddressInfo& value) noexcept {
+    return std__variant_nitro__NullType__IPAddressInfo_(value);
+  }
+  
+  // pragma MARK: std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>
+  /**
+   * Specialized version of `std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>`.
+   */
+  using std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo___ = std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>;
+  inline std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> create_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo___() noexcept {
+    return Promise<std::variant<nitro::NullType, IPAddressInfo>>::create();
+  }
+  inline PromiseHolder<std::variant<nitro::NullType, IPAddressInfo>> wrap_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo___(std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> promise) noexcept {
+    return PromiseHolder<std::variant<nitro::NullType, IPAddressInfo>>(std::move(promise));
+  }
+  
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& /* result */)>
+  /**
+   * Specialized version of `std::function<void(const std::variant<nitro::NullType, IPAddressInfo>&)>`.
+   */
+  using Func_void_std__variant_nitro__NullType__IPAddressInfo_ = std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& /* result */)>;
+  /**
+   * Wrapper class for a `std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& / * result * /)>`, this can be used from Swift.
+   */
+  class Func_void_std__variant_nitro__NullType__IPAddressInfo__Wrapper final {
+  public:
+    explicit Func_void_std__variant_nitro__NullType__IPAddressInfo__Wrapper(std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& /* result */)>&& func): _function(std::make_unique<std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& /* result */)>>(std::move(func))) {}
+    inline void call(std::variant<nitro::NullType, IPAddressInfo> result) const noexcept {
+      _function->operator()(result);
+    }
+  private:
+    std::unique_ptr<std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& /* result */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_std__variant_nitro__NullType__IPAddressInfo_ create_Func_void_std__variant_nitro__NullType__IPAddressInfo_(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_std__variant_nitro__NullType__IPAddressInfo__Wrapper wrap_Func_void_std__variant_nitro__NullType__IPAddressInfo_(Func_void_std__variant_nitro__NullType__IPAddressInfo_ value) noexcept {
+    return Func_void_std__variant_nitro__NullType__IPAddressInfo__Wrapper(std::move(value));
+  }
+  
   // pragma MARK: std::shared_ptr<Promise<WifiCapabilityStatus>>
   /**
    * Specialized version of `std::shared_ptr<Promise<WifiCapabilityStatus>>`.
@@ -1145,6 +1211,15 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   }
   inline Result_std__shared_ptr_Promise_HotspotOutcome___ create_Result_std__shared_ptr_Promise_HotspotOutcome___(const std::exception_ptr& error) noexcept {
     return Result<std::shared_ptr<Promise<HotspotOutcome>>>::withError(error);
+  }
+  
+  // pragma MARK: Result<std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>>
+  using Result_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo____ = Result<std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>>;
+  inline Result_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo____ create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo____(const std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>& value) noexcept {
+    return Result<std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>>::withValue(value);
+  }
+  inline Result_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo____ create_Result_std__shared_ptr_Promise_std__variant_nitro__NullType__IPAddressInfo____(const std::exception_ptr& error) noexcept {
+    return Result<std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>>>::withError(error);
   }
   
   // pragma MARK: Result<std::shared_ptr<Promise<WifiCapabilityStatus>>>

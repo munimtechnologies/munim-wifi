@@ -37,6 +37,8 @@ namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 // Forward declaration of `HotspotOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
+// Forward declaration of `IPAddressInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 // Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 // Forward declaration of `NetworkDiagnostics` to properly resolve imports.
@@ -61,6 +63,7 @@ namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 #include "SuggestionOutcome.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"
 #include "HotspotOutcome.hpp"
+#include "IPAddressInfo.hpp"
 #include "WifiCapabilityStatus.hpp"
 #include "NetworkDiagnostics.hpp"
 
@@ -119,6 +122,7 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<HotspotOutcome>> stopLocalOnlyHotspot(const std::string& reservationId) = 0;
       virtual std::shared_ptr<Promise<bool>> disconnect() = 0;
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() = 0;
+      virtual std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() = 0;
       virtual std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() = 0;
       virtual std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() = 0;
       virtual void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) = 0;
