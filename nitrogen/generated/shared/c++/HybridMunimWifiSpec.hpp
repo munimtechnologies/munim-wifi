@@ -45,6 +45,8 @@ namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 // Forward declaration of `NetworkDiagnostics` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
+// Forward declaration of `ReachabilityOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
 // Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `DiscoveredService` to properly resolve imports.
@@ -75,6 +77,7 @@ namespace margelo::nitro::munimwifi { enum class PermissionState; }
 #include "IPAddressInfo.hpp"
 #include "WifiCapabilityStatus.hpp"
 #include "NetworkDiagnostics.hpp"
+#include "ReachabilityOptions.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "DiscoveredService.hpp"
 #include "PermissionState.hpp"
@@ -140,6 +143,7 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() = 0;
       virtual std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() = 0;
       virtual std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() = 0;
+      virtual std::shared_ptr<Promise<bool>> isInternetReachable(const std::optional<ReachabilityOptions>& options) = 0;
       virtual void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) = 0;
       virtual void stopNetworkObserver() = 0;
       virtual std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;

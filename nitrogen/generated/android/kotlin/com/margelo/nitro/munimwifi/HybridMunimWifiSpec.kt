@@ -161,6 +161,10 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun getNetworkDiagnostics(): Promise<NetworkDiagnostics>
   
+  @DoNotStrip
+  @Keep
+  abstract fun isInternetReachable(options: ReachabilityOptions?): Promise<Boolean>
+  
   abstract fun startNetworkObserver(onUpdate: (diagnostics: NetworkDiagnostics) -> Unit): Unit
   
   @DoNotStrip

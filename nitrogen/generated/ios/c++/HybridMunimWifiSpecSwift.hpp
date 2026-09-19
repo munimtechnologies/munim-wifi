@@ -76,6 +76,8 @@ namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 namespace margelo::nitro::munimwifi { enum class NetworkState; }
 // Forward declaration of `NetworkLinkProperties` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
+// Forward declaration of `ReachabilityOptions` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
 // Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `DiscoveredService` to properly resolve imports.
@@ -122,6 +124,7 @@ namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 #include "NetworkDiagnostics.hpp"
 #include "NetworkState.hpp"
 #include "NetworkLinkProperties.hpp"
+#include "ReachabilityOptions.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "DiscoveredService.hpp"
 #include "ServiceTxtEntry.hpp"
@@ -404,6 +407,14 @@ namespace margelo::nitro::munimwifi {
     }
     inline std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() override {
       auto __result = _swiftPart.getNetworkDiagnostics();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<bool>> isInternetReachable(const std::optional<ReachabilityOptions>& options) override {
+      auto __result = _swiftPart.isInternetReachable(options);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

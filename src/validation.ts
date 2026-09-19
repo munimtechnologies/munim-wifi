@@ -1,4 +1,5 @@
 import type {
+  ReachabilityOptions,
   EnterpriseCredentials,
   NativeConnectionOptions,
   NativeNetworkSuggestionOptions,
@@ -320,5 +321,29 @@ export function validateResolveTimeout(timeout: number | undefined): void {
     (!Number.isInteger(timeout) || timeout < 1000 || timeout > 30000)
   ) {
     throw new RangeError('resolveTimeout must be an integer from 1000 through 30000 ms')
+  }
+}
+
+export function validateReachabilityOptions(
+  options: ReachabilityOptions | undefined
+): void {
+  if (options === undefined) return
+  if (options === null || typeof options !== 'object') {
+    throw new TypeError('Reachability options must be an object')
+  }
+  if (
+    options.probeUrl !== undefined &&
+    (typeof options.probeUrl !== 'string' ||
+      !/^https?:\/\/[^\s/$.?#][^\s]*$/i.test(options.probeUrl))
+  ) {
+    throw new TypeError('probeUrl must be an absolute http(s) URL')
+  }
+  if (
+    options.timeout !== undefined &&
+    (!Number.isInteger(options.timeout) ||
+      options.timeout < 1000 ||
+      options.timeout > 30000)
+  ) {
+    throw new RangeError('Reachability timeout must be 1000-30000 milliseconds')
   }
 }

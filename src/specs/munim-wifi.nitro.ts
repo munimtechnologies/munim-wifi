@@ -332,6 +332,18 @@ export interface NetworkDiagnostics {
   linkProperties?: NetworkLinkProperties
 }
 
+export interface ReachabilityOptions {
+  /**
+   * Optional URL to fetch (GET, redirects not followed) for an end-to-end
+   * check. Only a 2xx response counts as reachable, so captive-portal
+   * redirects fail. Use an https endpoint that returns 204, such as
+   * https://www.google.com/generate_204 or your own health check.
+   */
+  probeUrl?: string
+  /** Probe timeout in ms (1000-30000, default 5000). */
+  timeout?: number
+}
+
 // Wi-Fi Fingerprint data
 export interface WifiFingerprint {
   networks: WifiNetwork[]
@@ -599,6 +611,14 @@ export interface MunimWifi
   getWifiCapabilityStatus(): Promise<WifiCapabilityStatus>
 
   getNetworkDiagnostics(): Promise<NetworkDiagnostics>
+
+  /**
+   * Whether the default network reaches the internet.
+   * Android: NET_CAPABILITY_INTERNET + NET_CAPABILITY_VALIDATED (and no captive
+   * portal). iOS: NWPath status is satisfied. With `probeUrl`, the result is
+   * the outcome of an HTTP request over that network instead.
+   */
+  isInternetReachable(options?: ReachabilityOptions): Promise<boolean>
 
   startNetworkObserver(onUpdate: NetworkObserverCallback): void
 
