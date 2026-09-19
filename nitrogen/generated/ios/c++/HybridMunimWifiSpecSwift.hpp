@@ -315,7 +315,7 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<void>> disconnect() override {
+    inline std::shared_ptr<Promise<bool>> disconnect() override {
       auto __result = _swiftPart.disconnect();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());

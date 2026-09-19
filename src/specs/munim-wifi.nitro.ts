@@ -249,9 +249,10 @@ export type NetworkObserverCallback = (diagnostics: NetworkDiagnostics) => void
 export interface MunimWifi
   extends HybridObject<{ ios: 'swift'; android: 'kotlin' }> {
   /**
-   * Check if Wi-Fi is enabled on the device.
-   *
-   * @returns Promise resolving to true if Wi-Fi is enabled, false otherwise.
+   * Android: whether the Wi-Fi radio is enabled (WifiManager.isWifiEnabled).
+   * iOS: whether the device currently has a usable Wi-Fi path (joined to a
+   * Wi-Fi network). iOS offers no public API for the radio's on/off state, so a
+   * device with Wi-Fi on but not joined to any network reports false.
    */
   isWifiEnabled(): Promise<boolean>
 
@@ -389,11 +390,13 @@ export interface MunimWifi
   stopLocalOnlyHotspot(reservationId: string): Promise<HotspotOutcome>
 
   /**
-   * Disconnect from the current Wi-Fi network.
+   * Disconnect from the Wi-Fi network this app connected to.
    *
-   * @returns Promise resolving when disconnection is complete.
+   * @returns Promise resolving to true when a connection or configuration owned
+   * by this app was actually released, false when there was nothing to remove
+   * (for example on iOS when the current network was configured by the user).
    */
-  disconnect(): Promise<void>
+  disconnect(): Promise<boolean>
 
   /**
    * Get IP address information for the current Wi-Fi connection.
