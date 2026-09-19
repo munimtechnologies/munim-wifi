@@ -162,7 +162,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     }
   }
 
-  override fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>> {
+  override fun scanNetworks(options: ScanOptions): Promise<Array<WifiNetwork>> {
     val promise = Promise<Array<WifiNetwork>>()
     val settled = AtomicBoolean(false)
     val allowCached = options?.allowCached != false
@@ -212,7 +212,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun startScan(
-    options: ScanOptions?,
+    options: ScanOptions,
     onNetworks: (networks: Array<WifiNetwork>, info: ScanResultInfo) -> Unit,
     onError: ((message: String) -> Unit)?,
   ) {
@@ -584,7 +584,11 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     }
   }
 
-  override fun requestUserSavedNetwork(options: NativeConnectionOptions?): Promise<ConnectionOutcome> = Promise.parallel {
+  override fun requestUserSavedNetwork(
+    options: NativeConnectionOptions,
+    hasOptions: Boolean,
+  ): Promise<ConnectionOutcome> = Promise.parallel {
+    val options: NativeConnectionOptions? = if (hasOptions) options else null
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       return@parallel ConnectionOutcome(
         status = ConnectionStatus.UNSUPPORTED,
@@ -993,7 +997,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     buildDiagnostics(connectivityManager.activeNetwork, null)
   }
 
-  override fun isInternetReachable(options: ReachabilityOptions?): Promise<Boolean> = Promise.parallel {
+  override fun isInternetReachable(options: ReachabilityOptions): Promise<Boolean> = Promise.parallel {
     val timeout = options?.timeout ?: 5_000.0
     require(timeout.isFinite() && timeout in 1_000.0..30_000.0) {
       "munim-wifi: reachability timeout must be between 1000 and 30000 milliseconds"
@@ -1085,7 +1089,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   override fun startServiceDiscovery(
     type: String,
-    options: ServiceDiscoveryOptions?,
+    options: ServiceDiscoveryOptions,
     onFound: (service: DiscoveredService) -> Unit,
     onLost: (service: DiscoveredService) -> Unit,
     onError: ((message: String) -> Unit)?,

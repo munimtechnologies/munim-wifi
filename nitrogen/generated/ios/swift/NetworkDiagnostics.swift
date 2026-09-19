@@ -118,11 +118,11 @@ public extension NetworkDiagnostics {
   
   @inline(__always)
   var currentNetwork: CurrentNetworkInfo? {
-    return self.__currentNetwork.value
+    return (bridge.has_value_std__optional_CurrentNetworkInfo_(self.__currentNetwork) ? bridge.get_std__optional_CurrentNetworkInfo_(self.__currentNetwork) : nil)
   }
   
   @inline(__always)
   var linkProperties: NetworkLinkProperties? {
-    return self.__linkProperties.value
+    return (bridge.has_value_std__optional_NetworkLinkProperties_(self.__linkProperties) ? bridge.get_std__optional_NetworkLinkProperties_(self.__linkProperties) : nil)
   }
 }

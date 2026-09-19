@@ -195,16 +195,16 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const std::optional<ScanOptions>& options) override {
-      auto __result = _swiftPart.scanNetworks(options);
+    inline std::shared_ptr<Promise<std::vector<WifiNetwork>>> scanNetworks(const ScanOptions& options) override {
+      auto __result = _swiftPart.scanNetworks(std::forward<decltype(options)>(options));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline void startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
-      auto __result = _swiftPart.startScan(options, onNetworks, onError);
+    inline void startScan(const ScanOptions& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
+      auto __result = _swiftPart.startScan(std::forward<decltype(options)>(options), onNetworks, onError);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
@@ -295,8 +295,8 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) override {
-      auto __result = _swiftPart.requestUserSavedNetwork(options);
+    inline std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const NativeConnectionOptions& options, bool hasOptions) override {
+      auto __result = _swiftPart.requestUserSavedNetwork(std::forward<decltype(options)>(options), std::forward<decltype(hasOptions)>(hasOptions));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
@@ -413,8 +413,8 @@ namespace margelo::nitro::munimwifi {
       auto __value = std::move(__result.value());
       return __value;
     }
-    inline std::shared_ptr<Promise<bool>> isInternetReachable(const std::optional<ReachabilityOptions>& options) override {
-      auto __result = _swiftPart.isInternetReachable(options);
+    inline std::shared_ptr<Promise<bool>> isInternetReachable(const ReachabilityOptions& options) override {
+      auto __result = _swiftPart.isInternetReachable(std::forward<decltype(options)>(options));
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
@@ -433,8 +433,8 @@ namespace margelo::nitro::munimwifi {
         std::rethrow_exception(__result.error());
       }
     }
-    inline std::string startServiceDiscovery(const std::string& type, const std::optional<ServiceDiscoveryOptions>& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
-      auto __result = _swiftPart.startServiceDiscovery(type, options, onFound, onLost, onError);
+    inline std::string startServiceDiscovery(const std::string& type, const ServiceDiscoveryOptions& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) override {
+      auto __result = _swiftPart.startServiceDiscovery(type, std::forward<decltype(options)>(options), onFound, onLost, onError);
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

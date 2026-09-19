@@ -13,7 +13,7 @@
     "release": "semantic-release",
     "release:local": "node scripts/release-local.mjs",
     "build": "npm run typecheck && bob build",
-    "codegen": "nitrogen --logLevel=\"debug\" && node scripts/patch-nitrogen-swift.mjs",
+    "codegen": "nitrogen --logLevel=\"debug\" && node scripts/patch-nitro-optionals.js && node scripts/patch-nitrogen-swift.mjs",
     "typecheck:example": "tsc --noEmit -p example/tsconfig.json",
     "prepack": "npm run build",
     "test": "jest"

@@ -214,7 +214,8 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     return promise
   }
 
-  func scanNetworks(options: ScanOptions?) throws -> Promise<[WifiNetwork]> {
+  func scanNetworks(options: ScanOptions) throws -> Promise<[WifiNetwork]> {
+    let options: ScanOptions? = options
     try validate(options: options)
     let promise = Promise<[WifiNetwork]>()
     fetchCurrentNetwork { network in
@@ -226,10 +227,11 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 
   func startScan(
-    options: ScanOptions?,
+    options: ScanOptions,
     onNetworks: @escaping (_ networks: [WifiNetwork], _ info: ScanResultInfo) -> Void,
     onError: ((_ message: String) -> Void)?
   ) throws {
+    let options: ScanOptions? = options
     try validate(options: options)
     fetchCurrentNetwork { network in
       let networks = network.map { [self.toWifiNetwork($0)] } ?? []
@@ -487,8 +489,12 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     return promise
   }
 
-  func requestUserSavedNetwork(options: NativeConnectionOptions?) throws -> Promise<ConnectionOutcome> {
-    Promise.resolved(withResult: ConnectionOutcome(
+  func requestUserSavedNetwork(
+    options: NativeConnectionOptions,
+    hasOptions: Bool
+  ) throws -> Promise<ConnectionOutcome> {
+    let options: NativeConnectionOptions? = hasOptions ? options : nil
+    return Promise.resolved(withResult: ConnectionOutcome(
       status: .unsupported,
       mode: .usersavednetwork,
       ssid: options?.ssid,
@@ -602,7 +608,8 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     return promise
   }
 
-  func isInternetReachable(options: ReachabilityOptions?) throws -> Promise<Bool> {
+  func isInternetReachable(options: ReachabilityOptions) throws -> Promise<Bool> {
+    let options: ReachabilityOptions? = options
     let timeout = options?.timeout ?? 5_000
     guard timeout.isFinite, timeout >= 1_000, timeout <= 30_000 else {
       throw MunimWifiError.invalidTimeout
@@ -685,11 +692,12 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
 
   func startServiceDiscovery(
     type: String,
-    options: ServiceDiscoveryOptions?,
+    options: ServiceDiscoveryOptions,
     onFound: @escaping (_ service: DiscoveredService) -> Void,
     onLost: @escaping (_ service: DiscoveredService) -> Void,
     onError: ((_ message: String) -> Void)?
   ) throws -> String {
+    let options: ServiceDiscoveryOptions? = options
     let serviceType = type.hasSuffix(".") ? String(type.dropLast()) : type
     guard serviceType.range(
       of: "^_[A-Za-z0-9](?:[A-Za-z0-9-]{0,13}[A-Za-z0-9])?\\._(?:tcp|udp)$",

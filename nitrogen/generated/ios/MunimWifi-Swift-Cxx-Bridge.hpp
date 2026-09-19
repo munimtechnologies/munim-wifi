@@ -38,8 +38,6 @@ namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
 namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 // Forward declaration of `Location` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct Location; }
-// Forward declaration of `NativeConnectionOptions` to properly resolve imports.
-namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
 // Forward declaration of `NetworkDiagnostics` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 // Forward declaration of `NetworkLinkProperties` to properly resolve imports.
@@ -50,14 +48,8 @@ namespace margelo::nitro::munimwifi { enum class NetworkState; }
 namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `PermissionState` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class PermissionState; }
-// Forward declaration of `ReachabilityOptions` to properly resolve imports.
-namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
-// Forward declaration of `ScanOptions` to properly resolve imports.
-namespace margelo::nitro::munimwifi { struct ScanOptions; }
 // Forward declaration of `ScanResultInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
-// Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
-namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `ServiceTxtEntry` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 // Forward declaration of `SuggestionConnectionEventType` to properly resolve imports.
@@ -99,16 +91,12 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "HybridMunimWifiSpec.hpp"
 #include "IPAddressInfo.hpp"
 #include "Location.hpp"
-#include "NativeConnectionOptions.hpp"
 #include "NetworkDiagnostics.hpp"
 #include "NetworkLinkProperties.hpp"
 #include "NetworkState.hpp"
 #include "PasspointConfig.hpp"
 #include "PermissionState.hpp"
-#include "ReachabilityOptions.hpp"
-#include "ScanOptions.hpp"
 #include "ScanResultInfo.hpp"
-#include "ServiceDiscoveryOptions.hpp"
 #include "ServiceTxtEntry.hpp"
 #include "SuggestionConnectionEvent.hpp"
 #include "SuggestionConnectionEventType.hpp"
@@ -281,21 +269,6 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   Func_void_std__vector_WifiNetwork_ create_Func_void_std__vector_WifiNetwork_(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_std__vector_WifiNetwork__Wrapper wrap_Func_void_std__vector_WifiNetwork_(Func_void_std__vector_WifiNetwork_ value) noexcept {
     return Func_void_std__vector_WifiNetwork__Wrapper(std::move(value));
-  }
-  
-  // pragma MARK: std::optional<ScanOptions>
-  /**
-   * Specialized version of `std::optional<ScanOptions>`.
-   */
-  using std__optional_ScanOptions_ = std::optional<ScanOptions>;
-  inline std::optional<ScanOptions> create_std__optional_ScanOptions_(const ScanOptions& value) noexcept {
-    return std::optional<ScanOptions>(value);
-  }
-  inline bool has_value_std__optional_ScanOptions_(const std::optional<ScanOptions>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline ScanOptions get_std__optional_ScanOptions_(const std::optional<ScanOptions>& optional) noexcept {
-    return optional.value();
   }
   
   // pragma MARK: std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>
@@ -909,21 +882,6 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     return optional.value();
   }
   
-  // pragma MARK: std::optional<NativeConnectionOptions>
-  /**
-   * Specialized version of `std::optional<NativeConnectionOptions>`.
-   */
-  using std__optional_NativeConnectionOptions_ = std::optional<NativeConnectionOptions>;
-  inline std::optional<NativeConnectionOptions> create_std__optional_NativeConnectionOptions_(const NativeConnectionOptions& value) noexcept {
-    return std::optional<NativeConnectionOptions>(value);
-  }
-  inline bool has_value_std__optional_NativeConnectionOptions_(const std::optional<NativeConnectionOptions>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline NativeConnectionOptions get_std__optional_NativeConnectionOptions_(const std::optional<NativeConnectionOptions>& optional) noexcept {
-    return optional.value();
-  }
-  
   // pragma MARK: std::shared_ptr<Promise<SuggestionOutcome>>
   /**
    * Specialized version of `std::shared_ptr<Promise<SuggestionOutcome>>`.
@@ -1188,36 +1146,6 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   Func_void_NetworkDiagnostics create_Func_void_NetworkDiagnostics(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_NetworkDiagnostics_Wrapper wrap_Func_void_NetworkDiagnostics(Func_void_NetworkDiagnostics value) noexcept {
     return Func_void_NetworkDiagnostics_Wrapper(std::move(value));
-  }
-  
-  // pragma MARK: std::optional<ReachabilityOptions>
-  /**
-   * Specialized version of `std::optional<ReachabilityOptions>`.
-   */
-  using std__optional_ReachabilityOptions_ = std::optional<ReachabilityOptions>;
-  inline std::optional<ReachabilityOptions> create_std__optional_ReachabilityOptions_(const ReachabilityOptions& value) noexcept {
-    return std::optional<ReachabilityOptions>(value);
-  }
-  inline bool has_value_std__optional_ReachabilityOptions_(const std::optional<ReachabilityOptions>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline ReachabilityOptions get_std__optional_ReachabilityOptions_(const std::optional<ReachabilityOptions>& optional) noexcept {
-    return optional.value();
-  }
-  
-  // pragma MARK: std::optional<ServiceDiscoveryOptions>
-  /**
-   * Specialized version of `std::optional<ServiceDiscoveryOptions>`.
-   */
-  using std__optional_ServiceDiscoveryOptions_ = std::optional<ServiceDiscoveryOptions>;
-  inline std::optional<ServiceDiscoveryOptions> create_std__optional_ServiceDiscoveryOptions_(const ServiceDiscoveryOptions& value) noexcept {
-    return std::optional<ServiceDiscoveryOptions>(value);
-  }
-  inline bool has_value_std__optional_ServiceDiscoveryOptions_(const std::optional<ServiceDiscoveryOptions>& optional) noexcept {
-    return optional.has_value();
-  }
-  inline ServiceDiscoveryOptions get_std__optional_ServiceDiscoveryOptions_(const std::optional<ServiceDiscoveryOptions>& optional) noexcept {
-    return optional.value();
   }
   
   // pragma MARK: std::vector<ServiceTxtEntry>
