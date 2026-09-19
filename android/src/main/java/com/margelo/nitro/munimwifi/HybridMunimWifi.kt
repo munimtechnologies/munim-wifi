@@ -77,6 +77,9 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private var continuousReceiver: BroadcastReceiver? = null
   private var continuousRunnable: Runnable? = null
   private var requestedNetworkCallback: ConnectivityManager.NetworkCallback? = null
+  /** Process binding that was active before connectToNetwork() bound to its network. */
+  @Volatile private var specifierPreviousBoundNetwork: Network? = null
+  @Volatile private var specifierBoundProcess = false
   private var temporaryLegacyNetworkId: Int? = null
   private val localNetworkLeases = ConcurrentHashMap<String, LocalNetworkLease>()
   private val suggestions = ConcurrentHashMap<String, WifiNetworkSuggestion>()
@@ -316,7 +319,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         }
       }
       requestedNetworkCallback = null
-      connectivityManager.bindProcessToNetwork(null)
+      restoreSpecifierBinding()
     } else {
       temporaryLegacyNetworkId?.let {
         @Suppress("DEPRECATION")
@@ -1024,6 +1027,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         // Ignore stale callbacks.
       }
     }
+    restoreSpecifierBinding()
 
     val builder = WifiNetworkSpecifier.Builder().setSsid(options.ssid)
     options.bssid?.takeIf { it.isNotBlank() }?.let { builder.setBssid(MacAddress.fromString(it)) }
@@ -1045,7 +1049,13 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     val settled = AtomicBoolean(false)
     val callback = object : ConnectivityManager.NetworkCallback() {
       override fun onAvailable(network: Network) {
-        connectivityManager.bindProcessToNetwork(network)
+        synchronized(this@HybridMunimWifi) {
+          if (!specifierBoundProcess) {
+            specifierPreviousBoundNetwork = connectivityManager.boundNetworkForProcess
+          }
+          connectivityManager.bindProcessToNetwork(network)
+          specifierBoundProcess = true
+        }
         if (settled.compareAndSet(false, true)) promise.resolve(Unit)
       }
 
@@ -1057,13 +1067,24 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       }
 
       override fun onLost(network: Network) {
-        connectivityManager.bindProcessToNetwork(null)
+        // Restore whatever the app had bound before, like the lease path does,
+        // rather than unbinding the process entirely.
+        restoreSpecifierBinding()
       }
     }
     requestedNetworkCallback = callback
     val timeoutMs = normalizedConnectionTimeout(options.timeout)
     connectivityManager.requestNetwork(request, callback, timeoutMs.toInt())
     return promise
+  }
+
+  private fun restoreSpecifierBinding() {
+    synchronized(this) {
+      if (!specifierBoundProcess) return
+      connectivityManager.bindProcessToNetwork(specifierPreviousBoundNetwork)
+      specifierPreviousBoundNetwork = null
+      specifierBoundProcess = false
+    }
   }
 
   @Suppress("DEPRECATION")
