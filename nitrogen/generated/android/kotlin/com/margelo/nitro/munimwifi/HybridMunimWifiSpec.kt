@@ -106,6 +106,10 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   
   @DoNotStrip
   @Keep
+  abstract fun getConfiguredSSIDs(): Promise<Array<String>>
+  
+  @DoNotStrip
+  @Keep
   abstract fun addNetworkSuggestion(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome>
   
   @DoNotStrip

@@ -18,7 +18,7 @@ public extension NativeConnectionOptions {
   /**
    * Create a new instance of `NativeConnectionOptions`.
    */
-  init(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, timeout: Double?, bindProcess: Bool?, enterprise: EnterpriseCredentials?, passpoint: PasspointConfig?) {
+  init(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, timeout: Double?, bindProcess: Bool?, ssidPrefix: Bool?, enterprise: EnterpriseCredentials?, passpoint: PasspointConfig?) {
     self.init(std.string(ssid), securityType, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = passphrase {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -39,6 +39,12 @@ public extension NativeConnectionOptions {
       }
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = bindProcess {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = ssidPrefix {
         return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
@@ -109,6 +115,18 @@ public extension NativeConnectionOptions {
     return { () -> Bool? in
       if bridge.has_value_std__optional_bool_(self.__bindProcess) {
         let __unwrapped = bridge.get_std__optional_bool_(self.__bindProcess)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var ssidPrefix: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__ssidPrefix) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__ssidPrefix)
         return __unwrapped
       } else {
         return nil

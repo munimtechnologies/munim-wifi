@@ -27,6 +27,7 @@ import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.os.PatternMatcher
 import android.os.SystemClock
 import android.provider.Settings
 import android.util.Base64
@@ -387,7 +388,12 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         return promise
       }
 
-      val builder = WifiNetworkSpecifier.Builder().setSsid(options.ssid)
+      val builder = WifiNetworkSpecifier.Builder()
+      if (options.ssidPrefix == true) {
+        builder.setSsidPattern(PatternMatcher(options.ssid, PatternMatcher.PATTERN_PREFIX))
+      } else {
+        builder.setSsid(options.ssid)
+      }
       options.bssid?.takeIf { it.isNotBlank() }?.let { builder.setBssid(MacAddress.fromString(it)) }
       when (options.securityType) {
         WifiSecurityType.OPEN -> Unit
@@ -499,6 +505,17 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   override fun configureNetwork(options: NativeConnectionOptions): Promise<ConnectionOutcome> = Promise.parallel {
     validateIdentifier(options.ssid, options.securityType)
+    if (options.ssidPrefix == true) {
+      return@parallel ConnectionOutcome(
+        status = ConnectionStatus.UNSUPPORTED,
+        mode = ConnectionMode.MANAGEDCONFIGURATION,
+        ssid = options.ssid,
+        leaseId = null,
+        configurationId = null,
+        boundProcess = false,
+        message = "munim-wifi: network suggestions cannot match an SSID prefix; use requestLocalNetwork",
+      )
+    }
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       return@parallel ConnectionOutcome(
         status = ConnectionStatus.UNSUPPORTED,
@@ -629,6 +646,17 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       boundProcess = false,
       message = "munim-wifi: no lease or configuration matches \"$leaseOrConfigurationId\"",
     )
+  }
+
+  override fun getConfiguredSSIDs(): Promise<Array<String>> = Promise.parallel {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      wifiManager.networkSuggestions
+        .mapNotNull { it.ssid ?: it.passpointConfig?.homeSp?.fqdn }
+        .distinct()
+        .toTypedArray()
+    } else {
+      suggestions.keys.toTypedArray()
+    }
   }
 
   override fun addNetworkSuggestion(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome> = Promise.parallel {

@@ -31,6 +31,7 @@ namespace margelo::nitro::munimwifi {
       prototype.registerHybridMethod("configureNetwork", &HybridMunimWifiSpec::configureNetwork);
       prototype.registerHybridMethod("requestUserSavedNetwork", &HybridMunimWifiSpec::requestUserSavedNetwork);
       prototype.registerHybridMethod("releaseConnection", &HybridMunimWifiSpec::releaseConnection);
+      prototype.registerHybridMethod("getConfiguredSSIDs", &HybridMunimWifiSpec::getConfiguredSSIDs);
       prototype.registerHybridMethod("addNetworkSuggestion", &HybridMunimWifiSpec::addNetworkSuggestion);
       prototype.registerHybridMethod("removeNetworkSuggestion", &HybridMunimWifiSpec::removeNetworkSuggestion);
       prototype.registerHybridMethod("getNetworkSuggestionStatus", &HybridMunimWifiSpec::getNetworkSuggestionStatus);

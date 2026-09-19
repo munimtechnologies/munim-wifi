@@ -514,6 +514,14 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     ))
   }
 
+  func getConfiguredSSIDs() throws -> Promise<[String]> {
+    let promise = Promise<[String]>()
+    NEHotspotConfigurationManager.shared.getConfiguredSSIDs { ssids in
+      promise.resolve(withResult: ssids)
+    }
+    return promise
+  }
+
   func addNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome> {
     Promise.resolved(withResult: unsupportedSuggestionOutcome())
   }
@@ -641,6 +649,22 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   private func makeHotspotConfiguration(_ options: NativeConnectionOptions) throws -> NEHotspotConfiguration? {
     let ssid = options.ssid
     let passphrase = options.passphrase
+    if options.ssidPrefix == true {
+      // NEHotspotConfiguration(ssidPrefix:) only covers open/WEP/WPA personal.
+      switch options.securityType {
+      case .open, .owe:
+        return NEHotspotConfiguration(ssidPrefix: ssid)
+      case .wep, .wpa2, .wpa3:
+        guard let passphrase, !passphrase.isEmpty else { return nil }
+        return NEHotspotConfiguration(
+          ssidPrefix: ssid,
+          passphrase: passphrase,
+          isWEP: options.securityType == .wep
+        )
+      case .enterprise, .passpoint, .unknown:
+        return nil
+      }
+    }
     switch options.securityType {
     case .open, .owe:
       return NEHotspotConfiguration(ssid: ssid)
@@ -695,10 +719,12 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
         onFailure: onFailure
       )
     }
+    let ssid = options.ssid
     return WifiConnectionAttempt(
-      ssid: options.ssid,
+      ssid: ssid,
       configuration: configuration,
       isTemporary: isTemporary,
+      matchesNetwork: options.ssidPrefix == true ? { $0.hasPrefix(ssid) } : nil,
       onSuccess: onSuccess,
       onFailure: onFailure
     )

@@ -71,6 +71,7 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<ConnectionOutcome>> configureNetwork(const NativeConnectionOptions& options) override;
     std::shared_ptr<Promise<ConnectionOutcome>> requestUserSavedNetwork(const std::optional<NativeConnectionOptions>& options) override;
     std::shared_ptr<Promise<ConnectionOutcome>> releaseConnection(const std::string& leaseOrConfigurationId) override;
+    std::shared_ptr<Promise<std::vector<std::string>>> getConfiguredSSIDs() override;
     std::shared_ptr<Promise<SuggestionOutcome>> addNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override;
     std::shared_ptr<Promise<SuggestionOutcome>> removeNetworkSuggestion(const NativeNetworkSuggestionOptions& options) override;
     std::shared_ptr<Promise<SuggestionOutcome>> getNetworkSuggestionStatus(const NativeNetworkSuggestionOptions& options) override;

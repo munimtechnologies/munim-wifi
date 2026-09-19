@@ -184,6 +184,11 @@ export interface NativeConnectionOptions {
   bssid?: string
   timeout?: number
   bindProcess?: boolean
+  /**
+   * Treat `ssid` as a prefix and join the first matching network. iOS 13+
+   * (open/WEP/WPA personal); Android 10+ for requestLocalNetwork only.
+   */
+  ssidPrefix?: boolean
   /** Required when securityType is 'enterprise' or 'passpoint'. */
   enterprise?: EnterpriseCredentials
   /** Required when securityType is 'passpoint'. */
@@ -462,6 +467,13 @@ export interface MunimWifi
   ): Promise<ConnectionOutcome>
 
   releaseConnection(leaseOrConfigurationId: string): Promise<ConnectionOutcome>
+
+  /**
+   * Networks this app has configured.
+   * iOS: NEHotspotConfigurationManager.getConfiguredSSIDs().
+   * Android: SSIDs (or Passpoint domains) of this app's network suggestions.
+   */
+  getConfiguredSSIDs(): Promise<string[]>
 
   addNetworkSuggestion(
     options: NativeNetworkSuggestionOptions

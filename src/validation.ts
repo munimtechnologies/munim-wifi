@@ -279,6 +279,15 @@ export function validateNativeConnectionOptions(
   ) {
     throw new TypeError('bindProcess must be a boolean when provided')
   }
+  if (
+    options.ssidPrefix !== undefined &&
+    typeof options.ssidPrefix !== 'boolean'
+  ) {
+    throw new TypeError('ssidPrefix must be a boolean when provided')
+  }
+  if (options.ssidPrefix && options.securityType === 'passpoint') {
+    throw new TypeError('ssidPrefix does not apply to Passpoint networks')
+  }
 }
 
 export function validateSuggestionOptions(

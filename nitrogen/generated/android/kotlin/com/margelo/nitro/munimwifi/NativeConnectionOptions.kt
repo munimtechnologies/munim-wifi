@@ -38,6 +38,9 @@ data class NativeConnectionOptions(
   val bindProcess: Boolean?,
   @DoNotStrip
   @Keep
+  val ssidPrefix: Boolean?,
+  @DoNotStrip
+  @Keep
   val enterprise: EnterpriseCredentials?,
   @DoNotStrip
   @Keep
@@ -54,6 +57,7 @@ data class NativeConnectionOptions(
       && Objects.deepEquals(this.bssid, other.bssid)
       && Objects.deepEquals(this.timeout, other.timeout)
       && Objects.deepEquals(this.bindProcess, other.bindProcess)
+      && Objects.deepEquals(this.ssidPrefix, other.ssidPrefix)
       && Objects.deepEquals(this.enterprise, other.enterprise)
       && Objects.deepEquals(this.passpoint, other.passpoint)
   }
@@ -66,6 +70,7 @@ data class NativeConnectionOptions(
       bssid,
       timeout,
       bindProcess,
+      ssidPrefix,
       enterprise,
       passpoint
     ).contentDeepHashCode()
@@ -79,8 +84,8 @@ data class NativeConnectionOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, timeout: Double?, bindProcess: Boolean?, enterprise: EnterpriseCredentials?, passpoint: PasspointConfig?): NativeConnectionOptions {
-      return NativeConnectionOptions(ssid, securityType, passphrase, bssid, timeout, bindProcess, enterprise, passpoint)
+    private fun fromCpp(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, timeout: Double?, bindProcess: Boolean?, ssidPrefix: Boolean?, enterprise: EnterpriseCredentials?, passpoint: PasspointConfig?): NativeConnectionOptions {
+      return NativeConnectionOptions(ssid, securityType, passphrase, bssid, timeout, bindProcess, ssidPrefix, enterprise, passpoint)
     }
   }
 }

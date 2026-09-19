@@ -30,6 +30,7 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func configureNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome>
   func requestUserSavedNetwork(options: NativeConnectionOptions?) throws -> Promise<ConnectionOutcome>
   func releaseConnection(leaseOrConfigurationId: String) throws -> Promise<ConnectionOutcome>
+  func getConfiguredSSIDs() throws -> Promise<[String]>
   func addNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
   func removeNetworkSuggestion(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
   func getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions) throws -> Promise<SuggestionOutcome>
