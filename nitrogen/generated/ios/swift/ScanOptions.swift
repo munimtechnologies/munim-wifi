@@ -18,7 +18,7 @@ public extension ScanOptions {
   /**
    * Create a new instance of `ScanOptions`.
    */
-  init(maxResults: Double?, timeout: Double?, interval: Double?) {
+  init(maxResults: Double?, timeout: Double?, interval: Double?, allowCached: Bool?) {
     self.init({ () -> bridge.std__optional_double_ in
       if let __unwrappedValue = maxResults {
         return bridge.create_std__optional_double_(__unwrappedValue)
@@ -34,6 +34,12 @@ public extension ScanOptions {
     }(), { () -> bridge.std__optional_double_ in
       if let __unwrappedValue = interval {
         return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = allowCached {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -69,6 +75,18 @@ public extension ScanOptions {
     return { () -> Double? in
       if bridge.has_value_std__optional_double_(self.__interval) {
         let __unwrapped = bridge.get_std__optional_double_(self.__interval)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var allowCached: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__allowCached) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__allowCached)
         return __unwrapped
       } else {
         return nil

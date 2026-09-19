@@ -38,6 +38,14 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>
+  Func_void_std__vector_WifiNetwork__ScanResultInfo create_Func_void_std__vector_WifiNetwork__ScanResultInfo(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__vector_WifiNetwork__ScanResultInfo::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::vector<WifiNetwork>& networks, const ScanResultInfo& info) mutable -> void {
+      swiftClosure.call(networks, info);
+    };
+  }
+  
   // pragma MARK: std::function<void(const std::string& /* message */)>
   Func_void_std__string create_Func_void_std__string(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = MunimWifi::Func_void_std__string::fromUnsafe(swiftClosureWrapper);

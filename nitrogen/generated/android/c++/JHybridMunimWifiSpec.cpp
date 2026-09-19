@@ -47,6 +47,8 @@ namespace margelo::nitro::munimwifi { enum class NetworkState; }
 namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ScanOptions; }
+// Forward declaration of `ScanResultInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct ScanResultInfo; }
 // Forward declaration of `ConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ConnectionOptions; }
 // Forward declaration of `NativeConnectionOptions` to properly resolve imports.
@@ -108,9 +110,11 @@ namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 #include "JNetworkLinkProperties.hpp"
 #include "ScanOptions.hpp"
 #include "JScanOptions.hpp"
+#include "ScanResultInfo.hpp"
 #include <functional>
-#include "JFunc_void_std__vector_WifiNetwork_.hpp"
+#include "JFunc_void_std__vector_WifiNetwork__ScanResultInfo.hpp"
 #include <NitroModules/JNICallable.hpp>
+#include "JScanResultInfo.hpp"
 #include "JFunc_void_std__string.hpp"
 #include "ConnectionOptions.hpp"
 #include "JConnectionOptions.hpp"
@@ -210,9 +214,9 @@ namespace margelo::nitro::munimwifi {
       return __promise;
     }();
   }
-  void JHybridMunimWifiSpec::startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
-    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JScanOptions> /* options */, jni::alias_ref<JFunc_void_std__vector_WifiNetwork_::javaobject> /* onNetworks */, jni::alias_ref<JFunc_void_std__string::javaobject> /* onError */)>("startScan_cxx");
-    method(_javaPart, options.has_value() ? JScanOptions::fromCpp(options.value()) : nullptr, JFunc_void_std__vector_WifiNetwork__cxx::fromCpp(onNetworks), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
+  void JHybridMunimWifiSpec::startScan(const std::optional<ScanOptions>& options, const std::function<void(const std::vector<WifiNetwork>& /* networks */, const ScanResultInfo& /* info */)>& onNetworks, const std::optional<std::function<void(const std::string& /* message */)>>& onError) {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<void(jni::alias_ref<JScanOptions> /* options */, jni::alias_ref<JFunc_void_std__vector_WifiNetwork__ScanResultInfo::javaobject> /* onNetworks */, jni::alias_ref<JFunc_void_std__string::javaobject> /* onError */)>("startScan_cxx");
+    method(_javaPart, options.has_value() ? JScanOptions::fromCpp(options.value()) : nullptr, JFunc_void_std__vector_WifiNetwork__ScanResultInfo_cxx::fromCpp(onNetworks), onError.has_value() ? JFunc_void_std__string_cxx::fromCpp(onError.value()) : nullptr);
   }
   void JHybridMunimWifiSpec::stopScan() {
     static const auto method = _javaPart->javaClassStatic()->getMethod<void()>("stopScan");

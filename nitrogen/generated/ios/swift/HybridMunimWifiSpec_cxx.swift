@@ -188,18 +188,18 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
-  public final func startScan(options: bridge.std__optional_ScanOptions_, onNetworks: bridge.Func_void_std__vector_WifiNetwork_, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_void_ {
+  public final func startScan(options: bridge.std__optional_ScanOptions_, onNetworks: bridge.Func_void_std__vector_WifiNetwork__ScanResultInfo, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_void_ {
     do {
-      try self.__implementation.startScan(options: options.value, onNetworks: { () -> ([WifiNetwork]) -> Void in
-        let __wrappedFunction = bridge.wrap_Func_void_std__vector_WifiNetwork_(onNetworks)
-        return { (__networks: [WifiNetwork]) -> Void in
+      try self.__implementation.startScan(options: options.value, onNetworks: { () -> ([WifiNetwork], ScanResultInfo) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_std__vector_WifiNetwork__ScanResultInfo(onNetworks)
+        return { (__networks: [WifiNetwork], __info: ScanResultInfo) -> Void in
           __wrappedFunction.call({ () -> bridge.std__vector_WifiNetwork_ in
             var __vector = bridge.create_std__vector_WifiNetwork_(__networks.count)
             for __item in __networks {
               __vector.push_back(__item)
             }
             return __vector
-          }())
+          }(), __info)
         }
       }(), onError: { () -> ((_ message: String) -> Void)? in
         if bridge.has_value_std__optional_std__function_void_const_std__string_____message______(onError) {

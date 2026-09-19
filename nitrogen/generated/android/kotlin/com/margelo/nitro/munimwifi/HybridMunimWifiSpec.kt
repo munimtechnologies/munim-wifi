@@ -43,11 +43,11 @@ abstract class HybridMunimWifiSpec: HybridObject() {
   @Keep
   abstract fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>>
   
-  abstract fun startScan(options: ScanOptions?, onNetworks: (networks: Array<WifiNetwork>) -> Unit, onError: ((message: String) -> Unit)?): Unit
+  abstract fun startScan(options: ScanOptions?, onNetworks: (networks: Array<WifiNetwork>, info: ScanResultInfo) -> Unit, onError: ((message: String) -> Unit)?): Unit
   
   @DoNotStrip
   @Keep
-  private fun startScan_cxx(options: ScanOptions?, onNetworks: Func_void_std__vector_WifiNetwork_, onError: Func_void_std__string?): Unit {
+  private fun startScan_cxx(options: ScanOptions?, onNetworks: Func_void_std__vector_WifiNetwork__ScanResultInfo, onError: Func_void_std__string?): Unit {
     val __result = startScan(options, onNetworks, onError?.let { it })
     return __result
   }
