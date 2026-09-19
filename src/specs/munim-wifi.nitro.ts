@@ -17,10 +17,24 @@ export interface CurrentNetworkInfo {
   ssid: string
   bssid: string
   securityType: WifiSecurityType
+  /** IPv4 address of the Wi-Fi interface. */
   ipAddress?: string
+  /** IPv6 addresses of the Wi-Fi interface (global first, link-local last). */
+  ipv6Addresses?: string[]
   subnetMask?: string
   gateway?: string
   dnsServers?: string[]
+}
+
+/** Addresses assigned to the Wi-Fi interface. */
+export interface IPAddressInfo {
+  interfaceName?: string
+  ipv4: string[]
+  /**
+   * Global and unique-local addresses first; link-local (fe80::/10) last,
+   * with their `%interface` scope suffix.
+   */
+  ipv6: string[]
 }
 
 // Wi-Fi Network information
@@ -399,11 +413,20 @@ export interface MunimWifi
   disconnect(): Promise<boolean>
 
   /**
-   * Get IP address information for the current Wi-Fi connection.
+   * Get the IPv4 address of the current Wi-Fi connection.
    *
-   * @returns Promise resolving to IP address string, or null if not connected.
+   * @returns Promise resolving to the IPv4 address, or null if there is none.
+   * Use getIPAddresses() for IPv6 (including IPv6-only networks).
    */
   getIPAddress(): Promise<string | null>
+
+  /**
+   * Get every IPv4 and IPv6 address of the Wi-Fi interface.
+   *
+   * @returns Promise resolving to the addresses, or null when no Wi-Fi
+   * interface has an address.
+   */
+  getIPAddresses(): Promise<IPAddressInfo | null>
 
   getWifiCapabilityStatus(): Promise<WifiCapabilityStatus>
 

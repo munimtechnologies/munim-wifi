@@ -78,6 +78,7 @@ namespace margelo::nitro::munimwifi {
     std::shared_ptr<Promise<HotspotOutcome>> stopLocalOnlyHotspot(const std::string& reservationId) override;
     std::shared_ptr<Promise<bool>> disconnect() override;
     std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() override;
+    std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() override;
     std::shared_ptr<Promise<WifiCapabilityStatus>> getWifiCapabilityStatus() override;
     std::shared_ptr<Promise<NetworkDiagnostics>> getNetworkDiagnostics() override;
     void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) override;

@@ -38,6 +38,7 @@ namespace margelo::nitro::munimwifi {
       prototype.registerHybridMethod("stopLocalOnlyHotspot", &HybridMunimWifiSpec::stopLocalOnlyHotspot);
       prototype.registerHybridMethod("disconnect", &HybridMunimWifiSpec::disconnect);
       prototype.registerHybridMethod("getIPAddress", &HybridMunimWifiSpec::getIPAddress);
+      prototype.registerHybridMethod("getIPAddresses", &HybridMunimWifiSpec::getIPAddresses);
       prototype.registerHybridMethod("getWifiCapabilityStatus", &HybridMunimWifiSpec::getWifiCapabilityStatus);
       prototype.registerHybridMethod("getNetworkDiagnostics", &HybridMunimWifiSpec::getNetworkDiagnostics);
       prototype.registerHybridMethod("startNetworkObserver", &HybridMunimWifiSpec::startNetworkObserver);

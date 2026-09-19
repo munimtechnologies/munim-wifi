@@ -33,6 +33,8 @@ namespace margelo::nitro::munimwifi { enum class SuggestionStatus; }
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 // Forward declaration of `HotspotStatus` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
+// Forward declaration of `IPAddressInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 // Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 // Forward declaration of `CapabilityAvailability` to properly resolve imports.
@@ -96,6 +98,9 @@ namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 #include "JHotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
 #include "JHotspotStatus.hpp"
+#include "IPAddressInfo.hpp"
+#include "JVariant_NullType_IPAddressInfo.hpp"
+#include "JIPAddressInfo.hpp"
 #include "WifiCapabilityStatus.hpp"
 #include "JWifiCapabilityStatus.hpp"
 #include "CapabilityAvailability.hpp"
@@ -525,6 +530,22 @@ namespace margelo::nitro::munimwifi {
       auto __promise = Promise<std::variant<nitro::NullType, std::string>>::create();
       __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
         auto __result = jni::static_ref_cast<JVariant_NullType_String>(__boxedResult);
+        __promise->resolve(__result->toCpp());
+      });
+      __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {
+        jni::JniException __jniError(__throwable);
+        __promise->reject(std::make_exception_ptr(__jniError));
+      });
+      return __promise;
+    }();
+  }
+  std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> JHybridMunimWifiSpec::getIPAddresses() {
+    static const auto method = _javaPart->javaClassStatic()->getMethod<jni::local_ref<JPromise::javaobject>()>("getIPAddresses");
+    auto __result = method(_javaPart);
+    return [&]() {
+      auto __promise = Promise<std::variant<nitro::NullType, IPAddressInfo>>::create();
+      __result->cthis()->addOnResolvedListener([=](const jni::alias_ref<jni::JObject>& __boxedResult) {
+        auto __result = jni::static_ref_cast<JVariant_NullType_IPAddressInfo>(__boxedResult);
         __promise->resolve(__result->toCpp());
       });
       __result->cthis()->addOnRejectedListener([=](const jni::alias_ref<jni::JThrowable>& __throwable) {

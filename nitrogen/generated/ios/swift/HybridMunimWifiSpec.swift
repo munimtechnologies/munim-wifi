@@ -37,6 +37,7 @@ public protocol HybridMunimWifiSpec_protocol: HybridObject {
   func stopLocalOnlyHotspot(reservationId: String) throws -> Promise<HotspotOutcome>
   func disconnect() throws -> Promise<Bool>
   func getIPAddress() throws -> Promise<Variant_NullType_String>
+  func getIPAddresses() throws -> Promise<Variant_NullType_IPAddressInfo>
   func getWifiCapabilityStatus() throws -> Promise<WifiCapabilityStatus>
   func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics>
   func startNetworkObserver(onUpdate: @escaping (_ diagnostics: NetworkDiagnostics) -> Void) throws -> Void

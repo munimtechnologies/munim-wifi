@@ -48,6 +48,8 @@ namespace margelo::nitro::munimwifi { struct NativeNetworkSuggestionOptions; }
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 // Forward declaration of `HotspotStatus` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
+// Forward declaration of `IPAddressInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 // Forward declaration of `WifiCapabilityStatus` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 // Forward declaration of `CapabilityAvailability` to properly resolve imports.
@@ -86,6 +88,7 @@ namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 #include "NativeNetworkSuggestionOptions.hpp"
 #include "HotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
+#include "IPAddressInfo.hpp"
 #include "WifiCapabilityStatus.hpp"
 #include "CapabilityAvailability.hpp"
 #include "PermissionState.hpp"
@@ -325,6 +328,14 @@ namespace margelo::nitro::munimwifi {
     }
     inline std::shared_ptr<Promise<std::variant<nitro::NullType, std::string>>> getIPAddress() override {
       auto __result = _swiftPart.getIPAddress();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+      auto __value = std::move(__result.value());
+      return __value;
+    }
+    inline std::shared_ptr<Promise<std::variant<nitro::NullType, IPAddressInfo>>> getIPAddresses() override {
+      auto __result = _swiftPart.getIPAddresses();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }

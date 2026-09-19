@@ -28,6 +28,8 @@ namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 namespace margelo::nitro::munimwifi { enum class HotspotStatus; }
 // Forward declaration of `HybridMunimWifiSpec` to properly resolve imports.
 namespace margelo::nitro::munimwifi { class HybridMunimWifiSpec; }
+// Forward declaration of `IPAddressInfo` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct IPAddressInfo; }
 // Forward declaration of `Location` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct Location; }
 // Forward declaration of `NativeConnectionOptions` to properly resolve imports.
@@ -70,6 +72,7 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "HotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
 #include "HybridMunimWifiSpec.hpp"
+#include "IPAddressInfo.hpp"
 #include "Location.hpp"
 #include "NativeConnectionOptions.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"

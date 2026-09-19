@@ -18,10 +18,22 @@ public extension CurrentNetworkInfo {
   /**
    * Create a new instance of `CurrentNetworkInfo`.
    */
-  init(ssid: String, bssid: String, securityType: WifiSecurityType, ipAddress: String?, subnetMask: String?, gateway: String?, dnsServers: [String]?) {
+  init(ssid: String, bssid: String, securityType: WifiSecurityType, ipAddress: String?, ipv6Addresses: [String]?, subnetMask: String?, gateway: String?, dnsServers: [String]?) {
     self.init(std.string(ssid), std.string(bssid), securityType, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = ipAddress {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_std__vector_std__string__ in
+      if let __unwrappedValue = ipv6Addresses {
+        return bridge.create_std__optional_std__vector_std__string__({ () -> bridge.std__vector_std__string_ in
+          var __vector = bridge.create_std__vector_std__string_(__unwrappedValue.count)
+          for __item in __unwrappedValue {
+            __vector.push_back(std.string(__item))
+          }
+          return __vector
+        }())
       } else {
         return .init()
       }
@@ -73,6 +85,18 @@ public extension CurrentNetworkInfo {
       if bridge.has_value_std__optional_std__string_(self.__ipAddress) {
         let __unwrapped = bridge.get_std__optional_std__string_(self.__ipAddress)
         return String(__unwrapped)
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var ipv6Addresses: [String]? {
+    return { () -> [String]? in
+      if bridge.has_value_std__optional_std__vector_std__string__(self.__ipv6Addresses) {
+        let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__ipv6Addresses)
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }

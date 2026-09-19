@@ -142,6 +142,14 @@ namespace margelo::nitro::munimwifi::bridge::swift {
     };
   }
   
+  // pragma MARK: std::function<void(const std::variant<nitro::NullType, IPAddressInfo>& /* result */)>
+  Func_void_std__variant_nitro__NullType__IPAddressInfo_ create_Func_void_std__variant_nitro__NullType__IPAddressInfo_(void* NON_NULL swiftClosureWrapper) noexcept {
+    auto swiftClosure = MunimWifi::Func_void_std__variant_nitro__NullType__IPAddressInfo_::fromUnsafe(swiftClosureWrapper);
+    return [swiftClosure = std::move(swiftClosure)](const std::variant<nitro::NullType, IPAddressInfo>& result) mutable -> void {
+      swiftClosure.call(result);
+    };
+  }
+  
   // pragma MARK: std::function<void(const WifiCapabilityStatus& /* result */)>
   Func_void_WifiCapabilityStatus create_Func_void_WifiCapabilityStatus(void* NON_NULL swiftClosureWrapper) noexcept {
     auto swiftClosure = MunimWifi::Func_void_WifiCapabilityStatus::fromUnsafe(swiftClosureWrapper);
