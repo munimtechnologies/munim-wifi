@@ -7,6 +7,9 @@ import type {
   ConnectionOptions,
   ConnectionStatus,
   CurrentNetworkInfo,
+  EapMethod,
+  EapPhase2Method,
+  EnterpriseCredentials,
   HotspotOutcome,
   HotspotStatus,
   IPAddressInfo,
@@ -17,6 +20,7 @@ import type {
   NetworkDiagnostics,
   NetworkLinkProperties,
   NetworkState,
+  PasspointConfig,
   PermissionState,
   ScanOptions,
   ScanResultInfo,
@@ -77,6 +81,20 @@ export type WifiSecurityOptions =
   | { type: 'wep'; passphrase: string }
   | { type: 'wpa2'; passphrase: string }
   | { type: 'wpa3'; passphrase: string }
+  | { type: 'enterprise'; eap: EnterpriseCredentials }
+  | { type: 'passpoint'; passpoint: PasspointConfig; eap: EnterpriseCredentials }
+
+function securityFields(security: WifiSecurityOptions): {
+  passphrase?: string
+  enterprise?: EnterpriseCredentials
+  passpoint?: PasspointConfig
+} {
+  return {
+    passphrase: 'passphrase' in security ? security.passphrase : undefined,
+    enterprise: 'eap' in security ? security.eap : undefined,
+    passpoint: 'passpoint' in security ? security.passpoint : undefined,
+  }
+}
 
 export interface LocalNetworkRequestOptions extends BaseNetworkOptions {
   security: WifiSecurityOptions
@@ -106,10 +124,7 @@ function toNativeConnectionOptions(
     ssid: options.ssid,
     bssid: options.bssid,
     securityType: options.security.type,
-    passphrase:
-      'passphrase' in options.security
-        ? options.security.passphrase
-        : undefined,
+    ...securityFields(options.security),
     timeout: options.timeout,
     bindProcess:
       'bindProcess' in options ? options.bindProcess ?? false : false,
@@ -125,10 +140,7 @@ function toNativeSuggestionOptions(
     ssid: options.ssid,
     bssid: options.bssid,
     securityType: options.security.type,
-    passphrase:
-      'passphrase' in options.security
-        ? options.security.passphrase
-        : undefined,
+    ...securityFields(options.security),
     hidden: options.hidden,
     appInteractionRequired: options.appInteractionRequired,
   }
@@ -436,6 +448,9 @@ export type {
   ConnectionOptions,
   ConnectionStatus,
   CurrentNetworkInfo,
+  EapMethod,
+  EapPhase2Method,
+  EnterpriseCredentials,
   HotspotOutcome,
   HotspotStatus,
   IPAddressInfo,
@@ -446,6 +461,7 @@ export type {
   NetworkDiagnostics,
   NetworkLinkProperties,
   NetworkState,
+  PasspointConfig,
   PermissionState,
   ScanOptions,
   ScanResultInfo,

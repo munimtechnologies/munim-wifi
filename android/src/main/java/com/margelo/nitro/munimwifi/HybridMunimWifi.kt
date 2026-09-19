@@ -15,6 +15,10 @@ import android.net.NetworkRequest
 import android.net.wifi.ScanResult
 import android.net.wifi.SoftApConfiguration
 import android.net.wifi.WifiConfiguration
+import android.net.wifi.WifiEnterpriseConfig
+import android.net.wifi.hotspot2.PasspointConfiguration
+import android.net.wifi.hotspot2.pps.Credential
+import android.net.wifi.hotspot2.pps.HomeSp
 import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiNetworkSpecifier
@@ -25,7 +29,9 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
+import android.util.Base64
 import androidx.annotation.Keep
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.facebook.proguard.annotations.DoNotStrip
 import com.facebook.react.modules.core.PermissionAwareActivity
@@ -45,9 +51,14 @@ import com.margelo.nitro.munimwifi.Variant_NullType_String
 import com.margelo.nitro.munimwifi.Variant_NullType_WifiNetwork
 import com.margelo.nitro.munimwifi.WifiFingerprint
 import com.margelo.nitro.munimwifi.WifiNetwork
+import java.io.ByteArrayInputStream
 import java.net.Inet4Address
 import java.net.Inet6Address
+import java.security.KeyStore
 import java.security.MessageDigest
+import java.security.PrivateKey
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
 import java.util.UUID
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.ConcurrentHashMap
@@ -358,7 +369,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   override fun requestLocalNetwork(options: NativeConnectionOptions): Promise<ConnectionOutcome> {
     val promise = Promise<ConnectionOutcome>()
     try {
-      validateSsid(options.ssid)
+      validateIdentifier(options.ssid, options.securityType)
       if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
         promise.resolve(localNetworkOutcome(
           ConnectionStatus.UNSUPPORTED,
@@ -393,6 +404,30 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         }
         WifiSecurityType.WPA2 -> builder.setWpa2Passphrase(requirePassphrase(options.passphrase))
         WifiSecurityType.WPA3 -> builder.setWpa3Passphrase(requirePassphrase(options.passphrase))
+        WifiSecurityType.ENTERPRISE -> {
+          val credentials = options.enterprise
+            ?: throw IllegalArgumentException("munim-wifi: enterprise networks require EAP credentials")
+          val config = try {
+            buildEnterpriseConfig(credentials)
+          } catch (error: UnsupportedOperationException) {
+            promise.resolve(localNetworkOutcome(
+              ConnectionStatus.UNSUPPORTED,
+              ssid = options.ssid,
+              message = error.message,
+            ))
+            return promise
+          }
+          if (credentials.wpa3 == true) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+              builder.setWpa3EnterpriseStandardModeConfig(config)
+            } else {
+              @Suppress("DEPRECATION")
+              builder.setWpa3EnterpriseConfig(config)
+            }
+          } else {
+            builder.setWpa2EnterpriseConfig(config)
+          }
+        }
         else -> {
           promise.resolve(localNetworkOutcome(
             ConnectionStatus.UNSUPPORTED,
@@ -463,7 +498,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun configureNetwork(options: NativeConnectionOptions): Promise<ConnectionOutcome> = Promise.parallel {
-    validateSsid(options.ssid)
+    validateIdentifier(options.ssid, options.securityType)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       return@parallel ConnectionOutcome(
         status = ConnectionStatus.UNSUPPORTED,
@@ -480,6 +515,8 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         ssid = options.ssid,
         securityType = options.securityType,
         passphrase = options.passphrase,
+        enterprise = options.enterprise,
+        passpoint = options.passpoint,
         bssid = options.bssid,
         hidden = null,
         appInteractionRequired = null,
@@ -595,7 +632,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun addNetworkSuggestion(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome> = Promise.parallel {
-    validateSsid(options.ssid)
+    validateIdentifier(options.ssid, options.securityType)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       return@parallel SuggestionOutcome(
         status = SuggestionStatus.UNSUPPORTED,
@@ -608,6 +645,8 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         ssid = options.ssid,
         securityType = options.securityType,
         passphrase = options.passphrase,
+        enterprise = options.enterprise,
+        passpoint = options.passpoint,
         bssid = options.bssid,
         hidden = options.hidden,
         appInteractionRequired = options.appInteractionRequired,
@@ -633,7 +672,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun removeNetworkSuggestion(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome> = Promise.parallel {
-    validateSsid(options.ssid)
+    validateIdentifier(options.ssid, options.securityType)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       return@parallel SuggestionOutcome(
         status = SuggestionStatus.UNSUPPORTED,
@@ -646,6 +685,8 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         ssid = options.ssid,
         securityType = options.securityType,
         passphrase = options.passphrase,
+        enterprise = options.enterprise,
+        passpoint = options.passpoint,
         bssid = options.bssid,
         hidden = options.hidden,
         appInteractionRequired = options.appInteractionRequired,
@@ -667,7 +708,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun getNetworkSuggestionStatus(options: NativeNetworkSuggestionOptions): Promise<SuggestionOutcome> = Promise.parallel {
-    validateSsid(options.ssid)
+    validateIdentifier(options.ssid, options.securityType)
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
       return@parallel SuggestionOutcome(
         status = SuggestionStatus.UNSUPPORTED,
@@ -676,7 +717,14 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       )
     }
     val installed = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-      wifiManager.networkSuggestions.any { it.ssid == options.ssid }
+      val domain = options.passpoint?.domainName
+      wifiManager.networkSuggestions.any {
+        if (options.securityType == WifiSecurityType.PASSPOINT && domain != null) {
+          it.passpointConfig?.homeSp?.fqdn == domain
+        } else {
+          it.ssid == options.ssid
+        }
+      }
     } else {
       suggestions.containsKey(options.ssid)
     }
@@ -892,17 +940,48 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     ssid: String,
     securityType: WifiSecurityType,
     passphrase: String?,
+    enterprise: EnterpriseCredentials?,
+    passpoint: PasspointConfig?,
     bssid: String?,
     hidden: Boolean?,
     appInteractionRequired: Boolean?,
   ): WifiNetworkSuggestion {
-    val builder = WifiNetworkSuggestion.Builder().setSsid(ssid)
-    bssid?.takeIf { it.isNotBlank() }?.let { builder.setBssid(MacAddress.fromString(it)) }
+    val builder = WifiNetworkSuggestion.Builder()
+    if (securityType == WifiSecurityType.PASSPOINT) {
+      // Passpoint suggestions match networks by provider, never by SSID.
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+        throw UnsupportedOperationException("munim-wifi: Passpoint suggestions require Android 11+")
+      }
+      builder.setPasspointConfig(
+        buildPasspointConfig(
+          passpoint ?: throw IllegalArgumentException("munim-wifi: Passpoint networks require a passpoint configuration"),
+          enterprise ?: throw IllegalArgumentException("munim-wifi: Passpoint networks require EAP credentials"),
+        )
+      )
+    } else {
+      builder.setSsid(ssid)
+      bssid?.takeIf { it.isNotBlank() }?.let { builder.setBssid(MacAddress.fromString(it)) }
+    }
     when (securityType) {
-      WifiSecurityType.OPEN -> Unit
+      WifiSecurityType.OPEN, WifiSecurityType.PASSPOINT -> Unit
       WifiSecurityType.OWE -> builder.setIsEnhancedOpen(true)
       WifiSecurityType.WPA2 -> builder.setWpa2Passphrase(requirePassphrase(passphrase))
       WifiSecurityType.WPA3 -> builder.setWpa3Passphrase(requirePassphrase(passphrase))
+      WifiSecurityType.ENTERPRISE -> {
+        val credentials = enterprise
+          ?: throw IllegalArgumentException("munim-wifi: enterprise networks require EAP credentials")
+        val config = buildEnterpriseConfig(credentials)
+        if (credentials.wpa3 == true) {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            builder.setWpa3EnterpriseStandardModeConfig(config)
+          } else {
+            @Suppress("DEPRECATION")
+            builder.setWpa3EnterpriseConfig(config)
+          }
+        } else {
+          builder.setWpa2EnterpriseConfig(config)
+        }
+      }
       else -> throw UnsupportedOperationException(
         "munim-wifi: $securityType networks are not supported by this suggestion API yet"
       )
@@ -912,6 +991,152 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     return builder.build()
   }
 
+  private fun buildEnterpriseConfig(credentials: EnterpriseCredentials): WifiEnterpriseConfig {
+    val config = WifiEnterpriseConfig()
+    config.setEapMethod(when (credentials.method) {
+      EapMethod.PEAP -> WifiEnterpriseConfig.Eap.PEAP
+      EapMethod.TTLS -> WifiEnterpriseConfig.Eap.TTLS
+      EapMethod.TLS -> WifiEnterpriseConfig.Eap.TLS
+      EapMethod.PWD -> WifiEnterpriseConfig.Eap.PWD
+      EapMethod.SIM -> WifiEnterpriseConfig.Eap.SIM
+      EapMethod.AKA -> WifiEnterpriseConfig.Eap.AKA
+      EapMethod.AKAPRIME -> WifiEnterpriseConfig.Eap.AKA_PRIME
+      EapMethod.FAST -> throw UnsupportedOperationException("munim-wifi: EAP-FAST is not supported on Android")
+    })
+    credentials.phase2?.let { phase2 ->
+      config.setPhase2Method(when (phase2) {
+        EapPhase2Method.NONE -> WifiEnterpriseConfig.Phase2.NONE
+        EapPhase2Method.PAP -> WifiEnterpriseConfig.Phase2.PAP
+        EapPhase2Method.MSCHAP -> WifiEnterpriseConfig.Phase2.MSCHAP
+        EapPhase2Method.MSCHAPV2 -> WifiEnterpriseConfig.Phase2.MSCHAPV2
+        EapPhase2Method.GTC -> WifiEnterpriseConfig.Phase2.GTC
+        EapPhase2Method.CHAP, EapPhase2Method.EAP -> throw UnsupportedOperationException(
+          "munim-wifi: phase 2 method ${phase2.name.lowercase()} is not supported on Android"
+        )
+      })
+    }
+    credentials.identity?.let { config.setIdentity(it) }
+    credentials.anonymousIdentity?.let { config.setAnonymousIdentity(it) }
+    credentials.password?.let { config.setPassword(it) }
+    credentials.serverDomain?.takeIf { it.isNotBlank() }?.let { config.setDomainSuffixMatch(it) }
+    credentials.caCertificates?.takeIf { it.isNotEmpty() }?.let { encoded ->
+      config.setCaCertificates(encoded.map(::parseCertificate).toTypedArray())
+    }
+    credentials.clientCertificate?.takeIf { it.isNotBlank() }?.let { encoded ->
+      val (key, chain) = parsePkcs12(encoded, credentials.clientCertificatePassword.orEmpty())
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        config.setClientKeyEntryWithCertificateChain(key, chain.toTypedArray())
+      } else {
+        config.setClientKeyEntry(key, chain.first())
+      }
+    }
+    return config
+  }
+
+  @RequiresApi(Build.VERSION_CODES.R)
+  private fun buildPasspointConfig(
+    passpoint: PasspointConfig,
+    eap: EnterpriseCredentials,
+  ): PasspointConfiguration {
+    val homeSp = HomeSp().apply {
+      fqdn = passpoint.domainName
+      friendlyName = passpoint.friendlyName ?: passpoint.domainName
+      passpoint.roamingConsortiumOIs?.takeIf { it.isNotEmpty() }?.let { ois ->
+        roamingConsortiumOis = ois.map { it.toLong(16) }.toLongArray()
+      }
+    }
+    val credential = Credential().apply {
+      realm = passpoint.realm ?: passpoint.domainName
+      eap.caCertificates?.firstOrNull()?.let { caCertificate = parseCertificate(it) }
+    }
+    when (eap.method) {
+      EapMethod.TTLS -> credential.userCredential = Credential.UserCredential().apply {
+        username = eap.identity
+          ?: throw IllegalArgumentException("munim-wifi: Passpoint TTLS requires an identity")
+        // PasspointConfiguration stores user-credential passwords base64-encoded.
+        password = Base64.encodeToString(
+          (eap.password ?: throw IllegalArgumentException("munim-wifi: Passpoint TTLS requires a password"))
+            .toByteArray(Charsets.UTF_8),
+          Base64.NO_WRAP,
+        )
+        eapType = EAP_TYPE_TTLS
+        nonEapInnerMethod = when (eap.phase2) {
+          EapPhase2Method.PAP -> "PAP"
+          EapPhase2Method.MSCHAP -> "MS-CHAP"
+          null, EapPhase2Method.MSCHAPV2 -> "MS-CHAP-V2"
+          else -> throw UnsupportedOperationException(
+            "munim-wifi: Passpoint TTLS supports pap, mschap and mschapv2 inner methods"
+          )
+        }
+      }
+      EapMethod.TLS -> {
+        val (key, chain) = parsePkcs12(
+          eap.clientCertificate
+            ?: throw IllegalArgumentException("munim-wifi: Passpoint TLS requires a client certificate"),
+          eap.clientCertificatePassword.orEmpty(),
+        )
+        credential.certCredential = Credential.CertificateCredential().apply {
+          certType = "x509v3"
+          certSha256Fingerprint = MessageDigest.getInstance("SHA-256").digest(chain.first().encoded)
+        }
+        credential.clientCertificateChain = chain.toTypedArray()
+        credential.clientPrivateKey = key
+      }
+      EapMethod.SIM, EapMethod.AKA, EapMethod.AKAPRIME ->
+        credential.simCredential = Credential.SimCredential().apply {
+          imsi = passpoint.mccAndMncs?.firstOrNull()?.let { "$it*" }
+            ?: throw IllegalArgumentException("munim-wifi: SIM-based Passpoint requires mccAndMncs")
+          eapType = when (eap.method) {
+            EapMethod.SIM -> EAP_TYPE_SIM
+            EapMethod.AKA -> EAP_TYPE_AKA
+            else -> EAP_TYPE_AKA_PRIME
+          }
+        }
+      else -> throw UnsupportedOperationException(
+        "munim-wifi: Passpoint on Android supports ttls, tls, sim, aka and akaPrime"
+      )
+    }
+    return PasspointConfiguration().apply {
+      this.homeSp = homeSp
+      this.credential = credential
+    }
+  }
+
+  /** Base64 DER or a PEM block. */
+  private fun decodeCertificateData(encoded: String): ByteArray {
+    val body = if (encoded.contains("-----BEGIN")) {
+      encoded.lines().filterNot { it.startsWith("-----") }.joinToString("")
+    } else {
+      encoded
+    }
+    return Base64.decode(body.filterNot(Char::isWhitespace), Base64.DEFAULT)
+  }
+
+  private fun parseCertificate(encoded: String): X509Certificate =
+    CertificateFactory.getInstance("X.509")
+      .generateCertificate(ByteArrayInputStream(decodeCertificateData(encoded))) as X509Certificate
+
+  private fun parsePkcs12(encoded: String, password: String): Pair<PrivateKey, List<X509Certificate>> {
+    val keyStore = KeyStore.getInstance("PKCS12")
+    keyStore.load(ByteArrayInputStream(decodeCertificateData(encoded)), password.toCharArray())
+    val alias = keyStore.aliases().toList().firstOrNull { keyStore.isKeyEntry(it) }
+      ?: throw IllegalArgumentException("munim-wifi: the PKCS#12 client certificate has no private key")
+    val key = keyStore.getKey(alias, password.toCharArray()) as PrivateKey
+    val chain = keyStore.getCertificateChain(alias)?.map { it as X509Certificate }
+      ?: throw IllegalArgumentException("munim-wifi: the PKCS#12 client certificate has no certificate chain")
+    return key to chain
+  }
+
+  private fun validateIdentifier(ssid: String, securityType: WifiSecurityType) {
+    if (securityType == WifiSecurityType.PASSPOINT) {
+      require(ssid.isNotBlank() && '\u0000' !in ssid) {
+        "munim-wifi: a non-empty identifier is required"
+      }
+      return
+    }
+    validateSsid(ssid)
+  }
+
   private fun buildUserSavedNetworkIntent(options: NativeConnectionOptions?): Intent {
     if (options != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
       try {
@@ -919,6 +1144,8 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
           ssid = options.ssid,
           securityType = options.securityType,
           passphrase = options.passphrase,
+          enterprise = options.enterprise,
+          passpoint = options.passpoint,
           bssid = options.bssid,
           hidden = null,
           appInteractionRequired = null,
@@ -1443,6 +1670,10 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     const val SCAN_THROTTLED_MESSAGE =
       "munim-wifi: Android declined to start a Wi-Fi scan (foreground apps are limited to 4 scans " +
         "every 2 minutes); results are cached"
+    const val EAP_TYPE_SIM = 18
+    const val EAP_TYPE_TTLS = 21
+    const val EAP_TYPE_AKA = 23
+    const val EAP_TYPE_AKA_PRIME = 50
     const val SCAN_FAILED_MESSAGE =
       "munim-wifi: the Wi-Fi scan did not complete; results are cached"
   }

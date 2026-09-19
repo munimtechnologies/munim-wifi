@@ -11,6 +11,10 @@ private final class WifiConnectionAttempt {
   private let ssid: String
   private let configuration: NEHotspotConfiguration
   private let isTemporary: Bool
+  /// Decides whether the joined network is the requested one; nil skips the
+  /// check (Passpoint selects networks by provider, not by SSID).
+  private let matchesNetwork: ((String) -> Bool)?
+  private let removeConfiguration: () -> Void
   private let queue = DispatchQueue(label: "com.munimwifi.connection-attempt")
   private var existedBeforeAttempt: Bool?
   private var settled = false
@@ -20,15 +24,45 @@ private final class WifiConnectionAttempt {
     ssid: String,
     configuration: NEHotspotConfiguration,
     isTemporary: Bool,
+    matchesNetwork: ((String) -> Bool)? = nil,
+    removeConfiguration: (() -> Void)? = nil,
     onSuccess: @escaping () -> Void,
     onFailure: @escaping (Error) -> Void
   ) {
     self.ssid = ssid
     self.configuration = configuration
     self.isTemporary = isTemporary
+    self.matchesNetwork = matchesNetwork ?? { $0 == ssid }
+    self.removeConfiguration = removeConfiguration ?? {
+      NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: ssid)
+    }
     self.onSuccess = onSuccess
     self.onFailure = onFailure
   }
+
+  /// For configurations that must not be SSID-verified (Passpoint).
+  static func unverified(
+    identifier: String,
+    configuration: NEHotspotConfiguration,
+    isTemporary: Bool,
+    removeConfiguration: @escaping () -> Void,
+    onSuccess: @escaping () -> Void,
+    onFailure: @escaping (Error) -> Void
+  ) -> WifiConnectionAttempt {
+    let attempt = WifiConnectionAttempt(
+      ssid: identifier,
+      configuration: configuration,
+      isTemporary: isTemporary,
+      matchesNetwork: { _ in true },
+      removeConfiguration: removeConfiguration,
+      onSuccess: onSuccess,
+      onFailure: onFailure
+    )
+    attempt.skipVerification = true
+    return attempt
+  }
+
+  private var skipVerification = false
 
   func start(timeout: TimeInterval) {
     let timeoutWorkItem = DispatchWorkItem { [self] in
@@ -73,7 +107,11 @@ private final class WifiConnectionAttempt {
           return
         }
 
-        self.verifyConnectedSSID(remainingChecks: 10)
+        if self.skipVerification {
+          self.settle { self.onSuccess() }
+        } else {
+          self.verifyConnectedSSID(remainingChecks: 10)
+        }
       }
     }
   }
@@ -82,7 +120,7 @@ private final class WifiConnectionAttempt {
     NEHotspotNetwork.fetchCurrent { [self] network in
       queue.async {
         guard !self.settled else { return }
-        if let network, network.ssid == self.ssid {
+        if let network, self.matchesNetwork?(network.ssid) ?? true {
           self.settle { self.onSuccess() }
         } else if remainingChecks > 0 {
           self.queue.asyncAfter(deadline: .now() + 0.25) {
@@ -110,7 +148,7 @@ private final class WifiConnectionAttempt {
 
   private func cleanupNewPersistentConfiguration() {
     guard !isTemporary, existedBeforeAttempt == false else { return }
-    manager.removeConfiguration(forSSID: ssid)
+    removeConfiguration()
   }
 
   private func settle(_ action: () -> Void) {
@@ -350,49 +388,47 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 
   func requestLocalNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome> {
-    try validateSSID(options.ssid)
+    try validateIdentifier(options)
     let promise = Promise<ConnectionOutcome>()
-    guard let configuration = makeHotspotConfiguration(
-      ssid: options.ssid,
-      securityType: options.securityType,
-      passphrase: options.passphrase
-    ) else {
-      promise.resolve(withResult: ConnectionOutcome(
-        status: .unsupported,
-        mode: .localnetwork,
-        ssid: options.ssid,
-        leaseId: nil,
-        configurationId: nil,
-        boundProcess: false,
-        message: "munim-wifi: \(options.securityType.stringValue) networks cannot be joined through NEHotspotConfiguration"
-      ))
+    let configuration: NEHotspotConfiguration
+    do {
+      guard let made = try makeHotspotConfiguration(options) else {
+        promise.resolve(withResult: outcome(
+          .unsupported,
+          .localnetwork,
+          options: options,
+          message: "munim-wifi: \(options.securityType.stringValue) networks cannot be joined through NEHotspotConfiguration"
+        ))
+        return promise
+      }
+      configuration = made
+    } catch {
+      promise.resolve(withResult: outcome(.failed, .localnetwork, options: options, message: error.localizedDescription))
       return promise
     }
     configuration.joinOnce = true
-    WifiConnectionAttempt(
-      ssid: options.ssid,
+    let identifier = configurationIdentifier(options)
+    makeAttempt(
+      options: options,
       configuration: configuration,
       isTemporary: true,
       onSuccess: { [weak self] in
-        self?.lastJoinedSSID = options.ssid
+        if options.securityType != .passpoint { self?.lastJoinedSSID = options.ssid }
         promise.resolve(withResult: ConnectionOutcome(
           status: .connected,
           mode: .localnetwork,
           ssid: options.ssid,
-          leaseId: options.ssid,
+          leaseId: identifier,
           configurationId: nil,
           boundProcess: false,
           message: nil
         ))
       },
       onFailure: { error in
-        promise.resolve(withResult: ConnectionOutcome(
-          status: .failed,
-          mode: .localnetwork,
-          ssid: options.ssid,
-          leaseId: nil,
-          configurationId: nil,
-          boundProcess: false,
+        promise.resolve(withResult: self.outcome(
+          .failed,
+          .localnetwork,
+          options: options,
           message: error.localizedDescription
         ))
       }
@@ -401,25 +437,26 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 
   func configureNetwork(options: NativeConnectionOptions) throws -> Promise<ConnectionOutcome> {
-    try validateSSID(options.ssid)
+    try validateIdentifier(options)
     let promise = Promise<ConnectionOutcome>()
-    guard let configuration = makeHotspotConfiguration(
-      ssid: options.ssid,
-      securityType: options.securityType,
-      passphrase: options.passphrase
-    ) else {
-      promise.resolve(withResult: ConnectionOutcome(
-        status: .unsupported,
-        mode: .managedconfiguration,
-        ssid: options.ssid,
-        leaseId: nil,
-        configurationId: nil,
-        boundProcess: false,
-        message: "munim-wifi: \(options.securityType.stringValue) networks cannot be configured through NEHotspotConfiguration"
-      ))
+    let configuration: NEHotspotConfiguration
+    do {
+      guard let made = try makeHotspotConfiguration(options) else {
+        promise.resolve(withResult: outcome(
+          .unsupported,
+          .managedconfiguration,
+          options: options,
+          message: "munim-wifi: \(options.securityType.stringValue) networks cannot be configured through NEHotspotConfiguration"
+        ))
+        return promise
+      }
+      configuration = made
+    } catch {
+      promise.resolve(withResult: outcome(.failed, .managedconfiguration, options: options, message: error.localizedDescription))
       return promise
     }
     configuration.joinOnce = false
+    let identifier = configurationIdentifier(options)
     NEHotspotConfigurationManager.shared.apply(configuration) { [weak self] error in
       if let error = error as NSError?,
          !(error.domain == NEHotspotConfigurationErrorDomain &&
@@ -435,13 +472,13 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
         ))
         return
       }
-      self?.lastJoinedSSID = options.ssid
+      if options.securityType != .passpoint { self?.lastJoinedSSID = options.ssid }
       promise.resolve(withResult: ConnectionOutcome(
         status: .configured,
         mode: .managedconfiguration,
         ssid: options.ssid,
         leaseId: nil,
-        configurationId: options.ssid,
+        configurationId: identifier,
         boundProcess: false,
         message: nil
       ))
@@ -462,7 +499,9 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 
   func releaseConnection(leaseOrConfigurationId: String) throws -> Promise<ConnectionOutcome> {
+    // The identifier is an SSID, or a Passpoint domain name for HS20 configurations.
     NEHotspotConfigurationManager.shared.removeConfiguration(forSSID: leaseOrConfigurationId)
+    NEHotspotConfigurationManager.shared.removeConfiguration(forHS20DomainName: leaseOrConfigurationId)
     if lastJoinedSSID == leaseOrConfigurationId { lastJoinedSSID = nil }
     return Promise.resolved(withResult: ConnectionOutcome(
       status: .released,
@@ -599,12 +638,10 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
 
   func removeListeners(count: Double) throws {}
 
-  private func makeHotspotConfiguration(
-    ssid: String,
-    securityType: WifiSecurityType,
-    passphrase: String?
-  ) -> NEHotspotConfiguration? {
-    switch securityType {
+  private func makeHotspotConfiguration(_ options: NativeConnectionOptions) throws -> NEHotspotConfiguration? {
+    let ssid = options.ssid
+    let passphrase = options.passphrase
+    switch options.securityType {
     case .open, .owe:
       return NEHotspotConfiguration(ssid: ssid)
     case .wep:
@@ -614,9 +651,88 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       // iOS applies WPA2 and WPA3 Personal through the same passphrase API.
       guard let passphrase, !passphrase.isEmpty else { return nil }
       return NEHotspotConfiguration(ssid: ssid, passphrase: passphrase, isWEP: false)
-    case .enterprise, .passpoint, .unknown:
+    case .enterprise:
+      guard let enterprise = options.enterprise else { return nil }
+      return NEHotspotConfiguration(
+        ssid: ssid,
+        eapSettings: try EnterpriseCredentialStore.makeEAPSettings(enterprise)
+      )
+    case .passpoint:
+      guard let enterprise = options.enterprise, let passpoint = options.passpoint else { return nil }
+      return NEHotspotConfiguration(
+        hs20Settings: EnterpriseCredentialStore.makeHS20Settings(passpoint),
+        eapSettings: try EnterpriseCredentialStore.makeEAPSettings(enterprise)
+      )
+    case .unknown:
       return nil
     }
+  }
+
+  /// SSID for ordinary networks, provider domain for Passpoint.
+  private func configurationIdentifier(_ options: NativeConnectionOptions) -> String {
+    if options.securityType == .passpoint, let domain = options.passpoint?.domainName {
+      return domain
+    }
+    return options.ssid
+  }
+
+  private func makeAttempt(
+    options: NativeConnectionOptions,
+    configuration: NEHotspotConfiguration,
+    isTemporary: Bool,
+    onSuccess: @escaping () -> Void,
+    onFailure: @escaping (Error) -> Void
+  ) -> WifiConnectionAttempt {
+    if options.securityType == .passpoint, let domain = options.passpoint?.domainName {
+      return WifiConnectionAttempt.unverified(
+        identifier: domain,
+        configuration: configuration,
+        isTemporary: isTemporary,
+        removeConfiguration: {
+          NEHotspotConfigurationManager.shared.removeConfiguration(forHS20DomainName: domain)
+        },
+        onSuccess: onSuccess,
+        onFailure: onFailure
+      )
+    }
+    return WifiConnectionAttempt(
+      ssid: options.ssid,
+      configuration: configuration,
+      isTemporary: isTemporary,
+      onSuccess: onSuccess,
+      onFailure: onFailure
+    )
+  }
+
+  private func outcome(
+    _ status: ConnectionStatus,
+    _ mode: ConnectionMode,
+    options: NativeConnectionOptions,
+    message: String?
+  ) -> ConnectionOutcome {
+    ConnectionOutcome(
+      status: status,
+      mode: mode,
+      ssid: options.ssid,
+      leaseId: nil,
+      configurationId: nil,
+      boundProcess: false,
+      message: message
+    )
+  }
+
+  /// Passpoint identifiers are free-form; everything else must be a valid SSID.
+  private func validateIdentifier(_ options: NativeConnectionOptions) throws {
+    if options.securityType == .passpoint {
+      guard
+        !options.ssid.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+        !options.ssid.contains("\0")
+      else {
+        throw MunimWifiError.invalidSSID
+      }
+      return
+    }
+    try validateSSID(options.ssid)
   }
 
   private func unsupportedSuggestionOutcome() -> SuggestionOutcome {

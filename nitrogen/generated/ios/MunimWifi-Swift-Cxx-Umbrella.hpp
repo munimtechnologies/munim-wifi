@@ -22,6 +22,12 @@ namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
 namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `EapMethod` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapMethod; }
+// Forward declaration of `EapPhase2Method` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapPhase2Method; }
+// Forward declaration of `EnterpriseCredentials` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct EnterpriseCredentials; }
 // Forward declaration of `HotspotOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 // Forward declaration of `HotspotStatus` to properly resolve imports.
@@ -42,6 +48,8 @@ namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 // Forward declaration of `NetworkState` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class NetworkState; }
+// Forward declaration of `PasspointConfig` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `PermissionState` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class PermissionState; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
@@ -69,6 +77,9 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "ConnectionOutcome.hpp"
 #include "ConnectionStatus.hpp"
 #include "CurrentNetworkInfo.hpp"
+#include "EapMethod.hpp"
+#include "EapPhase2Method.hpp"
+#include "EnterpriseCredentials.hpp"
 #include "HotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
 #include "HybridMunimWifiSpec.hpp"
@@ -79,6 +90,7 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "NetworkDiagnostics.hpp"
 #include "NetworkLinkProperties.hpp"
 #include "NetworkState.hpp"
+#include "PasspointConfig.hpp"
 #include "PermissionState.hpp"
 #include "ScanOptions.hpp"
 #include "ScanResultInfo.hpp"

@@ -20,6 +20,12 @@ namespace margelo::nitro::munimwifi { struct ConnectionOutcome; }
 namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 // Forward declaration of `CurrentNetworkInfo` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct CurrentNetworkInfo; }
+// Forward declaration of `EapMethod` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapMethod; }
+// Forward declaration of `EapPhase2Method` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapPhase2Method; }
+// Forward declaration of `EnterpriseCredentials` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct EnterpriseCredentials; }
 // Forward declaration of `HotspotOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct HotspotOutcome; }
 // Forward declaration of `HotspotStatus` to properly resolve imports.
@@ -38,6 +44,8 @@ namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 // Forward declaration of `NetworkState` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class NetworkState; }
+// Forward declaration of `PasspointConfig` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `PermissionState` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class PermissionState; }
 // Forward declaration of `ScanOptions` to properly resolve imports.
@@ -68,6 +76,9 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "ConnectionOutcome.hpp"
 #include "ConnectionStatus.hpp"
 #include "CurrentNetworkInfo.hpp"
+#include "EapMethod.hpp"
+#include "EapPhase2Method.hpp"
+#include "EnterpriseCredentials.hpp"
 #include "HotspotOutcome.hpp"
 #include "HotspotStatus.hpp"
 #include "HybridMunimWifiSpec.hpp"
@@ -77,6 +88,7 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "NetworkDiagnostics.hpp"
 #include "NetworkLinkProperties.hpp"
 #include "NetworkState.hpp"
+#include "PasspointConfig.hpp"
 #include "PermissionState.hpp"
 #include "ScanOptions.hpp"
 #include "ScanResultInfo.hpp"
@@ -829,6 +841,51 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   Func_void_ConnectionOutcome create_Func_void_ConnectionOutcome(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_ConnectionOutcome_Wrapper wrap_Func_void_ConnectionOutcome(Func_void_ConnectionOutcome value) noexcept {
     return Func_void_ConnectionOutcome_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::optional<EapPhase2Method>
+  /**
+   * Specialized version of `std::optional<EapPhase2Method>`.
+   */
+  using std__optional_EapPhase2Method_ = std::optional<EapPhase2Method>;
+  inline std::optional<EapPhase2Method> create_std__optional_EapPhase2Method_(const EapPhase2Method& value) noexcept {
+    return std::optional<EapPhase2Method>(value);
+  }
+  inline bool has_value_std__optional_EapPhase2Method_(const std::optional<EapPhase2Method>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline EapPhase2Method get_std__optional_EapPhase2Method_(const std::optional<EapPhase2Method>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<EnterpriseCredentials>
+  /**
+   * Specialized version of `std::optional<EnterpriseCredentials>`.
+   */
+  using std__optional_EnterpriseCredentials_ = std::optional<EnterpriseCredentials>;
+  inline std::optional<EnterpriseCredentials> create_std__optional_EnterpriseCredentials_(const EnterpriseCredentials& value) noexcept {
+    return std::optional<EnterpriseCredentials>(value);
+  }
+  inline bool has_value_std__optional_EnterpriseCredentials_(const std::optional<EnterpriseCredentials>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline EnterpriseCredentials get_std__optional_EnterpriseCredentials_(const std::optional<EnterpriseCredentials>& optional) noexcept {
+    return optional.value();
+  }
+  
+  // pragma MARK: std::optional<PasspointConfig>
+  /**
+   * Specialized version of `std::optional<PasspointConfig>`.
+   */
+  using std__optional_PasspointConfig_ = std::optional<PasspointConfig>;
+  inline std::optional<PasspointConfig> create_std__optional_PasspointConfig_(const PasspointConfig& value) noexcept {
+    return std::optional<PasspointConfig>(value);
+  }
+  inline bool has_value_std__optional_PasspointConfig_(const std::optional<PasspointConfig>& optional) noexcept {
+    return optional.has_value();
+  }
+  inline PasspointConfig get_std__optional_PasspointConfig_(const std::optional<PasspointConfig>& optional) noexcept {
+    return optional.value();
   }
   
   // pragma MARK: std::optional<NativeConnectionOptions>

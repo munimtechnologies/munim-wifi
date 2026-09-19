@@ -30,10 +30,16 @@
 
 // Forward declaration of `WifiSecurityType` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
+// Forward declaration of `EnterpriseCredentials` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct EnterpriseCredentials; }
+// Forward declaration of `PasspointConfig` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 
 #include <string>
 #include "WifiSecurityType.hpp"
 #include <optional>
+#include "EnterpriseCredentials.hpp"
+#include "PasspointConfig.hpp"
 
 namespace margelo::nitro::munimwifi {
 
@@ -48,10 +54,12 @@ namespace margelo::nitro::munimwifi {
     std::optional<std::string> bssid     SWIFT_PRIVATE;
     std::optional<double> timeout     SWIFT_PRIVATE;
     std::optional<bool> bindProcess     SWIFT_PRIVATE;
+    std::optional<EnterpriseCredentials> enterprise     SWIFT_PRIVATE;
+    std::optional<PasspointConfig> passpoint     SWIFT_PRIVATE;
 
   public:
     NativeConnectionOptions() = default;
-    explicit NativeConnectionOptions(std::string ssid, WifiSecurityType securityType, std::optional<std::string> passphrase, std::optional<std::string> bssid, std::optional<double> timeout, std::optional<bool> bindProcess): ssid(ssid), securityType(securityType), passphrase(passphrase), bssid(bssid), timeout(timeout), bindProcess(bindProcess) {}
+    explicit NativeConnectionOptions(std::string ssid, WifiSecurityType securityType, std::optional<std::string> passphrase, std::optional<std::string> bssid, std::optional<double> timeout, std::optional<bool> bindProcess, std::optional<EnterpriseCredentials> enterprise, std::optional<PasspointConfig> passpoint): ssid(ssid), securityType(securityType), passphrase(passphrase), bssid(bssid), timeout(timeout), bindProcess(bindProcess), enterprise(enterprise), passpoint(passpoint) {}
 
   public:
     friend bool operator==(const NativeConnectionOptions& lhs, const NativeConnectionOptions& rhs) = default;
@@ -72,7 +80,9 @@ namespace margelo::nitro {
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "passphrase"))),
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid"))),
         JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout"))),
-        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bindProcess")))
+        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bindProcess"))),
+        JSIConverter<std::optional<margelo::nitro::munimwifi::EnterpriseCredentials>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "enterprise"))),
+        JSIConverter<std::optional<margelo::nitro::munimwifi::PasspointConfig>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "passpoint")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::munimwifi::NativeConnectionOptions& arg) {
@@ -83,6 +93,8 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "bssid"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.bssid));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "timeout"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.timeout));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "bindProcess"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.bindProcess));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "enterprise"), JSIConverter<std::optional<margelo::nitro::munimwifi::EnterpriseCredentials>>::toJSI(runtime, arg.enterprise));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "passpoint"), JSIConverter<std::optional<margelo::nitro::munimwifi::PasspointConfig>>::toJSI(runtime, arg.passpoint));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -99,6 +111,8 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bssid")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "timeout")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "bindProcess")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::munimwifi::EnterpriseCredentials>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "enterprise")))) return false;
+      if (!JSIConverter<std::optional<margelo::nitro::munimwifi::PasspointConfig>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "passpoint")))) return false;
       return true;
     }
   };

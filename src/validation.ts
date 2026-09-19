@@ -1,6 +1,8 @@
 import type {
+  EnterpriseCredentials,
   NativeConnectionOptions,
   NativeNetworkSuggestionOptions,
+  PasspointConfig,
   WifiSecurityType,
 } from './specs/munim-wifi.nitro'
 
@@ -58,9 +60,128 @@ export function validateTimeout(timeout: number | undefined): void {
   }
 }
 
+const EAP_METHODS = new Set([
+  'peap',
+  'ttls',
+  'tls',
+  'fast',
+  'pwd',
+  'sim',
+  'aka',
+  'akaPrime',
+])
+const PHASE2_METHODS = new Set([
+  'none',
+  'pap',
+  'chap',
+  'mschap',
+  'mschapv2',
+  'gtc',
+  'eap',
+])
+const BASE64_PATTERN = /^[A-Za-z0-9+/\s]+={0,2}\s*$/
+
+function validateOptionalString(value: unknown, name: string): void {
+  if (value !== undefined && (typeof value !== 'string' || value.includes('\0'))) {
+    throw new TypeError(`${name} must be a string without null characters`)
+  }
+}
+
+function validateCertificate(value: unknown, name: string): void {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new TypeError(`${name} must be a non-empty base64 or PEM string`)
+  }
+  const body = value.includes('-----BEGIN')
+    ? value.replace(/-----(BEGIN|END)[^-]+-----/g, '')
+    : value
+  if (!BASE64_PATTERN.test(body.trim())) {
+    throw new TypeError(`${name} must be base64 (DER/PKCS#12) or PEM`)
+  }
+}
+
+export function validateEnterpriseCredentials(
+  eap: EnterpriseCredentials | undefined
+): void {
+  if (!eap || typeof eap !== 'object') {
+    throw new TypeError('Enterprise networks require EAP credentials (eap)')
+  }
+  if (!EAP_METHODS.has(eap.method)) {
+    throw new TypeError(`Unknown EAP method "${String(eap.method)}"`)
+  }
+  if (eap.phase2 !== undefined && !PHASE2_METHODS.has(eap.phase2)) {
+    throw new TypeError(`Unknown EAP phase 2 method "${String(eap.phase2)}"`)
+  }
+  validateOptionalString(eap.identity, 'eap.identity')
+  validateOptionalString(eap.anonymousIdentity, 'eap.anonymousIdentity')
+  validateOptionalString(eap.password, 'eap.password')
+  validateOptionalString(eap.serverDomain, 'eap.serverDomain')
+  validateOptionalString(
+    eap.clientCertificatePassword,
+    'eap.clientCertificatePassword'
+  )
+  if (
+    (eap.method === 'peap' || eap.method === 'ttls' || eap.method === 'pwd') &&
+    (!eap.identity || !eap.password)
+  ) {
+    throw new TypeError(`EAP-${eap.method.toUpperCase()} requires identity and password`)
+  }
+  if (eap.method === 'tls') {
+    validateCertificate(eap.clientCertificate, 'eap.clientCertificate')
+  } else if (eap.clientCertificate !== undefined) {
+    validateCertificate(eap.clientCertificate, 'eap.clientCertificate')
+  }
+  if (eap.trustedServerNames !== undefined) {
+    if (!Array.isArray(eap.trustedServerNames)) {
+      throw new TypeError('eap.trustedServerNames must be an array of strings')
+    }
+    eap.trustedServerNames.forEach((name, index) =>
+      validateOptionalString(name, `eap.trustedServerNames[${index}]`)
+    )
+  }
+  if (eap.caCertificates !== undefined) {
+    if (!Array.isArray(eap.caCertificates)) {
+      throw new TypeError('eap.caCertificates must be an array of strings')
+    }
+    eap.caCertificates.forEach((certificate, index) =>
+      validateCertificate(certificate, `eap.caCertificates[${index}]`)
+    )
+  }
+}
+
+export function validatePasspointConfig(
+  passpoint: PasspointConfig | undefined
+): void {
+  if (!passpoint || typeof passpoint !== 'object') {
+    throw new TypeError('Passpoint networks require a passpoint configuration')
+  }
+  if (
+    typeof passpoint.domainName !== 'string' ||
+    passpoint.domainName.trim().length === 0 ||
+    passpoint.domainName.includes('\0')
+  ) {
+    throw new TypeError('passpoint.domainName must be a non-empty string')
+  }
+  validateOptionalString(passpoint.friendlyName, 'passpoint.friendlyName')
+  validateOptionalString(passpoint.realm, 'passpoint.realm')
+  for (const oi of passpoint.roamingConsortiumOIs ?? []) {
+    if (typeof oi !== 'string' || !HEX_PATTERN.test(oi) || oi.length % 2 !== 0 || oi.length > 16) {
+      throw new TypeError(
+        'passpoint.roamingConsortiumOIs must be even-length hex strings of at most 16 digits'
+      )
+    }
+  }
+  for (const code of passpoint.mccAndMncs ?? []) {
+    if (typeof code !== 'string' || !/^\d{5,6}$/.test(code)) {
+      throw new TypeError('passpoint.mccAndMncs entries must be 5-6 digit MCC+MNC strings')
+    }
+  }
+}
+
 export function validateSecurity(
   securityType: WifiSecurityType,
-  passphrase: string | undefined
+  passphrase: string | undefined,
+  enterprise?: EnterpriseCredentials,
+  passpoint?: PasspointConfig
 ): void {
   if (passphrase?.includes('\0')) {
     throw new TypeError('Passphrase must not contain null characters')
@@ -111,11 +232,30 @@ export function validateSecurity(
       return
     case 'enterprise':
     case 'passpoint':
+      if (passphrase !== undefined) {
+        throw new TypeError(
+          `${securityType} security takes EAP credentials, not a passphrase`
+        )
+      }
+      validateEnterpriseCredentials(enterprise)
+      if (securityType === 'passpoint') validatePasspointConfig(passpoint)
+      return
     case 'unknown':
       throw new TypeError(
-        `${securityType} credentials are not modeled by this connection API`
+        'unknown credentials are not modeled by this connection API'
       )
   }
+}
+
+/** Passpoint selects networks by provider domain, so the SSID is only an identifier. */
+function validateNetworkIdentifier(ssid: string, securityType: WifiSecurityType): void {
+  if (securityType === 'passpoint') {
+    if (typeof ssid !== 'string' || ssid.trim().length === 0 || ssid.includes('\0')) {
+      throw new TypeError('A non-empty identifier is required')
+    }
+    return
+  }
+  validateSSID(ssid)
 }
 
 export function validateNativeConnectionOptions(
@@ -124,10 +264,15 @@ export function validateNativeConnectionOptions(
   if (!options || typeof options !== 'object') {
     throw new TypeError('Connection options must be an object')
   }
-  validateSSID(options.ssid)
+  validateNetworkIdentifier(options.ssid, options.securityType)
   validateBSSID(options.bssid)
   validateTimeout(options.timeout)
-  validateSecurity(options.securityType, options.passphrase)
+  validateSecurity(
+    options.securityType,
+    options.passphrase,
+    options.enterprise,
+    options.passpoint
+  )
   if (
     options.bindProcess !== undefined &&
     typeof options.bindProcess !== 'boolean'
@@ -139,7 +284,12 @@ export function validateNativeConnectionOptions(
 export function validateSuggestionOptions(
   options: NativeNetworkSuggestionOptions
 ): void {
-  validateSSID(options.ssid)
+  validateNetworkIdentifier(options.ssid, options.securityType)
   validateBSSID(options.bssid)
-  validateSecurity(options.securityType, options.passphrase)
+  validateSecurity(
+    options.securityType,
+    options.passphrase,
+    options.enterprise,
+    options.passpoint
+  )
 }

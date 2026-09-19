@@ -38,6 +38,14 @@ namespace margelo::nitro::munimwifi { enum class ConnectionStatus; }
 namespace margelo::nitro::munimwifi { enum class ConnectionMode; }
 // Forward declaration of `NativeConnectionOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct NativeConnectionOptions; }
+// Forward declaration of `EnterpriseCredentials` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct EnterpriseCredentials; }
+// Forward declaration of `EapMethod` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapMethod; }
+// Forward declaration of `EapPhase2Method` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class EapPhase2Method; }
+// Forward declaration of `PasspointConfig` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct PasspointConfig; }
 // Forward declaration of `SuggestionOutcome` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct SuggestionOutcome; }
 // Forward declaration of `SuggestionStatus` to properly resolve imports.
@@ -83,6 +91,10 @@ namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 #include "ConnectionStatus.hpp"
 #include "ConnectionMode.hpp"
 #include "NativeConnectionOptions.hpp"
+#include "EnterpriseCredentials.hpp"
+#include "EapMethod.hpp"
+#include "EapPhase2Method.hpp"
+#include "PasspointConfig.hpp"
 #include "SuggestionOutcome.hpp"
 #include "SuggestionStatus.hpp"
 #include "NativeNetworkSuggestionOptions.hpp"

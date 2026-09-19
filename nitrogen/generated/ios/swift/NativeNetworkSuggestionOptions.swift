@@ -18,7 +18,7 @@ public extension NativeNetworkSuggestionOptions {
   /**
    * Create a new instance of `NativeNetworkSuggestionOptions`.
    */
-  init(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, hidden: Bool?, appInteractionRequired: Bool?) {
+  init(ssid: String, securityType: WifiSecurityType, passphrase: String?, bssid: String?, hidden: Bool?, appInteractionRequired: Bool?, enterprise: EnterpriseCredentials?, passpoint: PasspointConfig?) {
     self.init(std.string(ssid), securityType, { () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = passphrase {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -40,6 +40,18 @@ public extension NativeNetworkSuggestionOptions {
     }(), { () -> bridge.std__optional_bool_ in
       if let __unwrappedValue = appInteractionRequired {
         return bridge.create_std__optional_bool_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_EnterpriseCredentials_ in
+      if let __unwrappedValue = enterprise {
+        return bridge.create_std__optional_EnterpriseCredentials_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_PasspointConfig_ in
+      if let __unwrappedValue = passpoint {
+        return bridge.create_std__optional_PasspointConfig_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -102,5 +114,15 @@ public extension NativeNetworkSuggestionOptions {
         return nil
       }
     }()
+  }
+  
+  @inline(__always)
+  var enterprise: EnterpriseCredentials? {
+    return self.__enterprise.value
+  }
+  
+  @inline(__always)
+  var passpoint: PasspointConfig? {
+    return self.__passpoint.value
   }
 }

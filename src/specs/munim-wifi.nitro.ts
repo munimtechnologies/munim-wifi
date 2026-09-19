@@ -93,6 +93,75 @@ export interface ConnectionOptions {
   timeout?: number
 }
 
+/** EAP method for WPA2/WPA3-Enterprise and Passpoint networks. */
+export type EapMethod =
+  | 'peap'
+  | 'ttls'
+  | 'tls'
+  | 'fast'
+  | 'pwd'
+  | 'sim'
+  | 'aka'
+  | 'akaPrime'
+
+/** Inner (phase 2) authentication for PEAP/TTLS. */
+export type EapPhase2Method =
+  | 'none'
+  | 'pap'
+  | 'chap'
+  | 'mschap'
+  | 'mschapv2'
+  | 'gtc'
+  | 'eap'
+
+/**
+ * WPA2/WPA3-Enterprise (802.1X) credentials.
+ *
+ * iOS (NEHotspotEAPSettings) supports peap, ttls, tls and fast. Android
+ * (WifiEnterpriseConfig) supports peap, ttls, tls, pwd, sim, aka and akaPrime.
+ */
+export interface EnterpriseCredentials {
+  method: EapMethod
+  /** Inner authentication. iOS: TTLS only (pap/chap/mschap/mschapv2/eap). */
+  phase2?: EapPhase2Method
+  identity?: string
+  /** Outer identity sent in the clear (for example "anonymous@example.com"). */
+  anonymousIdentity?: string
+  password?: string
+  /**
+   * Domain the authentication server's certificate must match. Android:
+   * domainSuffixMatch; iOS: added to trustedServerNames.
+   */
+  serverDomain?: string
+  /** iOS: additional trusted server certificate common names. */
+  trustedServerNames?: string[]
+  /** CA certificates (base64 DER, or PEM) used to validate the server. */
+  caCertificates?: string[]
+  /** Base64 PKCS#12 client identity, required for EAP-TLS. */
+  clientCertificate?: string
+  clientCertificatePassword?: string
+  /** Android: configure WPA3-Enterprise instead of WPA2-Enterprise. */
+  wpa3?: boolean
+}
+
+/** Hotspot 2.0 (Passpoint) provider settings. */
+export interface PasspointConfig {
+  /** Home service provider FQDN (for example "example.com"). */
+  domainName: string
+  /** Android: provider name shown to the user. Defaults to domainName. */
+  friendlyName?: string
+  /** NAI realm used for the credential. Defaults to domainName. */
+  realm?: string
+  /** iOS: extra NAI realm names. */
+  naiRealmNames?: string[]
+  /** Roaming consortium OIs as hex strings (for example "5A03BA0000"). */
+  roamingConsortiumOIs?: string[]
+  /** MCC/MNC pairs such as "310026" for SIM-based providers. */
+  mccAndMncs?: string[]
+  /** iOS: allow connecting to roaming partner networks. Defaults to false. */
+  roamingEnabled?: boolean
+}
+
 export type ConnectionMode =
   | 'localNetwork'
   | 'managedConfiguration'
@@ -108,12 +177,17 @@ export type ConnectionStatus =
   | 'failed'
 
 export interface NativeConnectionOptions {
+  /** For Passpoint this is only an identifier; the domain name selects networks. */
   ssid: string
   securityType: WifiSecurityType
   passphrase?: string
   bssid?: string
   timeout?: number
   bindProcess?: boolean
+  /** Required when securityType is 'enterprise' or 'passpoint'. */
+  enterprise?: EnterpriseCredentials
+  /** Required when securityType is 'passpoint'. */
+  passpoint?: PasspointConfig
 }
 
 export interface ConnectionOutcome {
@@ -144,6 +218,8 @@ export interface NativeNetworkSuggestionOptions {
   bssid?: string
   hidden?: boolean
   appInteractionRequired?: boolean
+  enterprise?: EnterpriseCredentials
+  passpoint?: PasspointConfig
 }
 
 export interface SuggestionOutcome {
