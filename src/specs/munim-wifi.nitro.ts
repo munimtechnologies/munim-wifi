@@ -230,11 +230,13 @@ export interface MunimWifi
   isWifiEnabled(): Promise<boolean>
 
   /**
-   * Request Wi-Fi permissions (Android) or check authorization status (iOS).
-   * On Android, this requests location permission which is required for Wi-Fi scanning.
-   * On iOS, this checks location authorization status.
+   * Prompt for the runtime permissions Wi-Fi scanning needs.
+   * Android 13+: NEARBY_WIFI_DEVICES (plus location when the app declares it).
+   * Android 12L and below: precise location.
+   * iOS: When-In-Use location (gates the current network's SSID/BSSID).
    *
-   * @returns Promise resolving to true if permissions are granted, false otherwise.
+   * @returns Promise resolving to true when scanning (Android) or current-network
+   * access (iOS) is permitted afterwards.
    */
   requestWifiPermission(): Promise<boolean>
 

@@ -19,6 +19,7 @@ import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiNetworkSpecifier
 import android.net.wifi.WifiNetworkSuggestion
+import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -26,6 +27,8 @@ import android.provider.Settings
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
 import com.facebook.proguard.annotations.DoNotStrip
+import com.facebook.react.modules.core.PermissionAwareActivity
+import com.facebook.react.modules.core.PermissionListener
 import com.margelo.nitro.NitroModules
 import com.margelo.nitro.core.NullType
 import com.margelo.nitro.core.Promise
@@ -82,10 +85,56 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   @Volatile
   private var networkObserverEmit: ((NetworkDiagnostics) -> Unit)? = null
   private val observerLock = Any()
+  private var nextPermissionRequestCode = 0x5746
 
   override fun isWifiEnabled(): Promise<Boolean> = Promise.resolved(wifiManager.isWifiEnabled)
 
-  override fun requestWifiPermission(): Promise<Boolean> = Promise.resolved(hasRequiredPermissions())
+  /**
+   * Prompts for the runtime permissions Wi-Fi scanning needs on this API level:
+   * NEARBY_WIFI_DEVICES on Android 13+ (plus location when the app's manifest
+   * declares it, because reading the connected SSID/BSSID still needs it), and
+   * location below 13. Resolves true when scanning is permitted afterwards.
+   */
+  override fun requestWifiPermission(): Promise<Boolean> {
+    val missing = permissionsToRequest().filterNot(::hasPermission)
+    if (missing.isEmpty()) return Promise.resolved(hasWifiScanPermission())
+    val promise = Promise<Boolean>()
+    val requestCode = nextPermissionRequestCode++
+    mainHandler.post { requestPermissionsWhenActivityReady(missing.toTypedArray(), requestCode, promise, 0) }
+    return promise
+  }
+
+  /**
+   * The React context has no current Activity for a short window after launch,
+   * which is exactly when apps tend to ask for permissions, so retry briefly.
+   */
+  private fun requestPermissionsWhenActivityReady(
+    permissions: Array<String>,
+    requestCode: Int,
+    promise: Promise<Boolean>,
+    attempt: Int,
+  ) {
+    val activity = NitroModules.applicationContext?.currentActivity as? PermissionAwareActivity
+    if (activity == null) {
+      if (attempt >= PERMISSION_ACTIVITY_RETRIES) {
+        promise.resolve(hasWifiScanPermission())
+      } else {
+        mainHandler.postDelayed({
+          requestPermissionsWhenActivityReady(permissions, requestCode, promise, attempt + 1)
+        }, PERMISSION_ACTIVITY_RETRY_DELAY_MS)
+      }
+      return
+    }
+    try {
+      activity.requestPermissions(permissions, requestCode, PermissionListener { callbackCode, _, _ ->
+        if (callbackCode != requestCode) return@PermissionListener false
+        promise.resolve(hasWifiScanPermission())
+        true
+      })
+    } catch (error: Throwable) {
+      promise.resolve(hasWifiScanPermission())
+    }
+  }
 
   override fun scanNetworks(options: ScanOptions?): Promise<Array<WifiNetwork>> {
     val promise = Promise<Array<WifiNetwork>>()
@@ -606,14 +655,14 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       ))
       return promise
     }
-    if (!hasScanPermission() || !hasNearbyPermission()) {
+    if (!hasWifiScanPermission()) {
       promise.resolve(HotspotOutcome(
         status = HotspotStatus.FAILED,
         reservationId = null,
         ssid = null,
         passphrase = null,
         securityType = WifiSecurityType.UNKNOWN,
-        message = "munim-wifi: location and Nearby Wi-Fi Devices permissions are required to start a hotspot",
+        message = "munim-wifi: the Nearby Wi-Fi Devices permission (Android 13+) or location (Android 12 and below) is required to start a hotspot",
       ))
       return promise
     }
@@ -699,7 +748,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.P &&
           packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)
       ),
-      locationPermission = permissionState(hasScanPermission()),
+      locationPermission = permissionState(hasLocationPermission()),
       nearbyWifiPermission = if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
         PermissionState.UNAVAILABLE
       } else {
@@ -1047,18 +1096,79 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   private fun ensureCanScan() {
     check(wifiManager.isWifiEnabled) { "munim-wifi: Wi-Fi is disabled" }
-    if (!hasScanPermission()) {
-      throw SecurityException("munim-wifi: precise location permission is required for Wi-Fi scans")
+    if (!hasWifiScanPermission()) {
+      throw SecurityException(
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          if (nearbyWifiIsNeverForLocation()) {
+            "munim-wifi: the Nearby Wi-Fi Devices permission is required for Wi-Fi scans"
+          } else {
+            "munim-wifi: Nearby Wi-Fi Devices and precise location permissions are required for Wi-Fi scans " +
+              "(the app declares NEARBY_WIFI_DEVICES without neverForLocation)"
+          }
+        } else {
+          "munim-wifi: precise location permission is required for Wi-Fi scans"
+        }
+      )
     }
   }
 
-  private fun hasRequiredPermissions(): Boolean = hasScanPermission() && hasNearbyPermission()
+  /**
+   * Scan results and local-only hotspots: NEARBY_WIFI_DEVICES on Android 13+
+   * (plus location when the app did not assert neverForLocation), location
+   * below 13.
+   */
+  private fun hasWifiScanPermission(): Boolean =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      hasPermission(Manifest.permission.NEARBY_WIFI_DEVICES) &&
+        (nearbyWifiIsNeverForLocation() || hasLocationPermission())
+    } else {
+      hasLocationPermission()
+    }
 
-  private fun hasScanPermission(): Boolean = hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)
+  /** SSID/BSSID of the connected network is redacted without location on every API level. */
+  private fun hasLocationPermission(): Boolean =
+    hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) ||
+      (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
+        hasPermission(Manifest.permission.ACCESS_COARSE_LOCATION))
 
   private fun hasNearbyPermission(): Boolean =
     Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
       hasPermission(Manifest.permission.NEARBY_WIFI_DEVICES)
+
+  private fun permissionsToRequest(): List<String> {
+    val location = listOf(
+      Manifest.permission.ACCESS_FINE_LOCATION,
+      Manifest.permission.ACCESS_COARSE_LOCATION,
+    )
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return location
+    val permissions = mutableListOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+    // Location is only asked for on 13+ when the app declares it (for example to
+    // read the connected SSID) or when scans still need it (no neverForLocation).
+    if (!nearbyWifiIsNeverForLocation() || isDeclaredInManifest(Manifest.permission.ACCESS_FINE_LOCATION)) {
+      permissions += location.filter(::isDeclaredInManifest)
+    }
+    return permissions
+  }
+
+  @Suppress("DEPRECATION")
+  private fun requestedPermissionsInfo(): PackageInfo? = try {
+    context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
+  } catch (_: Throwable) {
+    null
+  }
+
+  private fun isDeclaredInManifest(permission: String): Boolean =
+    requestedPermissionsInfo()?.requestedPermissions?.contains(permission) == true
+
+  private fun nearbyWifiIsNeverForLocation(): Boolean {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false
+    val info = requestedPermissionsInfo() ?: return false
+    val names = info.requestedPermissions ?: return false
+    val flags = info.requestedPermissionsFlags ?: return false
+    val index = names.indexOf(Manifest.permission.NEARBY_WIFI_DEVICES)
+    return index >= 0 && index < flags.size &&
+      (flags[index] and PackageInfo.REQUESTED_PERMISSION_NEVER_FOR_LOCATION) != 0
+  }
 
   private fun hasPermission(permission: String): Boolean =
     ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
@@ -1145,7 +1255,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   @Suppress("DEPRECATION")
   private fun currentNetworkInfo(): CurrentNetworkInfo? {
-    if (!hasScanPermission()) return null
+    if (!hasLocationPermission()) return null
     val info: WifiInfo = wifiManager.connectionInfo ?: return null
     val ssid = info.ssid?.removeSurrounding("\"").orEmpty()
     if (ssid.isBlank() || ssid == WifiManager.UNKNOWN_SSID) return null
@@ -1214,4 +1324,9 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   private fun quote(value: String): String = "\"${value.replace("\"", "\\\"")}\""
+
+  private companion object {
+    const val PERMISSION_ACTIVITY_RETRIES = 20
+    const val PERMISSION_ACTIVITY_RETRY_DELAY_MS = 250L
+  }
 }
