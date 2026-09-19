@@ -14,6 +14,14 @@
     },
     "plugins": [
       [
+        "expo-build-properties",
+        {
+          "ios": {
+            "enableSceneSupport": true
+          }
+        }
+      ],
+      [
         "munim-wifi",
         {
           "locationPermission": "Allow Munim Wi-Fi Example to find nearby Wi-Fi networks.",

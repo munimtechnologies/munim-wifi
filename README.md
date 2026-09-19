@@ -210,6 +210,8 @@ All plugin options:
 - `android.locationOnAndroid13Plus` (default `true`): keep `ACCESS_FINE_LOCATION` on Android 13+ so `getCurrentNetwork()` can read the connected SSID/BSSID. Set `false` to cap location at API 32; scanning then needs only Nearby Wi-Fi Devices.
 - `android.neverForLocation` (default `true`): declare `NEARBY_WIFI_DEVICES` with `usesPermissionFlags="neverForLocation"`. Set `false` only if your app derives physical location from Wi-Fi scans (scans then also need location on Android 13+).
 
+> **Xcode 27 / iOS 27:** apps built with Xcode 27 crash at launch on iOS 27 unless they adopt the UIScene lifecycle ([expo/expo#46664](https://github.com/expo/expo/issues/46664)). This is an app setting, not a munim-wifi change: on Expo 57 use `expo` 57.0.23 or newer, run `npx expo install expo-build-properties`, and add `["expo-build-properties", { "ios": { "enableSceneSupport": true } }]` to your plugins (the example app does this).
+
 Generate or rebuild native projects after changing the plugin configuration:
 
 ```bash

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "expo": "~57.0.24",
+    "expo-build-properties": "~57.0.21",
     "expo-status-bar": "~57.0.1",
     "munim-wifi": "file:..",
     "react": "19.2.3",
