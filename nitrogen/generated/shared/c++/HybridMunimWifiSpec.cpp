@@ -47,6 +47,8 @@ namespace margelo::nitro::munimwifi {
       prototype.registerHybridMethod("isInternetReachable", &HybridMunimWifiSpec::isInternetReachable);
       prototype.registerHybridMethod("startNetworkObserver", &HybridMunimWifiSpec::startNetworkObserver);
       prototype.registerHybridMethod("stopNetworkObserver", &HybridMunimWifiSpec::stopNetworkObserver);
+      prototype.registerHybridMethod("startWifiStateObserver", &HybridMunimWifiSpec::startWifiStateObserver);
+      prototype.registerHybridMethod("stopWifiStateObserver", &HybridMunimWifiSpec::stopWifiStateObserver);
       prototype.registerHybridMethod("startServiceDiscovery", &HybridMunimWifiSpec::startServiceDiscovery);
       prototype.registerHybridMethod("stopServiceDiscovery", &HybridMunimWifiSpec::stopServiceDiscovery);
       prototype.registerHybridMethod("requestLocalNetworkPermission", &HybridMunimWifiSpec::requestLocalNetworkPermission);

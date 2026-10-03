@@ -37,7 +37,9 @@ import type {
   WifiFingerprint,
   WifiNetwork,
   WifiPlatform,
+  WifiRadioState,
   WifiSecurityType,
+  WifiStateEvent,
 } from './specs/munim-wifi.nitro'
 import {
   validateBSSID,
@@ -50,6 +52,12 @@ import {
   validateSuggestionOptions,
   validateTimeout,
 } from './validation'
+import {
+  isLocalNetworkPermissionError,
+  LOCAL_NETWORK_PERMISSION_DENIED,
+} from './errors'
+
+export { isLocalNetworkPermissionError, LOCAL_NETWORK_PERMISSION_DENIED }
 
 export const MunimWifi =
   NitroModules.createHybridObject<MunimWifiSpec>('MunimWifi')
@@ -180,6 +188,9 @@ const networksListeners = new Set<NetworksListener>()
 const errorListeners = new Set<ErrorListener>()
 const throttledListeners = new Set<ThrottledListener>()
 const diagnosticsListeners = new Set<(diagnostics: NetworkDiagnostics) => void>()
+const wifiStateListeners = new Set<(event: WifiStateEvent) => void>()
+let lastWifiState: WifiStateEvent | null = null
+
 
 export function isWifiEnabled(): Promise<boolean> {
   return MunimWifi.isWifiEnabled()
@@ -191,6 +202,9 @@ export function isWifiEnabled(): Promise<boolean> {
  *
  * - Android 13+: NEARBY_WIFI_DEVICES, plus location when the app declares it
  *   (needed to read the connected network's SSID/BSSID).
+ * - Android 17+: also ACCESS_LOCAL_NETWORK (same Nearby devices dialog), so
+ *   service discovery and LAN probes work afterwards. The result still only
+ *   reflects scanning; check `getWifiCapabilityStatus().localNetworkPermission`.
  * - Android 12L and below: precise location.
  * - iOS: When-In-Use location, which gates the current network's SSID/BSSID.
  */
@@ -446,6 +460,51 @@ export function addNetworkObserverListener(
   }
 }
 
+/**
+ * Observe the Wi-Fi radio turning on or off; the current state arrives first.
+ * Replaces any previous native observer — prefer addWifiStateListener() when
+ * several parts of an app listen.
+ *
+ * Android 16+: WifiManager.addWifiStateChangedListener; older Android: the
+ * WIFI_STATE_CHANGED_ACTION broadcast. iOS has no radio-state API, so it
+ * reports whether a Wi-Fi path is usable (like isWifiEnabled()).
+ */
+export function startWifiStateObserver(
+  callback: (event: WifiStateEvent) => void
+): void {
+  MunimWifi.startWifiStateObserver(callback)
+}
+
+export function stopWifiStateObserver(): void {
+  MunimWifi.stopWifiStateObserver()
+}
+
+/**
+ * Subscribe to Wi-Fi on/off changes. Late subscribers get the last known
+ * state immediately. Returns an unsubscribe function.
+ */
+export function addWifiStateListener(
+  callback: (event: WifiStateEvent) => void
+): () => void {
+  wifiStateListeners.add(callback)
+  if (wifiStateListeners.size === 1) {
+    lastWifiState = null
+    MunimWifi.startWifiStateObserver((event) => {
+      lastWifiState = event
+      wifiStateListeners.forEach((listener) => listener(event))
+    })
+  } else if (lastWifiState) {
+    callback(lastWifiState)
+  }
+  return () => {
+    if (!wifiStateListeners.delete(callback)) return
+    if (wifiStateListeners.size === 0) {
+      lastWifiState = null
+      MunimWifi.stopWifiStateObserver()
+    }
+  }
+}
+
 export function addNetworkFoundListener(callback: NetworkListener): () => void {
   networkListeners.add(callback)
   return () => networkListeners.delete(callback)
@@ -504,6 +563,12 @@ export interface ServiceDiscoveryHandle {
  * Browse the local network for DNS-SD (Bonjour/mDNS) services such as
  * "_http._tcp". iOS apps must list the type in NSBonjourServices and set
  * NSLocalNetworkUsageDescription (the config plugin's `bonjourServices`).
+ *
+ * Android 17+ apps targeting API 37 need ACCESS_LOCAL_NETWORK (see
+ * requestLocalNetworkPermission()) or `showPicker: true`, which lets the user
+ * pick services in a system dialog without any permission. Permission
+ * failures reach `onError` with a message matched by
+ * isLocalNetworkPermissionError().
  */
 export function startServiceDiscovery(
   type: string,
@@ -512,6 +577,9 @@ export function startServiceDiscovery(
 ): ServiceDiscoveryHandle {
   validateServiceType(type)
   validateResolveTimeout(options?.resolveTimeout)
+  if (options?.showPicker !== undefined && typeof options.showPicker !== 'boolean') {
+    throw new TypeError('showPicker must be a boolean when provided')
+  }
   if (!handlers || typeof handlers.onFound !== 'function' || typeof handlers.onLost !== 'function') {
     throw new TypeError('onFound and onLost handlers are required')
   }
@@ -541,7 +609,9 @@ export function txtRecordToObject(
 /**
  * iOS: triggers the Local Network privacy prompt (requires
  * NSLocalNetworkUsageDescription and "_munimwifi._tcp" in NSBonjourServices,
- * both added by the config plugin). Android: always 'granted'.
+ * both added by the config plugin).
+ * Android 17+ (apps targeting API 37+): requests ACCESS_LOCAL_NETWORK and
+ * resolves 'granted' or 'denied'. Older Android: 'granted' (no permission).
  */
 export function requestLocalNetworkPermission(
   timeoutMs?: number
@@ -603,7 +673,9 @@ export type {
   WifiFingerprint,
   WifiNetwork,
   WifiPlatform,
+  WifiRadioState,
   WifiSecurityType,
+  WifiStateEvent,
 }
 
 export default {
@@ -640,6 +712,9 @@ export default {
   startNetworkObserver,
   stopNetworkObserver,
   addNetworkObserverListener,
+  startWifiStateObserver,
+  stopWifiStateObserver,
+  addWifiStateListener,
   addNetworkFoundListener,
   addNetworksFoundListener,
   addScanErrorListener,
@@ -649,6 +724,7 @@ export default {
   stopServiceDiscovery,
   txtRecordToObject,
   requestLocalNetworkPermission,
+  isLocalNetworkPermissionError,
   addListener,
   removeListeners,
 }

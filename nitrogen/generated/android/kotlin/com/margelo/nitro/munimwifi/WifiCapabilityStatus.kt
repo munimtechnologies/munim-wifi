@@ -56,7 +56,10 @@ data class WifiCapabilityStatus(
   val nearbyWifiPermission: PermissionState,
   @DoNotStrip
   @Keep
-  val wifiInformationPermission: PermissionState
+  val wifiInformationPermission: PermissionState,
+  @DoNotStrip
+  @Keep
+  val localNetworkPermission: PermissionState
 ) {
   /* primary constructor */
 
@@ -76,6 +79,7 @@ data class WifiCapabilityStatus(
       && Objects.deepEquals(this.locationPermission, other.locationPermission)
       && Objects.deepEquals(this.nearbyWifiPermission, other.nearbyWifiPermission)
       && Objects.deepEquals(this.wifiInformationPermission, other.wifiInformationPermission)
+      && Objects.deepEquals(this.localNetworkPermission, other.localNetworkPermission)
   }
 
   override fun hashCode(): Int {
@@ -92,7 +96,8 @@ data class WifiCapabilityStatus(
       wifiRtt,
       locationPermission,
       nearbyWifiPermission,
-      wifiInformationPermission
+      wifiInformationPermission,
+      localNetworkPermission
     ).contentDeepHashCode()
   }
 
@@ -104,8 +109,8 @@ data class WifiCapabilityStatus(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(platform: String, scan: CapabilityAvailability, localNetworkRequest: CapabilityAvailability, managedConfiguration: CapabilityAvailability, networkSuggestions: CapabilityAvailability, userSavedNetworkIntent: CapabilityAvailability, localOnlyHotspot: CapabilityAvailability, wifiDirect: CapabilityAvailability, wifiAware: CapabilityAvailability, wifiRtt: CapabilityAvailability, locationPermission: PermissionState, nearbyWifiPermission: PermissionState, wifiInformationPermission: PermissionState): WifiCapabilityStatus {
-      return WifiCapabilityStatus(platform, scan, localNetworkRequest, managedConfiguration, networkSuggestions, userSavedNetworkIntent, localOnlyHotspot, wifiDirect, wifiAware, wifiRtt, locationPermission, nearbyWifiPermission, wifiInformationPermission)
+    private fun fromCpp(platform: String, scan: CapabilityAvailability, localNetworkRequest: CapabilityAvailability, managedConfiguration: CapabilityAvailability, networkSuggestions: CapabilityAvailability, userSavedNetworkIntent: CapabilityAvailability, localOnlyHotspot: CapabilityAvailability, wifiDirect: CapabilityAvailability, wifiAware: CapabilityAvailability, wifiRtt: CapabilityAvailability, locationPermission: PermissionState, nearbyWifiPermission: PermissionState, wifiInformationPermission: PermissionState, localNetworkPermission: PermissionState): WifiCapabilityStatus {
+      return WifiCapabilityStatus(platform, scan, localNetworkRequest, managedConfiguration, networkSuggestions, userSavedNetworkIntent, localOnlyHotspot, wifiDirect, wifiAware, wifiRtt, locationPermission, nearbyWifiPermission, wifiInformationPermission, localNetworkPermission)
     }
   }
 }

@@ -80,8 +80,12 @@ namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `WifiNetwork` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `WifiRadioState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiRadioState; }
 // Forward declaration of `WifiSecurityType` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
+// Forward declaration of `WifiStateEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiStateEvent; }
 
 // Include C++ defined types
 #include "CapabilityAvailability.hpp"
@@ -120,7 +124,9 @@ namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
 #include "WifiCapabilityStatus.hpp"
 #include "WifiFingerprint.hpp"
 #include "WifiNetwork.hpp"
+#include "WifiRadioState.hpp"
 #include "WifiSecurityType.hpp"
+#include "WifiStateEvent.hpp"
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/Result.hpp>

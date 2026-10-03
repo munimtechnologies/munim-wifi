@@ -139,8 +139,10 @@
 | Passpoint (Hotspot 2.0) | ✅ | ✅ Android 11+ (suggestions) | `security: { type: 'passpoint', passpoint, eap }`. |
 | SSID-prefix join | ✅ iOS 13+ | ⚠️ `requestLocalNetwork` only | `ssidPrefix: true`. |
 | Configured SSIDs | ✅ | ✅ (app suggestions) | `getConfiguredSSIDs()`. |
-| Service discovery (DNS-SD) | ✅ `NWBrowser` | ✅ `NsdManager` | iOS needs `NSBonjourServices`. |
-| Local network permission | ✅ Prompt + result | ✅ Always granted | `requestLocalNetworkPermission()`. |
+| Service discovery (DNS-SD) | ✅ `NWBrowser` | ✅ `NsdManager` | iOS needs `NSBonjourServices`; Android 17 needs `ACCESS_LOCAL_NETWORK` or `showPicker`. |
+| Service picker | ❌ (normal browse) | ✅ Android 17+ | `startServiceDiscovery(type, handlers, { showPicker: true })`, no permission needed. |
+| Local network permission | ✅ Prompt + result | ✅ Android 17+ `ACCESS_LOCAL_NETWORK` | `requestLocalNetworkPermission()`; granted with nothing to ask below Android 17. |
+| Wi-Fi on/off events | ⚠️ Wi-Fi path usable | ✅ Android 16 listener, broadcast below | `addWifiStateListener()`. |
 | Internet reachability | ✅ `NWPath` | ✅ `NET_CAPABILITY_VALIDATED` | Optional HTTP probe on both. |
 | Wi-Fi settings intent | ❌ | ✅ Android 10+ | `requestUserSavedNetwork()` opens the system panel. |
 | Local-only hotspot | ❌ | ✅ Android 8+ | Returns generated SSID/passphrase/security. |
@@ -198,7 +200,8 @@ All plugin options:
     "bonjourServices": ["_http._tcp", "_ipp._tcp"],
     "android": {
       "locationOnAndroid13Plus": true,
-      "neverForLocation": true
+      "neverForLocation": true,
+      "localNetworkPermission": true
     }
   }
 ]
@@ -209,8 +212,13 @@ All plugin options:
 - `bonjourServices`: service types for `startServiceDiscovery()`, added to `NSBonjourServices` next to `_munimwifi._tcp` (used by `requestLocalNetworkPermission()`).
 - `android.locationOnAndroid13Plus` (default `true`): keep `ACCESS_FINE_LOCATION` on Android 13+ so `getCurrentNetwork()` can read the connected SSID/BSSID. Set `false` to cap location at API 32; scanning then needs only Nearby Wi-Fi Devices.
 - `android.neverForLocation` (default `true`): declare `NEARBY_WIFI_DEVICES` with `usesPermissionFlags="neverForLocation"`. Set `false` only if your app derives physical location from Wi-Fi scans (scans then also need location on Android 13+).
+- `android.localNetworkPermission` (default `true`): keep Android 17's `ACCESS_LOCAL_NETWORK`. Set `false` to strip it from the merged manifest, for example when you only use `showPicker` discovery.
 
 > **Xcode 27 / iOS 27:** apps built with Xcode 27 crash at launch on iOS 27 unless they adopt the UIScene lifecycle ([expo/expo#46664](https://github.com/expo/expo/issues/46664)). This is an app setting, not a munim-wifi change: on Expo 57 use `expo` 57.0.23 or newer, run `npx expo install expo-build-properties`, and add `["expo-build-properties", { "ios": { "enableSceneSupport": true } }]` to your plugins (the example app does this).
+
+> **Nitro + Xcode 27 on iOS 17 and older:** any Nitro module built with Xcode 27 can crash at launch on iOS versions below 18 (`std::exception_ptr::__from_native_exception_pointer` missing; [margelo/nitro#1652](https://github.com/margelo/nitro/issues/1652), fix pending in [#1666](https://github.com/margelo/nitro/pull/1666)). It comes from `react-native-nitro-modules`, not munim-wifi. Until a fixed Nitro release ships, build with Xcode 26 if you support iOS 15–17, or apply the patch from that PR with `patch-package`.
+
+> **Android build defaults:** the library compiles against `compileSdk` 37 and targets 36 when your root project does not set them, and builds with Kotlin 2.2 and AGP 9.2 (React Native 0.87). Apps that still compile against API 36 (Expo SDK 57, React Native 0.86) build too; the Android 17 features then need an Android 17 device at runtime.
 
 Generate or rebuild native projects after changing the plugin configuration:
 
@@ -248,7 +256,10 @@ The library manifest already declares what it needs and is merged into your app:
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" android:maxSdkVersion="32" />
 <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES"
     android:usesPermissionFlags="neverForLocation" />
+<uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 ```
+
+`ACCESS_LOCAL_NETWORK` is Android 17's (API 37) local network permission. Apps that target API 37 need it for NSD/mDNS service discovery and for TCP/UDP to LAN addresses; older Android versions ignore it. See [Android 17 local network permission](#android-17-local-network-permission).
 
 Location is capped at API 32 because Android 13+ gates scans with `NEARBY_WIFI_DEVICES` instead. If your app reads the connected network's SSID/BSSID (`getCurrentNetwork()`, `getNetworkSuggestionStatus()`'s `active` state) or uses suggestion connection events on Android 13+, lift the cap in your app manifest (add `xmlns:tools="http://schemas.android.com/tools"` to `<manifest>`):
 
@@ -278,7 +289,7 @@ Apple's `NEHotspotNetwork.fetchCurrent()` returns a network only when the app ha
 
 ### Which permission each API needs
 
-`requestWifiPermission()` asks for what scanning needs on the running OS (Nearby Wi-Fi Devices on Android 13+, precise location below; plus location on 13+ when your manifest declares it). Everything else is checked at call time.
+`requestWifiPermission()` asks for what scanning needs on the running OS (Nearby Wi-Fi Devices on Android 13+, precise location below; plus location on 13+ when your manifest declares it). On Android 17+ it also asks for `ACCESS_LOCAL_NETWORK`, which shares the Nearby devices dialog. Everything else is checked at call time.
 
 | API | Android 13+ (API 33+) | Android 10–12L (API 29–32) | Android 9 and below | iOS |
 | --- | --- | --- | --- | --- |
@@ -289,9 +300,21 @@ Apple's `NEHotspotNetwork.fetchCurrent()` returns a network only when the app ha
 | `configureNetwork`, suggestions | none (`CHANGE_WIFI_STATE`) | none | unsupported | Hotspot Configuration entitlement |
 | Suggestion connection events | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` | unsupported | unsupported |
 | `startLocalOnlyHotspot` | `NEARBY_WIFI_DEVICES` (plus location without `neverForLocation`) | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` | unsupported |
-| `startServiceDiscovery` | none | none | none | Local Network permission + `NSBonjourServices` entry |
+| `startServiceDiscovery` | none (Android 17+, target API 37+: `ACCESS_LOCAL_NETWORK`, or `showPicker: true`) | none | none | Local Network permission + `NSBonjourServices` entry |
+| `isInternetReachable({ probeUrl })` to a LAN address | none (Android 17+, target API 37+: `ACCESS_LOCAL_NETWORK`) | none | none | Local Network permission |
 
 See [Android Wi-Fi permissions](https://developer.android.com/develop/connectivity/wifi/wifi-permissions).
+
+### Android 17 local network permission
+
+Android 17 (API 37) protects the local network: apps that target API 37 need the runtime `ACCESS_LOCAL_NETWORK` permission (Nearby devices group) for NSD/mDNS, multicast, and TCP/UDP to LAN addresses (DNS on port 53 is exempt). Blocked UDP fails with `EPERM` and blocked TCP connections time out, which looks like a dead device unless you know about it. munim-wifi:
+
+- declares the permission in its manifest and requests it from `requestWifiPermission()` and `requestLocalNetworkPermission()` on Android 17+;
+- reports it as `getWifiCapabilityStatus().localNetworkPermission` (`'unavailable'` below Android 17, or when your app targets API 36 or lower, because nothing needs to be granted);
+- turns the failures into a clear error: service discovery calls `onError` and LAN `isInternetReachable({ probeUrl })` probes reject with a message containing `local network permission denied`. Test with `isLocalNetworkPermissionError(error)`, which also matches iOS Local Network denials;
+- offers `showPicker: true` for `startServiceDiscovery()`: the system picker lists services and only the ones the user selects are reported, with no permission needed.
+
+On Android 16 you can try the restriction early with `adb shell am compat enable RESTRICT_LOCAL_NETWORK <package>`. See [Android's local network permission guide](https://developer.android.com/privacy-and-security/local-network-permission).
 
 ### Android scan throttling
 
@@ -581,7 +604,9 @@ Android 8+ local-only hotspot (requires Nearby Wi-Fi Devices on Android 13+, loc
 
 #### `getWifiCapabilityStatus()`
 
-Reports per-capability availability (`scan`, `localNetworkRequest`, `managedConfiguration`, `networkSuggestions`, `userSavedNetworkIntent`, `localOnlyHotspot`, `wifiDirect`, `wifiAware`, `wifiRtt`) and permission states (`locationPermission`, `nearbyWifiPermission`, `wifiInformationPermission`) for the current OS version.
+Reports per-capability availability (`scan`, `localNetworkRequest`, `managedConfiguration`, `networkSuggestions`, `userSavedNetworkIntent`, `localOnlyHotspot`, `wifiDirect`, `wifiAware`, `wifiRtt`) and permission states (`locationPermission`, `nearbyWifiPermission`, `wifiInformationPermission`, `localNetworkPermission`) for the current OS version.
+
+`localNetworkPermission` is Android 17's `ACCESS_LOCAL_NETWORK` (`'unavailable'` when the OS does not gate local network access for the app). iOS cannot query Local Network access, so it is the last outcome seen in this launch (`requestLocalNetworkPermission()`, a Bonjour browse, or a LAN probe), or `'notDetermined'` before any.
 
 **Returns:** `Promise<WifiCapabilityStatus>`
 
@@ -599,12 +624,25 @@ One-shot snapshot of the default network.
 - Android: the default network has `NET_CAPABILITY_INTERNET` and `NET_CAPABILITY_VALIDATED` and is not a captive portal.
 - iOS: the default `NWPath` is satisfied.
 - With `{ probeUrl, timeout? }` the answer is an HTTP GET over that network instead (redirects are not followed, only 2xx counts, so captive portals report `false`). Use an https endpoint that returns 204, such as `https://www.google.com/generate_204`; Android blocks cleartext `http` unless your network security config allows it.
+- A probe to a LAN address that local network protection blocks (Android 17 without `ACCESS_LOCAL_NETWORK`, or iOS with Local Network access off) rejects with a `local network permission denied` error instead of resolving `false`.
 
 **Returns:** `Promise<boolean>`
 
 #### `startNetworkObserver(callback)` / `stopNetworkObserver()` / `addNetworkObserverListener(callback)`
 
 Continuous `NetworkDiagnostics` updates as the default network appears, changes capabilities, or is lost (`state: 'available' | 'lost' | 'unavailable'`). `addNetworkObserverListener` multiplexes many JS listeners over one native observer and returns a cleanup function.
+
+#### `addWifiStateListener(callback)` / `startWifiStateObserver(callback)` / `stopWifiStateObserver()`
+
+Wi-Fi on/off events: `{ enabled, state, timestamp }`, where `state` is `'enabled' | 'enabling' | 'disabled' | 'disabling' | 'unknown'`. The current state arrives first, then each change.
+
+```typescript
+const unsubscribe = addWifiStateListener(({ enabled, state }) => console.log('Wi-Fi', state, enabled))
+```
+
+- Android 16+: `WifiManager.addWifiStateChangedListener`; Android 15 and below: the `WIFI_STATE_CHANGED_ACTION` broadcast.
+- iOS has no radio-state API, so this follows whether a Wi-Fi path is usable (`NWPathMonitor`), the same signal as `isWifiEnabled()`: only `'enabled'`/`'disabled'`, and Wi-Fi that is on but not joined reports `'disabled'`.
+- `addWifiStateListener` multiplexes JS listeners over one native observer (late subscribers get the last state) and returns a cleanup function.
 
 ### Local Network Functions
 
@@ -622,14 +660,20 @@ const discovery = startServiceDiscovery('_http._tcp', {
 discovery.stop() // or stopServiceDiscovery(discovery.id)
 ```
 
-- `options`: `domain?` (default `'local.'`), `resolve?` (default `true`), `resolveTimeout?` (1,000–30,000 ms, default 5,000).
+- `options`: `domain?` (default `'local.'`), `resolve?` (default `true`), `resolveTimeout?` (1,000–30,000 ms, default 5,000), `showPicker?` (default `false`; Android 17+ opens the system service picker via `DiscoveryRequest.FLAG_SHOW_PICKER`, needs no local network permission, and reports only the services the user selects; ignored on iOS and older Android).
 - `DiscoveredService`: `id` (`name.type.domain`, the same for found/lost), `name`, `type`, `domain`, `host?`, `port?`, `addresses`, `txt` (`{ key, value? }[]`), `interfaceName?`, `resolved`. A service is re-reported through `onFound` when its TXT record changes.
-- Android: `NsdManager`; services are resolved one at a time with a timeout.
+- Android: `NsdManager`; services are resolved one at a time with a timeout. On Android 17+ apps targeting API 37 need `ACCESS_LOCAL_NETWORK` (or `showPicker`); otherwise `onError` gets a `local network permission denied` message.
 - iOS: `NWBrowser`; TXT comes from the browse result, host/port from a short-lived `NWConnection` to the service (opened and cancelled immediately). The type must be listed in `NSBonjourServices` and `NSLocalNetworkUsageDescription` must be set (config plugin: `bonjourServices`, `localNetworkPermission`), otherwise `onError` reports a policy denial.
 
 #### `requestLocalNetworkPermission(timeoutMs?)`
 
-iOS has no API to read the Local Network permission. This publishes and browses a private `_munimwifi._tcp` service (declared by the config plugin; bare apps add it to `NSBonjourServices`), which shows the prompt the first time. Resolves `'granted'` when the browse sees the service, `'denied'` when access is refused (judged after the alert is dismissed), or `'notDetermined'` if nothing is decided within `timeoutMs` (default 30,000). Android needs no runtime permission for mDNS and resolves `'granted'`.
+iOS has no API to read the Local Network permission. This publishes and browses a private `_munimwifi._tcp` service (declared by the config plugin; bare apps add it to `NSBonjourServices`), which shows the prompt the first time. Resolves `'granted'` when the browse sees the service, `'denied'` when access is refused (judged after the alert is dismissed), or `'notDetermined'` if nothing is decided within `timeoutMs` (default 30,000).
+
+Android 17+ (apps targeting API 37+): requests `ACCESS_LOCAL_NETWORK` and resolves `'granted'` or `'denied'`. Older Android versions, and apps targeting API 36 or lower, need no permission and resolve `'granted'`.
+
+#### `isLocalNetworkPermissionError(error)`
+
+`true` when an error (or an `onError` message string) means local network access is blocked: Android 17 without `ACCESS_LOCAL_NETWORK`, or iOS Local Network privacy off. Matches the `LOCAL_NETWORK_PERMISSION_DENIED` phrase (`'local network permission denied'`).
 
 **Returns:** `Promise<PermissionState>`
 
@@ -645,6 +689,7 @@ iOS has no API to read the Local Network permission. This publishes and browses 
 | `addEventListener('networksFound', callback)` | `WifiNetwork[]` | Generic listener alias. |
 | `addEventListener('scanError', callback)` | `string` | Generic listener alias. |
 | `addEventListener('scanThrottled', callback)` | `ScanResultInfo` | Generic listener alias. |
+| `addWifiStateListener(callback)` | `WifiStateEvent` | Wi-Fi turned on/off; current state first. |
 
 Each listener function returns a cleanup function. `addListener()` and `removeListeners()` remain deprecated compatibility shims.
 
@@ -810,6 +855,7 @@ export function NetworkScanner() {
 - **The scan returns no Android networks:** Confirm Wi-Fi is enabled and `requestWifiPermission()` resolved `true` (Nearby Wi-Fi Devices on 13+, precise location and device Location Services below). Android also throttles repeated scans — check `info.throttled`.
 - **Android 13+ connection throws a permission error:** Request Nearby Wi-Fi Devices permission with `requestWifiPermission()` before connecting.
 - **`getCurrentNetwork()` is `null` on Android 13+:** reading the connected SSID still needs `ACCESS_FINE_LOCATION`; keep it declared without the API-32 cap (see Android Setup).
+- **Android 17 service discovery fails or LAN devices time out:** apps targeting API 37 need `ACCESS_LOCAL_NETWORK`. Call `requestLocalNetworkPermission()` (or `requestWifiPermission()`), or browse with `showPicker: true`. `isLocalNetworkPermissionError(error)` identifies these failures.
 - **iOS service discovery reports a policy denial:** add the type to `NSBonjourServices`, set `NSLocalNetworkUsageDescription`, and allow Local Network access (Settings › Privacy & Security › Local Network).
 - **iOS returns `null` for the current network:** Verify the Access Wi-Fi Information entitlement, precise-location authorization, and Apple's `fetchCurrent()` eligibility conditions.
 - **iOS returns no RSSI/channel/frequency:** Those values are not exposed to ordinary iOS apps. This is expected.

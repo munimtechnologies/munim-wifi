@@ -18,8 +18,8 @@ public extension WifiCapabilityStatus {
   /**
    * Create a new instance of `WifiCapabilityStatus`.
    */
-  init(platform: String, scan: CapabilityAvailability, localNetworkRequest: CapabilityAvailability, managedConfiguration: CapabilityAvailability, networkSuggestions: CapabilityAvailability, userSavedNetworkIntent: CapabilityAvailability, localOnlyHotspot: CapabilityAvailability, wifiDirect: CapabilityAvailability, wifiAware: CapabilityAvailability, wifiRtt: CapabilityAvailability, locationPermission: PermissionState, nearbyWifiPermission: PermissionState, wifiInformationPermission: PermissionState) {
-    self.init(std.string(platform), scan, localNetworkRequest, managedConfiguration, networkSuggestions, userSavedNetworkIntent, localOnlyHotspot, wifiDirect, wifiAware, wifiRtt, locationPermission, nearbyWifiPermission, wifiInformationPermission)
+  init(platform: String, scan: CapabilityAvailability, localNetworkRequest: CapabilityAvailability, managedConfiguration: CapabilityAvailability, networkSuggestions: CapabilityAvailability, userSavedNetworkIntent: CapabilityAvailability, localOnlyHotspot: CapabilityAvailability, wifiDirect: CapabilityAvailability, wifiAware: CapabilityAvailability, wifiRtt: CapabilityAvailability, locationPermission: PermissionState, nearbyWifiPermission: PermissionState, wifiInformationPermission: PermissionState, localNetworkPermission: PermissionState) {
+    self.init(std.string(platform), scan, localNetworkRequest, managedConfiguration, networkSuggestions, userSavedNetworkIntent, localOnlyHotspot, wifiDirect, wifiAware, wifiRtt, locationPermission, nearbyWifiPermission, wifiInformationPermission, localNetworkPermission)
   }
 
   @inline(__always)
@@ -85,5 +85,10 @@ public extension WifiCapabilityStatus {
   @inline(__always)
   var wifiInformationPermission: PermissionState {
     return self.__wifiInformationPermission
+  }
+  
+  @inline(__always)
+  var localNetworkPermission: PermissionState {
+    return self.__localNetworkPermission
   }
 }

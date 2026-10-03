@@ -43,10 +43,11 @@ namespace margelo::nitro::munimwifi {
     std::optional<std::string> domain     SWIFT_PRIVATE;
     std::optional<bool> resolve     SWIFT_PRIVATE;
     std::optional<double> resolveTimeout     SWIFT_PRIVATE;
+    std::optional<bool> showPicker     SWIFT_PRIVATE;
 
   public:
     ServiceDiscoveryOptions() = default;
-    explicit ServiceDiscoveryOptions(std::optional<std::string> domain, std::optional<bool> resolve, std::optional<double> resolveTimeout): domain(domain), resolve(resolve), resolveTimeout(resolveTimeout) {}
+    explicit ServiceDiscoveryOptions(std::optional<std::string> domain, std::optional<bool> resolve, std::optional<double> resolveTimeout, std::optional<bool> showPicker): domain(domain), resolve(resolve), resolveTimeout(resolveTimeout), showPicker(showPicker) {}
 
   public:
     friend bool operator==(const ServiceDiscoveryOptions& lhs, const ServiceDiscoveryOptions& rhs) = default;
@@ -64,7 +65,8 @@ namespace margelo::nitro {
       return margelo::nitro::munimwifi::ServiceDiscoveryOptions(
         JSIConverter<std::optional<std::string>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "domain"))),
         JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "resolve"))),
-        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "resolveTimeout")))
+        JSIConverter<std::optional<double>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "resolveTimeout"))),
+        JSIConverter<std::optional<bool>>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "showPicker")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::munimwifi::ServiceDiscoveryOptions& arg) {
@@ -72,6 +74,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "domain"), JSIConverter<std::optional<std::string>>::toJSI(runtime, arg.domain));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "resolve"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.resolve));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "resolveTimeout"), JSIConverter<std::optional<double>>::toJSI(runtime, arg.resolveTimeout));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "showPicker"), JSIConverter<std::optional<bool>>::toJSI(runtime, arg.showPicker));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -85,6 +88,7 @@ namespace margelo::nitro {
       if (!JSIConverter<std::optional<std::string>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "domain")))) return false;
       if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "resolve")))) return false;
       if (!JSIConverter<std::optional<double>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "resolveTimeout")))) return false;
+      if (!JSIConverter<std::optional<bool>>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "showPicker")))) return false;
       return true;
     }
   };

@@ -41,6 +41,10 @@ function withMunimWifi(config, props = {}) {
   const locationOnAndroid13Plus = android.locationOnAndroid13Plus !== false
   // Set false only if the app derives physical location from Wi-Fi scans.
   const neverForLocation = android.neverForLocation !== false
+  // Android 17 (API 37) ACCESS_LOCAL_NETWORK for service discovery and LAN
+  // probes. Set false to strip it (for example when only showPicker discovery
+  // is used).
+  const localNetworkPermission = android.localNetworkPermission !== false
 
   config = withInfoPlist(config, (current) => {
     const plist = current.modResults
@@ -104,6 +108,14 @@ function withMunimWifi(config, props = {}) {
       nearby.$['tools:remove'] = 'android:usesPermissionFlags'
     }
     nearby.$['tools:targetApi'] = 's'
+
+    const localNetwork = upsertPermission(manifest, 'android.permission.ACCESS_LOCAL_NETWORK')
+    if (localNetworkPermission) {
+      delete localNetwork.$['tools:node']
+    } else {
+      // The library manifest declares it; remove it from the merged manifest.
+      localNetwork.$['tools:node'] = 'remove'
+    }
 
     return current
   })

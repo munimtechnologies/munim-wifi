@@ -805,6 +805,33 @@ open class HybridMunimWifiSpec_cxx {
   }
   
   @inline(__always)
+  public final func startWifiStateObserver(onChange: bridge.Func_void_WifiStateEvent) -> bridge.Result_void_ {
+    do {
+      try self.__implementation.startWifiStateObserver(onChange: { () -> (WifiStateEvent) -> Void in
+        let __wrappedFunction = bridge.wrap_Func_void_WifiStateEvent(onChange)
+        return { (__event: WifiStateEvent) -> Void in
+          __wrappedFunction.call(__event)
+        }
+      }())
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
+  public final func stopWifiStateObserver() -> bridge.Result_void_ {
+    do {
+      try self.__implementation.stopWifiStateObserver()
+      return bridge.create_Result_void_()
+    } catch (let __error) {
+      let __exceptionPtr = __error.toCpp()
+      return bridge.create_Result_void_(__exceptionPtr)
+    }
+  }
+  
+  @inline(__always)
   public final func startServiceDiscovery(type: std.string, options: ServiceDiscoveryOptions, onFound: bridge.Func_void_DiscoveredService, onLost: bridge.Func_void_DiscoveredService, onError: bridge.std__optional_std__function_void_const_std__string_____message______) -> bridge.Result_std__string_ {
     do {
       let __result = try self.__implementation.startServiceDiscovery(type: String(type), options: options, onFound: { () -> (DiscoveredService) -> Void in

@@ -55,9 +55,17 @@ final class BonjourDiscoverySession {
       guard let self, !self.stopped else { return }
       switch state {
       case .failed(let error):
+        if Self.isPolicyDenied(error) { LocalNetworkPermissionProbe.record(.denied) }
         self.onError?("munim-wifi: service discovery for \(self.type) failed: \(Self.describe(error))")
       case .waiting(let error):
-        self.onError?("munim-wifi: service discovery for \(self.type) is waiting: \(Self.describe(error))")
+        if Self.isPolicyDenied(error) {
+          LocalNetworkPermissionProbe.record(.denied)
+          // Same leading phrase as the Android error, so apps can match one string.
+          self.onError?("munim-wifi: local network permission denied: browsing for \(self.type) " +
+            "(Settings > Privacy & Security > Local Network)")
+        } else {
+          self.onError?("munim-wifi: service discovery for \(self.type) is waiting: \(Self.describe(error))")
+        }
       default:
         break
       }
@@ -67,6 +75,8 @@ final class BonjourDiscoverySession {
       for change in changes {
         switch change {
         case .added(let result):
+          // Seeing any service proves Local Network access is granted.
+          LocalNetworkPermissionProbe.record(.granted)
           self.handleFound(result)
         case .changed(old: _, new: let result, flags: _):
           self.handleFound(result)
@@ -185,7 +195,9 @@ final class BonjourDiscoverySession {
   static func describe(_ host: NWEndpoint.Host) -> String {
     switch host {
     case .ipv4(let address):
-      return "\(address)"
+      // String(describing:) appends the interface ("10.0.4.20%en0"), which is
+      // not a usable host for URLs or sockets; IPv4 needs no scope.
+      return address.rawValue.map(String.init).joined(separator: ".")
     case .ipv6(let address):
       return "\(address)"
     case .name(let name, _):
@@ -196,10 +208,17 @@ final class BonjourDiscoverySession {
   }
 
   static func describe(_ error: NWError) -> String {
-    if case let .dns(code) = error, code == DNSServiceErrorType(kDNSServiceErr_PolicyDenied) {
-      return "local network access was denied (Settings > Privacy & Security > Local Network)"
+    if isPolicyDenied(error) {
+      return "local network permission denied (Settings > Privacy & Security > Local Network)"
     }
     return error.localizedDescription
+  }
+
+  static func isPolicyDenied(_ error: NWError) -> Bool {
+    if case let .dns(code) = error, code == DNSServiceErrorType(kDNSServiceErr_PolicyDenied) {
+      return true
+    }
+    return false
   }
 }
 
@@ -214,6 +233,21 @@ final class BonjourDiscoverySession {
 final class LocalNetworkPermissionProbe {
   static let serviceType = "_munimwifi._tcp"
   private static let probedKey = "munim-wifi.local-network-probed"
+  private static let stateLock = NSLock()
+  private static var _lastKnownState: PermissionState?
+
+  /// Last Local Network outcome seen in this launch (probe, browse or LAN probe).
+  static var lastKnownState: PermissionState? {
+    stateLock.lock()
+    defer { stateLock.unlock() }
+    return _lastKnownState
+  }
+
+  static func record(_ state: PermissionState) {
+    stateLock.lock()
+    _lastKnownState = state
+    stateLock.unlock()
+  }
 
   private let queue = DispatchQueue(label: "com.munimwifi.local-network-probe")
   private let serviceName = "munim-wifi-\(UUID().uuidString.prefix(8))"
@@ -304,6 +338,7 @@ final class LocalNetworkPermissionProbe {
       self.listener = nil
       let completion = self.completion
       self.completion = nil
+      if state == .granted || state == .denied { Self.record(state) }
       completion?(state)
       DispatchQueue.main.async {
         if let observer = self.activeObserver {

@@ -165,6 +165,8 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   private var locationManager: CLLocationManager?
   private var locationDelegate: LocationPermissionDelegate?
   private var pathMonitor: NWPathMonitor?
+  private var wifiStateMonitor: NWPathMonitor?
+  private let wifiStateQueue = DispatchQueue(label: "com.munimwifi.wifi-state")
   private let observerLock = NSLock()
   private let observerQueue = DispatchQueue(label: "com.munimwifi.network-observer")
   private let stateLock = NSLock()
@@ -575,7 +577,8 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
         wifiRtt: .unsupported,
         locationPermission: locationPermission,
         nearbyWifiPermission: .unavailable,
-        wifiInformationPermission: locationPermission
+        wifiInformationPermission: locationPermission,
+        localNetworkPermission: LocalNetworkPermissionProbe.lastKnownState ?? .notdetermined
       ))
     }
     return promise
@@ -633,8 +636,14 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
         promise.resolve(withResult: true)
         return
       }
-      ReachabilityProbe.run(url: probe, timeout: timeout / 1_000) { reachable in
-        promise.resolve(withResult: reachable)
+      ReachabilityProbe.run(url: probe, timeout: timeout / 1_000) { result in
+        switch result {
+        case .reachable(let reachable):
+          promise.resolve(withResult: reachable)
+        case .localNetworkDenied:
+          LocalNetworkPermissionProbe.record(.denied)
+          promise.reject(withError: MunimWifiError.localNetworkDenied(host: probe.host ?? probe.absoluteString))
+        }
       }
     }
     return promise
@@ -688,6 +697,36 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     defer { observerLock.unlock() }
     pathMonitor?.cancel()
     pathMonitor = nil
+  }
+
+  /// iOS exposes no Wi-Fi radio state, so this follows whether a Wi-Fi path is
+  /// usable — the same signal as isWifiEnabled(). Repeats are dropped.
+  func startWifiStateObserver(onChange: @escaping (_ event: WifiStateEvent) -> Void) throws {
+    observerLock.lock()
+    defer { observerLock.unlock() }
+    wifiStateMonitor?.cancel()
+    let monitor = NWPathMonitor(requiredInterfaceType: .wifi)
+    let lastEnabled = WifiStateBox()
+    monitor.pathUpdateHandler = { path in
+      // Runs on the serial wifiStateQueue.
+      let enabled = path.status == .satisfied
+      guard enabled != lastEnabled.value else { return }
+      lastEnabled.value = enabled
+      onChange(WifiStateEvent(
+        enabled: enabled,
+        state: enabled ? .enabled : .disabled,
+        timestamp: Date().timeIntervalSince1970 * 1_000
+      ))
+    }
+    wifiStateMonitor = monitor
+    monitor.start(queue: wifiStateQueue)
+  }
+
+  func stopWifiStateObserver() throws {
+    observerLock.lock()
+    defer { observerLock.unlock() }
+    wifiStateMonitor?.cancel()
+    wifiStateMonitor = nil
   }
 
   func startServiceDiscovery(
@@ -1092,7 +1131,13 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
 
 /// One GET that refuses redirects, so a captive portal's 302 counts as unreachable.
 private final class ReachabilityProbe: NSObject, URLSessionTaskDelegate {
-  static func run(url: URL, timeout: TimeInterval, completion: @escaping (Bool) -> Void) {
+  enum Result {
+    case reachable(Bool)
+    /// The request failed because Local Network access is denied.
+    case localNetworkDenied
+  }
+
+  static func run(url: URL, timeout: TimeInterval, completion: @escaping (Result) -> Void) {
     let configuration = URLSessionConfiguration.ephemeral
     configuration.requestCachePolicy = .reloadIgnoringLocalAndRemoteCacheData
     configuration.timeoutIntervalForRequest = timeout
@@ -1101,11 +1146,30 @@ private final class ReachabilityProbe: NSObject, URLSessionTaskDelegate {
     var request = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: timeout)
     request.httpMethod = "GET"
     session.dataTask(with: request) { _, response, error in
+      if let error, isLocalNetworkDenied(error) {
+        completion(.localNetworkDenied)
+        return
+      }
       let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-      completion(error == nil && (200..<300).contains(status))
+      completion(.reachable(error == nil && (200..<300).contains(status)))
     }.resume()
     // Releases the delegate once the task completes.
     session.finishTasksAndInvalidate()
+  }
+
+  /// URLSession attaches the failing nw_path; its unsatisfied reason says
+  /// whether Local Network privacy blocked the request.
+  private static func isLocalNetworkDenied(_ error: Error) -> Bool {
+    let nsError = error as NSError
+    guard nsError.domain == NSURLErrorDomain else { return false }
+    if let value = nsError.userInfo["_NSURLErrorNWPathKey"] {
+      let path = value as AnyObject
+      if let nwPath = path as? nw_path_t {
+        return nw_path_get_unsatisfied_reason(nwPath) == nw_path_unsatisfied_reason_local_network_denied
+      }
+      return String(describing: value).localizedCaseInsensitiveContains("local network prohibited")
+    }
+    return false
   }
 
   func urlSession(
@@ -1117,6 +1181,11 @@ private final class ReachabilityProbe: NSObject, URLSessionTaskDelegate {
   ) {
     completionHandler(nil)
   }
+}
+
+/// Last Wi-Fi state a startWifiStateObserver() monitor reported; only touched on its serial queue.
+private final class WifiStateBox: @unchecked Sendable {
+  var value: Bool?
 }
 
 final class OnceFlag {
@@ -1174,6 +1243,7 @@ private enum MunimWifiError: LocalizedError {
   case invalidServiceType
   case invalidProbeURL
   case invalidResolveTimeout
+  case localNetworkDenied(host: String)
 
   var errorDescription: String? {
     switch self {
@@ -1199,6 +1269,9 @@ private enum MunimWifiError: LocalizedError {
       return "munim-wifi: probeUrl must be an absolute http(s) URL"
     case .invalidResolveTimeout:
       return "munim-wifi: resolveTimeout must be between 1000 and 30000 milliseconds"
+    case .localNetworkDenied(let host):
+      return "munim-wifi: local network permission denied: probing \(host) needs Local Network access " +
+        "(Settings > Privacy & Security > Local Network)"
     case .released:
       return "munim-wifi: the module was released before the operation finished"
     }

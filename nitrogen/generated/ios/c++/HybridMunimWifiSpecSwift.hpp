@@ -78,6 +78,10 @@ namespace margelo::nitro::munimwifi { enum class NetworkState; }
 namespace margelo::nitro::munimwifi { struct NetworkLinkProperties; }
 // Forward declaration of `ReachabilityOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
+// Forward declaration of `WifiStateEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiStateEvent; }
+// Forward declaration of `WifiRadioState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiRadioState; }
 // Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `DiscoveredService` to properly resolve imports.
@@ -125,6 +129,8 @@ namespace margelo::nitro::munimwifi { struct ServiceTxtEntry; }
 #include "NetworkState.hpp"
 #include "NetworkLinkProperties.hpp"
 #include "ReachabilityOptions.hpp"
+#include "WifiStateEvent.hpp"
+#include "WifiRadioState.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "DiscoveredService.hpp"
 #include "ServiceTxtEntry.hpp"
@@ -429,6 +435,18 @@ namespace margelo::nitro::munimwifi {
     }
     inline void stopNetworkObserver() override {
       auto __result = _swiftPart.stopNetworkObserver();
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void startWifiStateObserver(const std::function<void(const WifiStateEvent& /* event */)>& onChange) override {
+      auto __result = _swiftPart.startWifiStateObserver(onChange);
+      if (__result.hasError()) [[unlikely]] {
+        std::rethrow_exception(__result.error());
+      }
+    }
+    inline void stopWifiStateObserver() override {
+      auto __result = _swiftPart.stopWifiStateObserver();
       if (__result.hasError()) [[unlikely]] {
         std::rethrow_exception(__result.error());
       }
