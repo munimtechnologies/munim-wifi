@@ -1,3 +1,9 @@
+## [0.5.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.4.1...v0.5.0) (2026-10-03)
+
+### ✨ Features
+
+* Android 17 local network permission, NSD picker discovery and Wi-Fi state events ([#29](https://github.com/munimtechnologies/munim-wifi/issues/29)) ([02ab745](https://github.com/munimtechnologies/munim-wifi/commit/02ab7454c64a455a34a53abd67100f86a6284222))
+
 ## [0.4.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.4.0...v0.4.1) (2026-09-19)
 
 ### 🐛 Bug Fixes
