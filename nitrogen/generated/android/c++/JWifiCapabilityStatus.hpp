@@ -61,6 +61,8 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<JPermissionState> nearbyWifiPermission = this->getFieldValue(fieldNearbyWifiPermission);
       static const auto fieldWifiInformationPermission = clazz->getField<JPermissionState>("wifiInformationPermission");
       jni::local_ref<JPermissionState> wifiInformationPermission = this->getFieldValue(fieldWifiInformationPermission);
+      static const auto fieldLocalNetworkPermission = clazz->getField<JPermissionState>("localNetworkPermission");
+      jni::local_ref<JPermissionState> localNetworkPermission = this->getFieldValue(fieldLocalNetworkPermission);
       return WifiCapabilityStatus(
         platform->toStdString(),
         scan->toCpp(),
@@ -74,7 +76,8 @@ namespace margelo::nitro::munimwifi {
         wifiRtt->toCpp(),
         locationPermission->toCpp(),
         nearbyWifiPermission->toCpp(),
-        wifiInformationPermission->toCpp()
+        wifiInformationPermission->toCpp(),
+        localNetworkPermission->toCpp()
       );
     }
 
@@ -84,7 +87,7 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JWifiCapabilityStatus::javaobject> fromCpp(const WifiCapabilityStatus& value) {
-      using JSignature = JWifiCapabilityStatus(jni::alias_ref<jni::JString>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JPermissionState>, jni::alias_ref<JPermissionState>, jni::alias_ref<JPermissionState>);
+      using JSignature = JWifiCapabilityStatus(jni::alias_ref<jni::JString>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JCapabilityAvailability>, jni::alias_ref<JPermissionState>, jni::alias_ref<JPermissionState>, jni::alias_ref<JPermissionState>, jni::alias_ref<JPermissionState>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
@@ -101,7 +104,8 @@ namespace margelo::nitro::munimwifi {
         JCapabilityAvailability::fromCpp(value.wifiRtt),
         JPermissionState::fromCpp(value.locationPermission),
         JPermissionState::fromCpp(value.nearbyWifiPermission),
-        JPermissionState::fromCpp(value.wifiInformationPermission)
+        JPermissionState::fromCpp(value.wifiInformationPermission),
+        JPermissionState::fromCpp(value.localNetworkPermission)
       );
     }
   };

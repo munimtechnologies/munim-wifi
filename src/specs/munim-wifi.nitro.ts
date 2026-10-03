@@ -309,6 +309,18 @@ export interface WifiCapabilityStatus {
   locationPermission: PermissionState
   nearbyWifiPermission: PermissionState
   wifiInformationPermission: PermissionState
+  /**
+   * Local network access (mDNS/DNS-SD, LAN TCP/UDP).
+   *
+   * Android: `android.permission.ACCESS_LOCAL_NETWORK`, enforced on Android 17
+   * (API 37) for apps targeting API 37+. 'unavailable' when the OS does not
+   * gate local network access for this app (older Android, or a lower
+   * targetSdk), so nothing needs to be requested.
+   * iOS: the Local Network privacy permission. iOS has no query API, so this is
+   * the last outcome observed in this launch (requestLocalNetworkPermission(),
+   * a Bonjour browse or a LAN probe), or 'notDetermined' before any.
+   */
+  localNetworkPermission: PermissionState
 }
 
 export interface NetworkLinkProperties {
@@ -407,7 +419,31 @@ export interface ServiceDiscoveryOptions {
   resolve?: boolean
   /** Per-service resolution timeout in ms (1000-30000, default 5000). */
   resolveTimeout?: number
+  /**
+   * Android 17 (API 37)+: let the user pick the services to share through the
+   * system picker (DiscoveryRequest.FLAG_SHOW_PICKER). Picker discovery needs
+   * no local network permission; only the services the user selects are
+   * reported. Ignored on iOS and older Android versions, which browse as usual.
+   */
+  showPicker?: boolean
 }
+
+/** Wi-Fi radio state (Android WifiManager.WIFI_STATE_*). */
+export type WifiRadioState =
+  | 'disabled'
+  | 'disabling'
+  | 'enabled'
+  | 'enabling'
+  | 'unknown'
+
+export interface WifiStateEvent {
+  /** True when the radio is on (Android) or a Wi-Fi path is usable (iOS). */
+  enabled: boolean
+  state: WifiRadioState
+  timestamp: number
+}
+
+export type WifiStateCallback = (event: WifiStateEvent) => void
 
 export type ServiceFoundCallback = (service: DiscoveredService) => void
 export type ServiceLostCallback = (service: DiscoveredService) => void
@@ -629,6 +665,18 @@ export interface MunimWifi
 
   stopNetworkObserver(): void
 
+  /**
+   * Observe the Wi-Fi radio being switched on or off. The current state is
+   * delivered first.
+   * Android 16+: WifiManager.addWifiStateChangedListener; older versions use
+   * the WIFI_STATE_CHANGED_ACTION broadcast.
+   * iOS: no radio-state API exists, so this follows whether a Wi-Fi path is
+   * usable (NWPathMonitor), the same signal as isWifiEnabled().
+   */
+  startWifiStateObserver(onChange: WifiStateCallback): void
+
+  stopWifiStateObserver(): void
+
   // ========== Local network ==========
 
   /**
@@ -653,7 +701,9 @@ export interface MunimWifi
    * and browsing a private Bonjour service ("_munimwifi._tcp", which must be in
    * NSBonjourServices). Resolves 'granted', 'denied', or 'notDetermined' if the
    * user has not answered within `timeoutMs` (default 30000).
-   * Android: no runtime permission is required; resolves 'granted'.
+   * Android 17+ (apps targeting API 37+): requests the runtime
+   * ACCESS_LOCAL_NETWORK permission and resolves 'granted' or 'denied'.
+   * Older Android versions need no permission and resolve 'granted'.
    */
   requestLocalNetworkPermission(timeoutMs?: number): Promise<PermissionState>
 

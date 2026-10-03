@@ -57,10 +57,11 @@ namespace margelo::nitro::munimwifi {
     PermissionState locationPermission     SWIFT_PRIVATE;
     PermissionState nearbyWifiPermission     SWIFT_PRIVATE;
     PermissionState wifiInformationPermission     SWIFT_PRIVATE;
+    PermissionState localNetworkPermission     SWIFT_PRIVATE;
 
   public:
     WifiCapabilityStatus() = default;
-    explicit WifiCapabilityStatus(std::string platform, CapabilityAvailability scan, CapabilityAvailability localNetworkRequest, CapabilityAvailability managedConfiguration, CapabilityAvailability networkSuggestions, CapabilityAvailability userSavedNetworkIntent, CapabilityAvailability localOnlyHotspot, CapabilityAvailability wifiDirect, CapabilityAvailability wifiAware, CapabilityAvailability wifiRtt, PermissionState locationPermission, PermissionState nearbyWifiPermission, PermissionState wifiInformationPermission): platform(platform), scan(scan), localNetworkRequest(localNetworkRequest), managedConfiguration(managedConfiguration), networkSuggestions(networkSuggestions), userSavedNetworkIntent(userSavedNetworkIntent), localOnlyHotspot(localOnlyHotspot), wifiDirect(wifiDirect), wifiAware(wifiAware), wifiRtt(wifiRtt), locationPermission(locationPermission), nearbyWifiPermission(nearbyWifiPermission), wifiInformationPermission(wifiInformationPermission) {}
+    explicit WifiCapabilityStatus(std::string platform, CapabilityAvailability scan, CapabilityAvailability localNetworkRequest, CapabilityAvailability managedConfiguration, CapabilityAvailability networkSuggestions, CapabilityAvailability userSavedNetworkIntent, CapabilityAvailability localOnlyHotspot, CapabilityAvailability wifiDirect, CapabilityAvailability wifiAware, CapabilityAvailability wifiRtt, PermissionState locationPermission, PermissionState nearbyWifiPermission, PermissionState wifiInformationPermission, PermissionState localNetworkPermission): platform(platform), scan(scan), localNetworkRequest(localNetworkRequest), managedConfiguration(managedConfiguration), networkSuggestions(networkSuggestions), userSavedNetworkIntent(userSavedNetworkIntent), localOnlyHotspot(localOnlyHotspot), wifiDirect(wifiDirect), wifiAware(wifiAware), wifiRtt(wifiRtt), locationPermission(locationPermission), nearbyWifiPermission(nearbyWifiPermission), wifiInformationPermission(wifiInformationPermission), localNetworkPermission(localNetworkPermission) {}
 
   public:
     friend bool operator==(const WifiCapabilityStatus& lhs, const WifiCapabilityStatus& rhs) = default;
@@ -88,7 +89,8 @@ namespace margelo::nitro {
         JSIConverter<margelo::nitro::munimwifi::CapabilityAvailability>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "wifiRtt"))),
         JSIConverter<margelo::nitro::munimwifi::PermissionState>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "locationPermission"))),
         JSIConverter<margelo::nitro::munimwifi::PermissionState>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "nearbyWifiPermission"))),
-        JSIConverter<margelo::nitro::munimwifi::PermissionState>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "wifiInformationPermission")))
+        JSIConverter<margelo::nitro::munimwifi::PermissionState>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "wifiInformationPermission"))),
+        JSIConverter<margelo::nitro::munimwifi::PermissionState>::fromJSI(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "localNetworkPermission")))
       );
     }
     static inline jsi::Value toJSI(jsi::Runtime& runtime, const margelo::nitro::munimwifi::WifiCapabilityStatus& arg) {
@@ -106,6 +108,7 @@ namespace margelo::nitro {
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "locationPermission"), JSIConverter<margelo::nitro::munimwifi::PermissionState>::toJSI(runtime, arg.locationPermission));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "nearbyWifiPermission"), JSIConverter<margelo::nitro::munimwifi::PermissionState>::toJSI(runtime, arg.nearbyWifiPermission));
       obj.setProperty(runtime, PropNameIDCache::get(runtime, "wifiInformationPermission"), JSIConverter<margelo::nitro::munimwifi::PermissionState>::toJSI(runtime, arg.wifiInformationPermission));
+      obj.setProperty(runtime, PropNameIDCache::get(runtime, "localNetworkPermission"), JSIConverter<margelo::nitro::munimwifi::PermissionState>::toJSI(runtime, arg.localNetworkPermission));
       return obj;
     }
     static inline bool canConvert(jsi::Runtime& runtime, const jsi::Value& value) {
@@ -129,6 +132,7 @@ namespace margelo::nitro {
       if (!JSIConverter<margelo::nitro::munimwifi::PermissionState>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "locationPermission")))) return false;
       if (!JSIConverter<margelo::nitro::munimwifi::PermissionState>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "nearbyWifiPermission")))) return false;
       if (!JSIConverter<margelo::nitro::munimwifi::PermissionState>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "wifiInformationPermission")))) return false;
+      if (!JSIConverter<margelo::nitro::munimwifi::PermissionState>::canConvert(runtime, obj.getProperty(runtime, PropNameIDCache::get(runtime, "localNetworkPermission")))) return false;
       return true;
     }
   };

@@ -26,7 +26,10 @@ data class ServiceDiscoveryOptions(
   val resolve: Boolean?,
   @DoNotStrip
   @Keep
-  val resolveTimeout: Double?
+  val resolveTimeout: Double?,
+  @DoNotStrip
+  @Keep
+  val showPicker: Boolean?
 ) {
   /* primary constructor */
 
@@ -36,13 +39,15 @@ data class ServiceDiscoveryOptions(
     return Objects.deepEquals(this.domain, other.domain)
       && Objects.deepEquals(this.resolve, other.resolve)
       && Objects.deepEquals(this.resolveTimeout, other.resolveTimeout)
+      && Objects.deepEquals(this.showPicker, other.showPicker)
   }
 
   override fun hashCode(): Int {
     return arrayOf<Any?>(
       domain,
       resolve,
-      resolveTimeout
+      resolveTimeout,
+      showPicker
     ).contentDeepHashCode()
   }
 
@@ -54,8 +59,8 @@ data class ServiceDiscoveryOptions(
     @Keep
     @Suppress("unused")
     @JvmStatic
-    private fun fromCpp(domain: String?, resolve: Boolean?, resolveTimeout: Double?): ServiceDiscoveryOptions {
-      return ServiceDiscoveryOptions(domain, resolve, resolveTimeout)
+    private fun fromCpp(domain: String?, resolve: Boolean?, resolveTimeout: Double?, showPicker: Boolean?): ServiceDiscoveryOptions {
+      return ServiceDiscoveryOptions(domain, resolve, resolveTimeout, showPicker)
     }
   }
 }

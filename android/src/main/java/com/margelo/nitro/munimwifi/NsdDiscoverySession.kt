@@ -1,10 +1,13 @@
 package com.margelo.nitro.munimwifi
 
+import android.net.nsd.DiscoveryRequest
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.os.Build
 import android.os.Handler
+import androidx.annotation.RequiresApi
 import java.util.ArrayDeque
+import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -12,6 +15,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  * below 14 rejects concurrent resolves with FAILURE_ALREADY_ACTIVE), each with
  * a timeout so a stuck resolve cannot stall the queue. All state is touched on
  * [handler]'s thread.
+ *
+ * With [showPicker] (Android 17+), discovery goes through the system service
+ * picker (DiscoveryRequest.FLAG_SHOW_PICKER), which needs no local network
+ * permission and only reports the services the user selects.
  */
 internal class NsdDiscoverySession(
   private val nsdManager: NsdManager,
@@ -21,6 +28,7 @@ internal class NsdDiscoverySession(
   private val domain: String,
   private val resolve: Boolean,
   private val resolveTimeoutMs: Long,
+  private val showPicker: Boolean,
   private val onFound: (DiscoveredService) -> Unit,
   private val onLost: (DiscoveredService) -> Unit,
   private val onError: ((String) -> Unit)?,
@@ -29,6 +37,7 @@ internal class NsdDiscoverySession(
   private val pending = ArrayDeque<NsdServiceInfo>()
   private var resolving: NsdServiceInfo? = null
   private var activeResolveListener: NsdManager.ResolveListener? = null
+  private var permissionErrorReported = false
 
   private val discoveryListener = object : NsdManager.DiscoveryListener {
     override fun onDiscoveryStarted(serviceType: String) = Unit
@@ -38,7 +47,11 @@ internal class NsdDiscoverySession(
     override fun onStartDiscoveryFailed(serviceType: String, errorCode: Int) {
       handler.post {
         stopped.set(true)
-        emitError("munim-wifi: service discovery for $type failed to start (${errorName(errorCode)})")
+        if (errorCode == LocalNetworkAccess.NSD_FAILURE_PERMISSION_DENIED) {
+          emitError(LocalNetworkAccess.deniedMessage("browsing for $type"))
+        } else {
+          emitError("munim-wifi: service discovery for $type failed to start (${errorName(errorCode)})")
+        }
       }
     }
 
@@ -72,11 +85,30 @@ internal class NsdDiscoverySession(
 
   fun start() {
     try {
-      nsdManager.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+      if (showPicker && Build.VERSION.SDK_INT >= PICKER_SDK) {
+        startWithPicker()
+      } else {
+        nsdManager.discoverServices(type, NsdManager.PROTOCOL_DNS_SD, discoveryListener)
+      }
+    } catch (error: SecurityException) {
+      stopped.set(true)
+      emitError(LocalNetworkAccess.deniedMessage("browsing for $type"))
     } catch (error: Throwable) {
       stopped.set(true)
       emitError(error.message ?: "munim-wifi: service discovery for $type failed to start")
     }
+  }
+
+  @RequiresApi(PICKER_SDK)
+  private fun startWithPicker() {
+    val builder = DiscoveryRequest.Builder(type)
+    // DiscoveryRequest.Builder.setFlags(long) is API 37. Called reflectively so
+    // apps that still compile against API 36 (Expo SDK 57, RN 0.86) can build.
+    DiscoveryRequest.Builder::class.java
+      .getMethod("setFlags", java.lang.Long.TYPE)
+      .invoke(builder, FLAG_SHOW_PICKER)
+    val executor = Executor { command -> handler.post(command) }
+    nsdManager.discoverServices(builder.build(), executor, discoveryListener)
   }
 
   fun stop() {
@@ -112,7 +144,12 @@ internal class NsdDiscoverySession(
     val listener = object : NsdManager.ResolveListener {
       override fun onServiceResolved(serviceInfo: NsdServiceInfo) = finish(serviceInfo, true)
 
-      override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) = finish(next, false)
+      override fun onResolveFailed(serviceInfo: NsdServiceInfo, errorCode: Int) {
+        if (errorCode == LocalNetworkAccess.NSD_FAILURE_PERMISSION_DENIED) {
+          handler.post { reportPermissionErrorOnce("resolving ${next.serviceName}") }
+        }
+        finish(next, false)
+      }
     }
     activeResolveListener = listener
     try {
@@ -148,6 +185,12 @@ internal class NsdDiscoverySession(
     } catch (_: Throwable) {
       // Never crash because a JS listener threw.
     }
+  }
+
+  private fun reportPermissionErrorOnce(action: String) {
+    if (permissionErrorReported || stopped.get()) return
+    permissionErrorReported = true
+    emitError(LocalNetworkAccess.deniedMessage(action))
   }
 
   private fun emitError(message: String) {
@@ -196,6 +239,14 @@ internal class NsdDiscoverySession(
     NsdManager.FAILURE_INTERNAL_ERROR -> "internal error"
     NsdManager.FAILURE_ALREADY_ACTIVE -> "already active"
     NsdManager.FAILURE_MAX_LIMIT -> "too many requests"
+    LocalNetworkAccess.NSD_FAILURE_PERMISSION_DENIED -> "permission denied"
     else -> "error $code"
+  }
+
+  private companion object {
+    /** DiscoveryRequest.FLAG_SHOW_PICKER arrived in Android 17 (API 37). */
+    const val PICKER_SDK = 37
+    /** DiscoveryRequest.FLAG_SHOW_PICKER (API 37). */
+    const val FLAG_SHOW_PICKER = 2L
   }
 }

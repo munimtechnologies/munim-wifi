@@ -68,8 +68,12 @@ namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 namespace margelo::nitro::munimwifi { struct WifiFingerprint; }
 // Forward declaration of `WifiNetwork` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct WifiNetwork; }
+// Forward declaration of `WifiRadioState` to properly resolve imports.
+namespace margelo::nitro::munimwifi { enum class WifiRadioState; }
 // Forward declaration of `WifiSecurityType` to properly resolve imports.
 namespace margelo::nitro::munimwifi { enum class WifiSecurityType; }
+// Forward declaration of `WifiStateEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiStateEvent; }
 
 // Forward declarations of Swift defined types
 // Forward declaration of `HybridMunimWifiSpec_cxx` to properly resolve imports.
@@ -106,7 +110,9 @@ namespace MunimWifi { class HybridMunimWifiSpec_cxx; }
 #include "WifiCapabilityStatus.hpp"
 #include "WifiFingerprint.hpp"
 #include "WifiNetwork.hpp"
+#include "WifiRadioState.hpp"
 #include "WifiSecurityType.hpp"
+#include "WifiStateEvent.hpp"
 #include <NitroModules/Null.hpp>
 #include <NitroModules/Promise.hpp>
 #include <NitroModules/PromiseHolder.hpp>
@@ -1146,6 +1152,28 @@ namespace margelo::nitro::munimwifi::bridge::swift {
   Func_void_NetworkDiagnostics create_Func_void_NetworkDiagnostics(void* NON_NULL swiftClosureWrapper) noexcept;
   inline Func_void_NetworkDiagnostics_Wrapper wrap_Func_void_NetworkDiagnostics(Func_void_NetworkDiagnostics value) noexcept {
     return Func_void_NetworkDiagnostics_Wrapper(std::move(value));
+  }
+  
+  // pragma MARK: std::function<void(const WifiStateEvent& /* event */)>
+  /**
+   * Specialized version of `std::function<void(const WifiStateEvent&)>`.
+   */
+  using Func_void_WifiStateEvent = std::function<void(const WifiStateEvent& /* event */)>;
+  /**
+   * Wrapper class for a `std::function<void(const WifiStateEvent& / * event * /)>`, this can be used from Swift.
+   */
+  class Func_void_WifiStateEvent_Wrapper final {
+  public:
+    explicit Func_void_WifiStateEvent_Wrapper(std::function<void(const WifiStateEvent& /* event */)>&& func): _function(std::make_unique<std::function<void(const WifiStateEvent& /* event */)>>(std::move(func))) {}
+    inline void call(WifiStateEvent event) const noexcept {
+      _function->operator()(event);
+    }
+  private:
+    std::unique_ptr<std::function<void(const WifiStateEvent& /* event */)>> _function;
+  } SWIFT_NONCOPYABLE;
+  Func_void_WifiStateEvent create_Func_void_WifiStateEvent(void* NON_NULL swiftClosureWrapper) noexcept;
+  inline Func_void_WifiStateEvent_Wrapper wrap_Func_void_WifiStateEvent(Func_void_WifiStateEvent value) noexcept {
+    return Func_void_WifiStateEvent_Wrapper(std::move(value));
   }
   
   // pragma MARK: std::vector<ServiceTxtEntry>

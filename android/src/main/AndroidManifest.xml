@@ -29,4 +29,13 @@
         android:name="android.permission.NEARBY_WIFI_DEVICES"
         android:usesPermissionFlags="neverForLocation"
         tools:targetApi="s" />
+    <!--
+      Android 17 (API 37) local network protection: apps targeting API 37+ need
+      this runtime permission (Nearby devices group) for NSD/mDNS service
+      discovery and TCP/UDP to LAN addresses. requestWifiPermission() and
+      requestLocalNetworkPermission() request it on Android 17+. Discovery with
+      showPicker (the system service picker) works without it. Unknown to older
+      Android versions, which ignore it.
+    -->
+    <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 </manifest>

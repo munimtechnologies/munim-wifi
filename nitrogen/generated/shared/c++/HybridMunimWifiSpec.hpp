@@ -47,6 +47,8 @@ namespace margelo::nitro::munimwifi { struct WifiCapabilityStatus; }
 namespace margelo::nitro::munimwifi { struct NetworkDiagnostics; }
 // Forward declaration of `ReachabilityOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ReachabilityOptions; }
+// Forward declaration of `WifiStateEvent` to properly resolve imports.
+namespace margelo::nitro::munimwifi { struct WifiStateEvent; }
 // Forward declaration of `ServiceDiscoveryOptions` to properly resolve imports.
 namespace margelo::nitro::munimwifi { struct ServiceDiscoveryOptions; }
 // Forward declaration of `DiscoveredService` to properly resolve imports.
@@ -78,6 +80,7 @@ namespace margelo::nitro::munimwifi { enum class PermissionState; }
 #include "WifiCapabilityStatus.hpp"
 #include "NetworkDiagnostics.hpp"
 #include "ReachabilityOptions.hpp"
+#include "WifiStateEvent.hpp"
 #include "ServiceDiscoveryOptions.hpp"
 #include "DiscoveredService.hpp"
 #include "PermissionState.hpp"
@@ -146,6 +149,8 @@ namespace margelo::nitro::munimwifi {
       virtual std::shared_ptr<Promise<bool>> isInternetReachable(const ReachabilityOptions& options) = 0;
       virtual void startNetworkObserver(const std::function<void(const NetworkDiagnostics& /* diagnostics */)>& onUpdate) = 0;
       virtual void stopNetworkObserver() = 0;
+      virtual void startWifiStateObserver(const std::function<void(const WifiStateEvent& /* event */)>& onChange) = 0;
+      virtual void stopWifiStateObserver() = 0;
       virtual std::string startServiceDiscovery(const std::string& type, const ServiceDiscoveryOptions& options, const std::function<void(const DiscoveredService& /* service */)>& onFound, const std::function<void(const DiscoveredService& /* service */)>& onLost, const std::optional<std::function<void(const std::string& /* message */)>>& onError) = 0;
       virtual void stopServiceDiscovery(const std::string& discoveryId) = 0;
       virtual std::shared_ptr<Promise<PermissionState>> requestLocalNetworkPermission(std::optional<double> timeoutMs) = 0;

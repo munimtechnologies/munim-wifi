@@ -38,10 +38,13 @@ namespace margelo::nitro::munimwifi {
       jni::local_ref<jni::JBoolean> resolve = this->getFieldValue(fieldResolve);
       static const auto fieldResolveTimeout = clazz->getField<jni::JDouble>("resolveTimeout");
       jni::local_ref<jni::JDouble> resolveTimeout = this->getFieldValue(fieldResolveTimeout);
+      static const auto fieldShowPicker = clazz->getField<jni::JBoolean>("showPicker");
+      jni::local_ref<jni::JBoolean> showPicker = this->getFieldValue(fieldShowPicker);
       return ServiceDiscoveryOptions(
         domain != nullptr ? std::make_optional(domain->toStdString()) : std::nullopt,
         resolve != nullptr ? std::make_optional(static_cast<bool>(resolve->value())) : std::nullopt,
-        resolveTimeout != nullptr ? std::make_optional(resolveTimeout->value()) : std::nullopt
+        resolveTimeout != nullptr ? std::make_optional(resolveTimeout->value()) : std::nullopt,
+        showPicker != nullptr ? std::make_optional(static_cast<bool>(showPicker->value())) : std::nullopt
       );
     }
 
@@ -51,14 +54,15 @@ namespace margelo::nitro::munimwifi {
      */
     [[maybe_unused]]
     static jni::local_ref<JServiceDiscoveryOptions::javaobject> fromCpp(const ServiceDiscoveryOptions& value) {
-      using JSignature = JServiceDiscoveryOptions(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>);
+      using JSignature = JServiceDiscoveryOptions(jni::alias_ref<jni::JString>, jni::alias_ref<jni::JBoolean>, jni::alias_ref<jni::JDouble>, jni::alias_ref<jni::JBoolean>);
       static const auto clazz = javaClassStatic();
       static const auto create = clazz->getStaticMethod<JSignature>("fromCpp");
       return create(
         clazz,
         value.domain.has_value() ? jni::make_jstring(value.domain.value()) : nullptr,
         value.resolve.has_value() ? jni::JBoolean::valueOf(value.resolve.value()) : nullptr,
-        value.resolveTimeout.has_value() ? jni::JDouble::valueOf(value.resolveTimeout.value()) : nullptr
+        value.resolveTimeout.has_value() ? jni::JDouble::valueOf(value.resolveTimeout.value()) : nullptr,
+        value.showPicker.has_value() ? jni::JBoolean::valueOf(value.showPicker.value()) : nullptr
       );
     }
   };

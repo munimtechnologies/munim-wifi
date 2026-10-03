@@ -18,7 +18,7 @@ public extension ServiceDiscoveryOptions {
   /**
    * Create a new instance of `ServiceDiscoveryOptions`.
    */
-  init(domain: String?, resolve: Bool?, resolveTimeout: Double?) {
+  init(domain: String?, resolve: Bool?, resolveTimeout: Double?, showPicker: Bool?) {
     self.init({ () -> bridge.std__optional_std__string_ in
       if let __unwrappedValue = domain {
         return bridge.create_std__optional_std__string_(std.string(__unwrappedValue))
@@ -34,6 +34,12 @@ public extension ServiceDiscoveryOptions {
     }(), { () -> bridge.std__optional_double_ in
       if let __unwrappedValue = resolveTimeout {
         return bridge.create_std__optional_double_(__unwrappedValue)
+      } else {
+        return .init()
+      }
+    }(), { () -> bridge.std__optional_bool_ in
+      if let __unwrappedValue = showPicker {
+        return bridge.create_std__optional_bool_(__unwrappedValue)
       } else {
         return .init()
       }
@@ -69,6 +75,18 @@ public extension ServiceDiscoveryOptions {
     return { () -> Double? in
       if bridge.has_value_std__optional_double_(self.__resolveTimeout) {
         let __unwrapped = bridge.get_std__optional_double_(self.__resolveTimeout)
+        return __unwrapped
+      } else {
+        return nil
+      }
+    }()
+  }
+  
+  @inline(__always)
+  var showPicker: Bool? {
+    return { () -> Bool? in
+      if bridge.has_value_std__optional_bool_(self.__showPicker) {
+        let __unwrapped = bridge.get_std__optional_bool_(self.__showPicker)
         return __unwrapped
       } else {
         return nil

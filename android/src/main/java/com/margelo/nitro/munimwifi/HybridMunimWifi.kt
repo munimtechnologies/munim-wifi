@@ -111,6 +111,12 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   @Volatile
   private var networkObserverEmit: ((NetworkDiagnostics) -> Unit)? = null
   private val observerLock = Any()
+  private val wifiStateLock = Any()
+  /** WifiManager.WifiStateChangedListener (API 36), typed Any for older class loading. */
+  private var wifiStateListener: Any? = null
+  private var wifiStateReceiver: BroadcastReceiver? = null
+  @Volatile private var wifiStateEmit: ((WifiStateEvent) -> Unit)? = null
+  private var lastWifiState: Int? = null
   private var nextPermissionRequestCode = 0x5746
 
   override fun isWifiEnabled(): Promise<Boolean> = Promise.resolved(wifiManager.isWifiEnabled)
@@ -125,9 +131,16 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     val missing = permissionsToRequest().filterNot(::hasPermission)
     if (missing.isEmpty()) return Promise.resolved(hasWifiScanPermission())
     val promise = Promise<Boolean>()
-    val requestCode = nextPermissionRequestCode++
-    mainHandler.post { requestPermissionsWhenActivityReady(missing.toTypedArray(), requestCode, promise, 0) }
+    requestPermissions(missing) { promise.resolve(hasWifiScanPermission()) }
     return promise
+  }
+
+  /** Shows the system permission dialog for [permissions], then calls [onDone] on the main thread. */
+  private fun requestPermissions(permissions: List<String>, onDone: () -> Unit) {
+    val requestCode = nextPermissionRequestCode++
+    mainHandler.post {
+      requestPermissionsWhenActivityReady(permissions.toTypedArray(), requestCode, onDone, 0)
+    }
   }
 
   /**
@@ -137,16 +150,16 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private fun requestPermissionsWhenActivityReady(
     permissions: Array<String>,
     requestCode: Int,
-    promise: Promise<Boolean>,
+    onDone: () -> Unit,
     attempt: Int,
   ) {
     val activity = NitroModules.applicationContext?.currentActivity as? PermissionAwareActivity
     if (activity == null) {
       if (attempt >= PERMISSION_ACTIVITY_RETRIES) {
-        promise.resolve(hasWifiScanPermission())
+        onDone()
       } else {
         mainHandler.postDelayed({
-          requestPermissionsWhenActivityReady(permissions, requestCode, promise, attempt + 1)
+          requestPermissionsWhenActivityReady(permissions, requestCode, onDone, attempt + 1)
         }, PERMISSION_ACTIVITY_RETRY_DELAY_MS)
       }
       return
@@ -154,11 +167,11 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     try {
       activity.requestPermissions(permissions, requestCode, PermissionListener { callbackCode, _, _ ->
         if (callbackCode != requestCode) return@PermissionListener false
-        promise.resolve(hasWifiScanPermission())
+        onDone()
         true
       })
     } catch (error: Throwable) {
-      promise.resolve(hasWifiScanPermission())
+      onDone()
     }
   }
 
@@ -990,6 +1003,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         permissionState(hasPermission(Manifest.permission.NEARBY_WIFI_DEVICES))
       },
       wifiInformationPermission = permissionState(hasPermission(Manifest.permission.ACCESS_WIFI_STATE)),
+      localNetworkPermission = localNetworkPermissionState(),
     )
   }
 
@@ -1025,10 +1039,34 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         setRequestProperty("Cache-Control", "no-cache")
       }
       connection.responseCode in 200..299
-    } catch (_: IOException) {
+    } catch (error: IOException) {
+      if (isLocalNetworkBlock(network, url, error)) {
+        throw SecurityException(LocalNetworkAccess.deniedMessage("probing ${url.host}"), error)
+      }
       false
+    } catch (error: SecurityException) {
+      if (localNetworkPermissionEnforced() && !hasPermission(ACCESS_LOCAL_NETWORK)) {
+        throw SecurityException(LocalNetworkAccess.deniedMessage("probing ${url.host}"), error)
+      }
+      throw error
     } finally {
       connection?.disconnect()
+    }
+  }
+
+  /**
+   * Android 17 blocks LAN traffic without ACCESS_LOCAL_NETWORK: UDP fails with
+   * EPERM and TCP connects time out. Only reported as a permission problem when
+   * the permission is actually missing and the target is a local address.
+   */
+  private fun isLocalNetworkBlock(network: Network, url: URL, error: IOException): Boolean {
+    if (!localNetworkPermissionEnforced() || hasPermission(ACCESS_LOCAL_NETWORK)) return false
+    if (LocalNetworkAccess.isEperm(error)) return true
+    if (error !is java.net.SocketTimeoutException && error !is java.net.ConnectException) return false
+    return try {
+      network.getAllByName(url.host).any(LocalNetworkAccess::isLocalAddress)
+    } catch (_: Throwable) {
+      false
     }
   }
 
@@ -1087,6 +1125,77 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     networkObserverCallback = null
   }
 
+  override fun startWifiStateObserver(onChange: (event: WifiStateEvent) -> Unit) {
+    synchronized(wifiStateLock) {
+      stopWifiStateObserverLocked()
+      wifiStateEmit = onChange
+      if (Build.VERSION.SDK_INT >= WIFI_STATE_LISTENER_SDK) {
+        wifiStateListener = WifiStateListenerApi36.add(wifiManager, mainHandler) {
+          emitWifiState(wifiManager.wifiState)
+        }
+        // The listener only reports changes; deliver the current state first.
+        mainHandler.post { emitWifiState(wifiManager.wifiState) }
+      } else {
+        // Sticky broadcast: registering delivers the current state straight away.
+        val receiver = object : BroadcastReceiver() {
+          override fun onReceive(receiverContext: Context, intent: Intent) {
+            if (intent.action != WifiManager.WIFI_STATE_CHANGED_ACTION) return
+            emitWifiState(intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN))
+          }
+        }
+        wifiStateReceiver = receiver
+        val filter = IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+          context.registerReceiver(receiver, filter, null, mainHandler, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+          context.registerReceiver(receiver, filter, null, mainHandler)
+        }
+      }
+    }
+  }
+
+  override fun stopWifiStateObserver() {
+    synchronized(wifiStateLock) {
+      stopWifiStateObserverLocked()
+    }
+  }
+
+  private fun stopWifiStateObserverLocked() {
+    wifiStateEmit = null
+    lastWifiState = null
+    wifiStateListener?.let {
+      if (Build.VERSION.SDK_INT >= WIFI_STATE_LISTENER_SDK) WifiStateListenerApi36.remove(wifiManager, it)
+    }
+    wifiStateListener = null
+    wifiStateReceiver?.let(::unregisterReceiverSafely)
+    wifiStateReceiver = null
+  }
+
+  /** Runs on the main thread; drops repeats of the last reported state. */
+  private fun emitWifiState(state: Int) {
+    val emitter = wifiStateEmit ?: return
+    if (lastWifiState == state) return
+    lastWifiState = state
+    val radioState = when (state) {
+      WifiManager.WIFI_STATE_DISABLED -> WifiRadioState.DISABLED
+      WifiManager.WIFI_STATE_DISABLING -> WifiRadioState.DISABLING
+      WifiManager.WIFI_STATE_ENABLED -> WifiRadioState.ENABLED
+      WifiManager.WIFI_STATE_ENABLING -> WifiRadioState.ENABLING
+      else -> WifiRadioState.UNKNOWN
+    }
+    try {
+      emitter(
+        WifiStateEvent(
+          enabled = radioState == WifiRadioState.ENABLED,
+          state = radioState,
+          timestamp = System.currentTimeMillis().toDouble(),
+        )
+      )
+    } catch (_: Throwable) {
+      // Never crash the app because a JS listener threw.
+    }
+  }
+
   override fun startServiceDiscovery(
     type: String,
     options: ServiceDiscoveryOptions,
@@ -1112,6 +1221,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       domain = options?.domain?.takeIf { it.isNotBlank() } ?: "local.",
       resolve = options?.resolve != false,
       resolveTimeoutMs = resolveTimeout.toLong(),
+      showPicker = options?.showPicker == true && Build.VERSION.SDK_INT >= LOCAL_NETWORK_PERMISSION_SDK,
       onFound = onFound,
       onLost = onLost,
       onError = onError,
@@ -1125,9 +1235,25 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     discoverySessions.remove(discoveryId)?.stop()
   }
 
-  /** Android has no runtime permission for mDNS/NSD on current releases. */
-  override fun requestLocalNetworkPermission(timeoutMs: Double?): Promise<PermissionState> =
-    Promise.resolved(PermissionState.GRANTED)
+  /**
+   * Android 17 (API 37) gates mDNS/NSD and LAN sockets behind the runtime
+   * ACCESS_LOCAL_NETWORK permission for apps targeting API 37+. Earlier
+   * versions (and lower targets) need nothing, so they resolve 'granted'.
+   */
+  override fun requestLocalNetworkPermission(timeoutMs: Double?): Promise<PermissionState> {
+    if (Build.VERSION.SDK_INT < LOCAL_NETWORK_PERMISSION_SDK ||
+      hasPermission(ACCESS_LOCAL_NETWORK) ||
+      !isDeclaredInManifest(ACCESS_LOCAL_NETWORK)
+    ) {
+      return Promise.resolved(localNetworkRequestOutcome())
+    }
+    val promise = Promise<PermissionState>()
+    requestPermissions(listOf(ACCESS_LOCAL_NETWORK)) { promise.resolve(localNetworkRequestOutcome()) }
+    return promise
+  }
+
+  private fun localNetworkRequestOutcome(): PermissionState =
+    if (hasLocalNetworkAccess()) PermissionState.GRANTED else PermissionState.DENIED
 
   override fun addListener(eventName: String) = Unit
 
@@ -1656,7 +1782,30 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     if (!nearbyWifiIsNeverForLocation() || isDeclaredInManifest(Manifest.permission.ACCESS_FINE_LOCATION)) {
       permissions += location.filter(::isDeclaredInManifest)
     }
+    // Android 17: local network access is in the same Nearby devices group, so
+    // it shares the dialog with NEARBY_WIFI_DEVICES.
+    if (Build.VERSION.SDK_INT >= LOCAL_NETWORK_PERMISSION_SDK && isDeclaredInManifest(ACCESS_LOCAL_NETWORK)) {
+      permissions += ACCESS_LOCAL_NETWORK
+    }
     return permissions
+  }
+
+  /**
+   * Android 17 enforces ACCESS_LOCAL_NETWORK only for apps targeting API 37+
+   * (compat change RESTRICT_LOCAL_NETWORK).
+   */
+  private fun localNetworkPermissionEnforced(): Boolean =
+    Build.VERSION.SDK_INT >= LOCAL_NETWORK_PERMISSION_SDK &&
+      context.applicationInfo.targetSdkVersion >= LOCAL_NETWORK_PERMISSION_SDK
+
+  private fun hasLocalNetworkAccess(): Boolean =
+    !localNetworkPermissionEnforced() || hasPermission(ACCESS_LOCAL_NETWORK)
+
+  private fun localNetworkPermissionState(): PermissionState = when {
+    Build.VERSION.SDK_INT < LOCAL_NETWORK_PERMISSION_SDK -> PermissionState.UNAVAILABLE
+    hasPermission(ACCESS_LOCAL_NETWORK) -> PermissionState.GRANTED
+    !localNetworkPermissionEnforced() -> PermissionState.UNAVAILABLE
+    else -> PermissionState.DENIED
   }
 
   @Suppress("DEPRECATION")
@@ -1883,6 +2032,12 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private fun quote(value: String): String = "\"${value.replace("\"", "\\\"")}\""
 
   private companion object {
+    /** Manifest.permission.ACCESS_LOCAL_NETWORK (API 37). */
+    const val ACCESS_LOCAL_NETWORK = "android.permission.ACCESS_LOCAL_NETWORK"
+    /** Build.VERSION_CODES.CINNAMON_BUN (Android 17). */
+    const val LOCAL_NETWORK_PERMISSION_SDK = 37
+    /** Build.VERSION_CODES.BAKLAVA (Android 16). */
+    const val WIFI_STATE_LISTENER_SDK = 36
     const val PERMISSION_ACTIVITY_RETRIES = 20
     const val PERMISSION_ACTIVITY_RETRY_DELAY_MS = 250L
     const val SCAN_THROTTLED_MESSAGE =
@@ -1895,5 +2050,23 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     const val EAP_TYPE_AKA_PRIME = 50
     const val SCAN_FAILED_MESSAGE =
       "munim-wifi: the Wi-Fi scan did not complete; results are cached"
+  }
+}
+
+/** Android 16 WifiManager.addWifiStateChangedListener, isolated so older ART never loads the type. */
+@RequiresApi(36)
+private object WifiStateListenerApi36 {
+  fun add(wifiManager: WifiManager, handler: Handler, onChange: () -> Unit): Any {
+    val listener = WifiManager.WifiStateChangedListener { onChange() }
+    wifiManager.addWifiStateChangedListener({ command -> handler.post(command) }, listener)
+    return listener
+  }
+
+  fun remove(wifiManager: WifiManager, listener: Any) {
+    try {
+      wifiManager.removeWifiStateChangedListener(listener as WifiManager.WifiStateChangedListener)
+    } catch (_: Throwable) {
+      // Already removed.
+    }
   }
 }
