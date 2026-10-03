@@ -9,8 +9,11 @@ import {
   Text,
   View,
 } from 'react-native'
+import { runSelfTest, type SelfTestReport } from './selftest'
 import {
   addNetworkObserverListener,
+  addWifiStateListener,
+  isLocalNetworkPermissionError,
   addNetworkSuggestion,
   addNetworksFoundListener,
   addScanErrorListener,
@@ -66,10 +69,30 @@ export default function App() {
   const [browsing, setBrowsing] = useState(false)
   const [scanning, setScanning] = useState(false)
   const [suggestionEvents, setSuggestionEvents] = useState(false)
+  const [selfTest, setSelfTest] = useState<SelfTestReport | null>(null)
+  const [selfTestRunning, setSelfTestRunning] = useState(false)
+  const stopWifiState = useRef<(() => void) | null>(null)
+  const [watchingWifi, setWatchingWifi] = useState(false)
+
+  const startSelfTest = () => {
+    if (selfTestRunning) return
+    setSelfTestRunning(true)
+    setMessage('Running self-test…')
+    runSelfTest((line) => setMessage(line))
+      .then((report) => {
+        setSelfTest(report)
+        setMessage(`Self-test: ${report.passed}/${report.total} passed (saved to munim-wifi-selftest.json).`)
+      })
+      .catch((error) => setMessage(`Self-test failed: ${error instanceof Error ? error.message : String(error)}`))
+      .finally(() => setSelfTestRunning(false))
+  }
 
   useEffect(() => {
     void isWifiEnabled().then(setEnabled).catch(() => setEnabled(false))
+    // Runs once per launch so device runs (Release builds) produce a result file.
+    startSelfTest()
     return () => {
+      stopWifiState.current?.()
       stopObserving.current?.()
       stopBrowsing.current?.()
       stopContinuous.current?.()
@@ -291,6 +314,42 @@ export default function App() {
     setMessage('Listening for suggestion connection events.')
   }
 
+  const toggleWifiState = () => {
+    if (stopWifiState.current) {
+      stopWifiState.current()
+      stopWifiState.current = null
+      setWatchingWifi(false)
+      setMessage('Wi-Fi state listener stopped.')
+      return
+    }
+    stopWifiState.current = addWifiStateListener((event) => {
+      setEnabled(event.enabled)
+      setMessage(`Wi-Fi state: ${event.state} at ${new Date(event.timestamp).toLocaleTimeString()}`)
+    })
+    setWatchingWifi(true)
+  }
+
+  const togglePickerBrowse = () => {
+    if (stopBrowsing.current) {
+      toggleBrowse()
+      return
+    }
+    setServices({})
+    const handle = startServiceDiscovery(
+      '_http._tcp',
+      {
+        onFound: (service) => setServices((all) => ({ ...all, [service.id]: service })),
+        onLost: () => {},
+        onError: (error) =>
+          setMessage(isLocalNetworkPermissionError(error) ? `Permission: ${error}` : error),
+      },
+      { showPicker: true }
+    )
+    stopBrowsing.current = handle.stop
+    setBrowsing(true)
+    setMessage('Browsing with the system picker (Android 17+; a normal browse elsewhere)…')
+  }
+
   const toggleObserver = () => {
     if (stopObserving.current) {
       stopObserving.current()
@@ -381,9 +440,31 @@ export default function App() {
           <Pressable disabled={busy} onPress={runDisconnect} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
             <Text style={styles.smallButtonText}>Disconnect</Text>
           </Pressable>
+          <Pressable onPress={toggleWifiState} style={({ pressed }) => [styles.smallButton, watchingWifi && styles.smallButtonActive, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>{watchingWifi ? 'Stop Wi-Fi state' : 'Wi-Fi state'}</Text>
+          </Pressable>
+          <Pressable onPress={togglePickerBrowse} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Bonjour picker</Text>
+          </Pressable>
+          <Pressable disabled={selfTestRunning} onPress={startSelfTest} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>{selfTestRunning ? 'Self-test…' : 'Self-test'}</Text>
+          </Pressable>
         </View>
 
         <Text style={styles.message}>{message}</Text>
+
+        {selfTest && (
+          <View style={styles.currentCard}>
+            <Text style={styles.cardLabel}>
+              SELF-TEST · {selfTest.passed}/{selfTest.total} PASSED
+            </Text>
+            {selfTest.checks.map((item) => (
+              <Text key={item.name} style={styles.meta}>
+                {item.pass ? 'PASS' : 'FAIL'} {item.name}: {item.detail}
+              </Text>
+            ))}
+          </View>
+        )}
 
         {connection && (
           <View style={styles.currentCard}>
@@ -406,6 +487,7 @@ export default function App() {
             <Text style={styles.meta}>configuration: {capabilities.managedConfiguration} · suggestions: {capabilities.networkSuggestions}</Text>
             <Text style={styles.meta}>hotspot: {capabilities.localOnlyHotspot} · settings intent: {capabilities.userSavedNetworkIntent}</Text>
             <Text style={styles.meta}>location: {capabilities.locationPermission} · nearby devices: {capabilities.nearbyWifiPermission}</Text>
+            <Text style={styles.meta}>local network: {capabilities.localNetworkPermission}</Text>
           </View>
         )}
 
