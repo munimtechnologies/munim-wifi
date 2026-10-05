@@ -183,16 +183,24 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     try {
       ensureCanScan()
       val timeoutMs = normalizedTimeout(options?.timeout)
+      // Validated up front: a bad value would otherwise only throw once results
+      // arrive, on the main thread inside the receiver.
+      normalizedMaxResults(options?.maxResults)
       val receiver = object : BroadcastReceiver() {
         override fun onReceive(receiverContext: Context, intent: Intent) {
           if (intent.action != WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) return
           if (settled.compareAndSet(false, true)) {
             unregisterReceiverSafely(this)
-            val updated = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
-            if (!updated && !allowCached) {
-              promise.reject(IllegalStateException(SCAN_FAILED_MESSAGE))
-            } else {
-              promise.resolve(readNetworks(options?.maxResults))
+            try {
+              val updated = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false)
+              if (!updated && !allowCached) {
+                promise.reject(IllegalStateException(SCAN_FAILED_MESSAGE))
+              } else {
+                promise.resolve(readNetworks(options?.maxResults))
+              }
+            } catch (error: Throwable) {
+              // e.g. Wi-Fi was switched off while the scan ran.
+              promise.reject(error)
             }
           }
         }
@@ -203,10 +211,14 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       val started = wifiManager.startScan()
       if (!started && settled.compareAndSet(false, true)) {
         unregisterReceiverSafely(receiver)
-        if (allowCached) {
-          promise.resolve(readNetworks(options?.maxResults))
-        } else {
-          promise.reject(IllegalStateException(SCAN_THROTTLED_MESSAGE))
+        try {
+          if (allowCached) {
+            promise.resolve(readNetworks(options?.maxResults))
+          } else {
+            promise.reject(IllegalStateException(SCAN_THROTTLED_MESSAGE))
+          }
+        } catch (error: Throwable) {
+          promise.reject(error)
         }
         return promise
       }
@@ -233,6 +245,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     try {
       ensureCanScan()
       val intervalMs = normalizedInterval(options?.interval)
+      normalizedMaxResults(options?.maxResults)
       val receiver = object : BroadcastReceiver() {
         override fun onReceive(receiverContext: Context, intent: Intent) {
           if (intent.action != WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) return
