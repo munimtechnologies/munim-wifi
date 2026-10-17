@@ -69,7 +69,7 @@ function writeReport(report: SelfTestReport) {
   const file = new File(Paths.document, SELF_TEST_FILE)
   if (file.exists) file.delete()
   file.create()
-  file.write(JSON.stringify(report, null, 2))
+  file.writeSync(JSON.stringify(report, null, 2))
 }
 
 function describe(error: unknown): string {
