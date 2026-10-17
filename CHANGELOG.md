@@ -1,3 +1,13 @@
+## [0.6.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.5.0...v0.6.0) (2026-10-17)
+
+### ✨ Features
+
+* React Native 0.88, Nitro Modules 0.37.1 and Expo SDK 58 ([#31](https://github.com/munimtechnologies/munim-wifi/issues/31)) ([4322a9e](https://github.com/munimtechnologies/munim-wifi/commit/4322a9edcc2cc836cd1ccca71213e2ce53838754))
+
+### 🐛 Bug Fixes
+
+* **android:** scanNetworks no longer crashes or hangs on bad maxResults ([#30](https://github.com/munimtechnologies/munim-wifi/issues/30)) ([aca7291](https://github.com/munimtechnologies/munim-wifi/commit/aca72915aa5eecadf5483378705a3bd3959b9fdf))
+
 ## [0.5.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.4.1...v0.5.0) (2026-10-03)
 
 ### ✨ Features
