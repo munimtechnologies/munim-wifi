@@ -1,3 +1,9 @@
+## [0.6.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.6.0...v0.6.1) (2026-10-17)
+
+### 🐛 Bug Fixes
+
+* accept react-native-nitro-modules 0.36.5 again ([cce77da](https://github.com/munimtechnologies/munim-wifi/commit/cce77da1ab103d88d2dc2e396818611a1bd16868)), closes [margelo/nitro#1573](https://github.com/margelo/nitro/issues/1573)
+
 ## [0.6.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.5.0...v0.6.0) (2026-10-17)
 
 ### ✨ Features
