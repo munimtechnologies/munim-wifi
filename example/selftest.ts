@@ -146,7 +146,9 @@ export async function runSelfTest(
     try {
       // Partial results, so a run stuck on a prompt still shows how far it got.
       writeReport(snapshot(false))
-    } catch {}
+    } catch {
+      // The final report is written (or the failure reported) at the end.
+    }
   }
 
   await check('permission flow (requestWifiPermission)', async () => {

@@ -12,6 +12,7 @@ module.exports = {
           composite: false,
           noEmit: true,
           verbatimModuleSyntax: false,
+          types: ['jest'],
         },
       },
     ],
