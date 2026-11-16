@@ -1,3 +1,28 @@
+## [0.7.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.6.1...v0.7.0) (2026-11-16)
+
+### ✨ Features
+
+* spec for Wi-Fi 7/link details, scan throttle status and Wi-Fi RTT ranging ([d1be11f](https://github.com/munimtechnologies/munim-wifi/commit/d1be11f61f80e02bb515d9d3848bdffab4d3a23c))
+* Wi-Fi 7/link details, scan cache + throttle status, Wi-Fi RTT ranging; worker-thread callbacks ([2225d90](https://github.com/munimtechnologies/munim-wifi/commit/2225d900713256261d5f36ff47b9b7e03c2ca82f))
+
+### 🐛 Bug Fixes
+
+* **android:** a maxAge cache read that throws now rejects instead of hanging ([c991a80](https://github.com/munimtechnologies/munim-wifi/commit/c991a8023f16d14ddce96d22c7ddb73ad541a6fa))
+* run the Swift codegen patch on Windows too ([4a42582](https://github.com/munimtechnologies/munim-wifi/commit/4a42582744126f23ee57d91a9c681eafc0fc9d54))
+
+### 📚 Documentation
+
+* Wi-Fi 7, link details, RTT ranging and throttle-aware scans; ship without unit tests ([5e9132e](https://github.com/munimtechnologies/munim-wifi/commit/5e9132e2b9ded48ec4482f2c028cc43adb935009))
+
+### 🛠️ Other changes
+
+* **deps:** lockfile with expo-build-properties for the example ([22243e2](https://github.com/munimtechnologies/munim-wifi/commit/22243e214413e62f5a033269f0baae4cd9d62945))
+* **deps:** React Native 0.88.1, Nitro 0.37.2, Expo SDK 58.0.25, semantic-release 26, ESLint 10 ([660d4d3](https://github.com/munimtechnologies/munim-wifi/commit/660d4d3b0cb39339954f7f47582c56f6cf66a28f))
+* keep unit tests out of the library typecheck and published types ([788aaf4](https://github.com/munimtechnologies/munim-wifi/commit/788aaf4a624ff9e2735addf47a68f373be84aae4))
+* regenerate nitrogen 0.37.2 bindings and lockfile ([97b7239](https://github.com/munimtechnologies/munim-wifi/commit/97b7239349d9d71ad88bda2b45c500277986a0de))
+* regenerate nitrogen 0.37.2 bindings and lockfile ([9ac0eb9](https://github.com/munimtechnologies/munim-wifi/commit/9ac0eb9fa49d9063e3f8023f4c0293babb857fe6))
+* TypeScript 6 config (bundler resolution, explicit jest types) and lint fixes ([83b42b1](https://github.com/munimtechnologies/munim-wifi/commit/83b42b13f6ce1b34530d746bd408eec40b07426d))
+
 ## [0.6.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.6.0...v0.6.1) (2026-10-17)
 
 ### 🐛 Bug Fixes
