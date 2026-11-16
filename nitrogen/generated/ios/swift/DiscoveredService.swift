@@ -98,7 +98,7 @@ public extension DiscoveredService {
   
   @inline(__always)
   var addresses: [String] {
-    return self.__addresses.map({ __item in String(__item) })
+    return __nitroVectorToStringArray(self.__addresses)
   }
   
   @inline(__always)
@@ -122,4 +122,17 @@ public extension DiscoveredService {
   var resolved: Bool {
     return self.__resolved
   }
+}
+
+@inline(__always)
+fileprivate func __nitroVectorToStringArray(_ __vector: margelo.nitro.munimwifi.bridge.swift.std__vector_std__string_) -> [String] {
+  var __result: [String] = []
+  let __count = Int(__vector.size())
+  __result.reserveCapacity(__count)
+  var __index = 0
+  while __index < __count {
+    __result.append(String(__vector[__index]))
+    __index += 1
+  }
+  return __result
 }

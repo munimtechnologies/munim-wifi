@@ -110,7 +110,7 @@ public extension PasspointConfig {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__naiRealmNames) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__naiRealmNames)
-        return __unwrapped.map({ __item in String(__item) })
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }
@@ -122,7 +122,7 @@ public extension PasspointConfig {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__roamingConsortiumOIs) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__roamingConsortiumOIs)
-        return __unwrapped.map({ __item in String(__item) })
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }
@@ -134,7 +134,7 @@ public extension PasspointConfig {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__mccAndMncs) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__mccAndMncs)
-        return __unwrapped.map({ __item in String(__item) })
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }
@@ -152,4 +152,17 @@ public extension PasspointConfig {
       }
     }()
   }
+}
+
+@inline(__always)
+fileprivate func __nitroVectorToStringArray(_ __vector: margelo.nitro.munimwifi.bridge.swift.std__vector_std__string_) -> [String] {
+  var __result: [String] = []
+  let __count = Int(__vector.size())
+  __result.reserveCapacity(__count)
+  var __index = 0
+  while __index < __count {
+    __result.append(String(__vector[__index]))
+    __index += 1
+  }
+  return __result
 }

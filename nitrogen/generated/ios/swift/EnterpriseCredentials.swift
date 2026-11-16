@@ -157,7 +157,7 @@ public extension EnterpriseCredentials {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__trustedServerNames) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__trustedServerNames)
-        return __unwrapped.map({ __item in String(__item) })
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }
@@ -169,7 +169,7 @@ public extension EnterpriseCredentials {
     return { () -> [String]? in
       if bridge.has_value_std__optional_std__vector_std__string__(self.__caCertificates) {
         let __unwrapped = bridge.get_std__optional_std__vector_std__string__(self.__caCertificates)
-        return __unwrapped.map({ __item in String(__item) })
+        return __nitroVectorToStringArray(__unwrapped)
       } else {
         return nil
       }
@@ -211,4 +211,17 @@ public extension EnterpriseCredentials {
       }
     }()
   }
+}
+
+@inline(__always)
+fileprivate func __nitroVectorToStringArray(_ __vector: margelo.nitro.munimwifi.bridge.swift.std__vector_std__string_) -> [String] {
+  var __result: [String] = []
+  let __count = Int(__vector.size())
+  __result.reserveCapacity(__count)
+  var __index = 0
+  while __index < __count {
+    __result.append(String(__vector[__index]))
+    __index += 1
+  }
+  return __result
 }
