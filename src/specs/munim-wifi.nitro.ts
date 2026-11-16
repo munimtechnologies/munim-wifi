@@ -22,8 +22,74 @@ export interface CurrentNetworkInfo {
   /** IPv6 addresses of the Wi-Fi interface (global first, link-local last). */
   ipv6Addresses?: string[]
   subnetMask?: string
+  /** IPv4 prefix length of the Wi-Fi interface (24 for 255.255.255.0). */
+  subnetPrefixLength?: number
   gateway?: string
   dnsServers?: string[]
+  /**
+   * Signal strength of the connection in dBm. Android only; iOS exposes no
+   * signal strength for the joined network to ordinary apps.
+   */
+  rssi?: number
+  /** Android: current link speed in Mbps (WifiInfo.getLinkSpeed). */
+  linkSpeedMbps?: number
+  /** Android 10+: transmit link speed in Mbps. */
+  txLinkSpeedMbps?: number
+  /** Android 10+: receive link speed in Mbps. */
+  rxLinkSpeedMbps?: number
+  /** Android 11+: highest transmit link speed the connection supports, in Mbps. */
+  maxTxLinkSpeedMbps?: number
+  /** Android 11+: highest receive link speed the connection supports, in Mbps. */
+  maxRxLinkSpeedMbps?: number
+  /** Android: primary channel frequency in MHz. */
+  frequency?: number
+  /** Android: primary channel number. */
+  channel?: number
+  /** Android: band of the primary channel in GHz (2.4, 5, 6 or 60). */
+  bandGhz?: number
+  /** Android 11+: Wi-Fi generation of the connection. */
+  wifiStandard?: WifiStandard
+  /** Android: whether the network hides its SSID. */
+  hiddenSsid?: boolean
+  /**
+   * Android 13+, Wi-Fi 7 multi-link operation: MAC address of the access
+   * point's multi-link device (MLD). Absent for single-link connections.
+   */
+  apMldMacAddress?: string
+  /** Android 13+, Wi-Fi 7: links of this multi-link association. */
+  mloLinks?: MloLink[]
+}
+
+/**
+ * Wi-Fi generation. legacy = 802.11a/b/g, wifi4 = 802.11n, wifi5 = 802.11ac,
+ * wifi6 = 802.11ax (including 6 GHz Wi-Fi 6E), wifi7 = 802.11be,
+ * wigig = 802.11ad (60 GHz).
+ */
+export type WifiStandard =
+  | 'legacy'
+  | 'wifi4'
+  | 'wifi5'
+  | 'wifi6'
+  | 'wifi7'
+  | 'wigig'
+  | 'unknown'
+
+/** State of one Wi-Fi 7 link (Android MloLink.MLO_LINK_STATE_*). */
+export type MloLinkState = 'invalid' | 'unassociated' | 'idle' | 'active'
+
+/** One link of a Wi-Fi 7 (802.11be) multi-link access point or association. */
+export interface MloLink {
+  linkId: number
+  /** Band in GHz (2.4, 5, 6 or 60); absent when the platform reports none. */
+  bandGhz?: number
+  channel?: number
+  /** BSSID of the access point on this link. */
+  apMacAddress?: string
+  /** Associated links only (CurrentNetworkInfo.mloLinks). */
+  state?: MloLinkState
+  rssi?: number
+  txLinkSpeedMbps?: number
+  rxLinkSpeedMbps?: number
 }
 
 /** Addresses assigned to the Wi-Fi interface. */
@@ -53,6 +119,27 @@ export interface WifiNetwork {
    * carry their real age; on iOS it is the time of the current-network read.
    */
   timestamp?: number
+  /** Android: band in GHz (2.4, 5, 6 or 60). */
+  bandGhz?: number
+  /** Android: channel bandwidth in MHz (20, 40, 80, 160 or 320; 80+80 reports 160). */
+  channelWidthMhz?: number
+  /** Android: center frequency of the whole channel in MHz (40 MHz and wider). */
+  centerFrequency0?: number
+  /** Android: center frequency of the second segment of an 80+80 MHz channel. */
+  centerFrequency1?: number
+  /** Android 11+: newest Wi-Fi generation the access point advertises. */
+  wifiStandard?: WifiStandard
+  /**
+   * Android: the access point answers IEEE 802.11mc fine timing measurements,
+   * so rangeToAccessPoints() can measure its distance with two-sided RTT.
+   */
+  rttResponder?: boolean
+  /** Android 15+: the access point supports IEEE 802.11az non-trigger-based ranging. */
+  rttNtbResponder?: boolean
+  /** Android 13+, Wi-Fi 7: MAC address of the access point's multi-link device. */
+  apMldMacAddress?: string
+  /** Android 13+, Wi-Fi 7: the links the access point's MLD offers. */
+  mloLinks?: MloLink[]
 }
 
 export type WifiSecurityType =
@@ -374,6 +461,83 @@ export interface ScanOptions {
    * with the cached results (true, the default) or reject (false).
    */
   allowCached?: boolean
+  /**
+   * scanNetworks() only, Android. Resolve with the cached results, without
+   * starting a scan, when the newest cached result is at most this many
+   * milliseconds old. Saves one of the 4 scans Android allows every 2 minutes.
+   * Ignored on iOS.
+   */
+  maxAge?: number
+}
+
+/** Android's Wi-Fi scan throttle as seen by this app. */
+export interface ScanThrottleStatus {
+  /**
+   * Android 11+: whether the system throttles scans (the developer option
+   * "Wi-Fi scan throttling"). Absent where the OS does not report it.
+   */
+  throttleEnabled?: boolean
+  /** Scans a foreground app may start per window (4 on Android 9+, 0 on iOS). */
+  maxScans: number
+  /** Length of the throttle window in milliseconds (120000 on Android 9+). */
+  windowMs: number
+  /** Scans this app started through munim-wifi inside the current window. */
+  scansInWindow: number
+  /**
+   * Wall-clock ms at which the next scan request should be accepted; now (or
+   * earlier) when one would be accepted right away.
+   */
+  nextScanAllowedAt: number
+  /** Age in milliseconds of the newest cached scan result, when there is one. */
+  cachedResultsAgeMs?: number
+}
+
+export type RttRangingStatus =
+  | 'completed'
+  | 'unsupported'
+  | 'unavailable'
+  | 'permissionDenied'
+  | 'noTargets'
+  | 'failed'
+
+export type RttResultStatus = 'success' | 'failed' | 'responderUnsupported'
+
+export interface RttRangingOptions {
+  /**
+   * BSSIDs to range to. They must be in the latest scan results. Defaults to
+   * every 802.11mc responder in the latest scan, strongest first.
+   */
+  bssids?: string[]
+  /**
+   * Android 12+: also range to access points that are not 802.11mc
+   * responders, using one-sided RTT (less accurate). Defaults to false.
+   */
+  includeOneSided?: boolean
+  /** Ranging timeout in ms (1000-30000, default 10000). */
+  timeout?: number
+}
+
+export interface RttRangingResult {
+  bssid: string
+  status: RttResultStatus
+  /** Estimated distance in meters (success only). */
+  distanceMeters?: number
+  /** Standard deviation of the distance estimate in meters (success only). */
+  distanceStdDevMeters?: number
+  /** RSSI of the ranging frames in dBm (success only). */
+  rssi?: number
+  attemptedMeasurements?: number
+  successfulMeasurements?: number
+  /** True when this was measured with one-sided RTT. */
+  oneSided: boolean
+  /** Wall-clock time of the measurement (ms since epoch). */
+  timestamp: number
+}
+
+export interface RttRangingOutcome {
+  status: RttRangingStatus
+  results: RttRangingResult[]
+  message?: string
 }
 
 /** Describes one batch of scan results delivered by startScan(). */
@@ -650,6 +814,21 @@ export interface MunimWifi
   getIPAddresses(): Promise<IPAddressInfo | null>
 
   getWifiCapabilityStatus(): Promise<WifiCapabilityStatus>
+
+  /**
+   * Android: the scan throttle state, so apps can avoid scan requests that
+   * would only return cached results. iOS has no scan API and reports
+   * maxScans 0.
+   */
+  getScanThrottleStatus(): Promise<ScanThrottleStatus>
+
+  /**
+   * Android 9+ on devices with Wi-Fi RTT (FEATURE_WIFI_RTT): measure the
+   * distance to access points with IEEE 802.11mc fine timing measurement.
+   * Needs the same permissions as scanning; scan first so the access points
+   * are in the scan results. iOS: resolves 'unsupported'.
+   */
+  rangeToAccessPoints(options: RttRangingOptions): Promise<RttRangingOutcome>
 
   getNetworkDiagnostics(): Promise<NetworkDiagnostics>
 

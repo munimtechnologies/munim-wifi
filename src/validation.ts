@@ -1,5 +1,7 @@
 import type {
   ReachabilityOptions,
+  RttRangingOptions,
+  ScanOptions,
   EnterpriseCredentials,
   NativeConnectionOptions,
   NativeNetworkSuggestionOptions,
@@ -345,5 +347,54 @@ export function validateReachabilityOptions(
       options.timeout > 30000)
   ) {
     throw new RangeError('Reachability timeout must be 1000-30000 milliseconds')
+  }
+}
+
+/** Validates the options shared by scanNetworks() and startScan(). */
+export function validateScanOptions(options: ScanOptions | undefined): void {
+  if (options === undefined) return
+  if (options === null || typeof options !== 'object') {
+    throw new TypeError('Scan options must be an object')
+  }
+  if (
+    options.maxAge !== undefined &&
+    (!Number.isFinite(options.maxAge) || options.maxAge < 0)
+  ) {
+    throw new RangeError('maxAge must be a non-negative number of milliseconds')
+  }
+  if (
+    options.allowCached !== undefined &&
+    typeof options.allowCached !== 'boolean'
+  ) {
+    throw new TypeError('allowCached must be a boolean when provided')
+  }
+}
+
+export function validateRttRangingOptions(
+  options: RttRangingOptions | undefined
+): void {
+  if (options === undefined) return
+  if (options === null || typeof options !== 'object') {
+    throw new TypeError('Ranging options must be an object')
+  }
+  if (options.bssids !== undefined) {
+    if (!Array.isArray(options.bssids) || options.bssids.length === 0) {
+      throw new TypeError('bssids must be a non-empty array when provided')
+    }
+    options.bssids.forEach(validateBSSID)
+  }
+  if (
+    options.includeOneSided !== undefined &&
+    typeof options.includeOneSided !== 'boolean'
+  ) {
+    throw new TypeError('includeOneSided must be a boolean when provided')
+  }
+  if (
+    options.timeout !== undefined &&
+    (!Number.isInteger(options.timeout) ||
+      options.timeout < 1000 ||
+      options.timeout > 30000)
+  ) {
+    throw new RangeError('Ranging timeout must be an integer from 1000 through 30000 ms')
   }
 }
