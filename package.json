@@ -126,8 +126,8 @@
     "@semantic-release/npm": {
       "npm": "npm:@semantic-release/error@4.0.0"
     },
-    "undici@6.x": "6.29.0",
-    "undici@7.x": "7.30.0"
+    "undici@6.x": "6.29.1",
+    "undici@7.x": "7.30.2"
   },
   "prettier": {
     "quoteProps": "consistent",
