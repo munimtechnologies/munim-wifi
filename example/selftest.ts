@@ -5,14 +5,17 @@ import {
   getCurrentNetwork,
   getIPAddresses,
   getNetworkDiagnostics,
+  getScanThrottleStatus,
   getWifiCapabilityStatus,
   isInternetReachable,
   isLocalNetworkPermissionError,
   isWifiEnabled,
+  rangeToAccessPoints,
   requestLocalNetworkPermission,
   requestWifiPermission,
   scanNetworks,
   startServiceDiscovery,
+  type CurrentNetworkInfo,
   type DiscoveredService,
   type PermissionState,
   type WifiStateEvent,
@@ -205,8 +208,9 @@ export async function runSelfTest(
   })
 
   let gateway: string | undefined
+  let current = null as CurrentNetworkInfo | null
   await check('current network info', async () => {
-    const current = await getCurrentNetwork()
+    current = await getCurrentNetwork()
     if (!current) return [false, 'null (not connected or no location permission)']
     gateway = current.gateway
     return [
@@ -214,6 +218,24 @@ export async function runSelfTest(
       `ssid=${current.ssid} bssid=${current.bssid} security=${current.securityType} ` +
         `ip=${current.ipAddress ?? '-'} gateway=${current.gateway ?? '-'} ` +
         `dns=${(current.dnsServers ?? []).join(',')} ipv6=${(current.ipv6Addresses ?? []).length}`,
+    ]
+  })
+
+  await check('current network link details', async () => {
+    const network = current
+    if (!network) return [false, 'no current network']
+    const subnetOk =
+      network.subnetMask != null && network.subnetPrefixLength != null && network.subnetPrefixLength > 0
+    // Android reports signal and link speed; iOS has no API for them, only addressing.
+    const linkOk = android
+      ? network.rssi != null && network.rssi < 0 && network.linkSpeedMbps != null && network.frequency != null
+      : network.rssi == null && network.linkSpeedMbps == null
+    return [
+      subnetOk && linkOk,
+      `subnet=${network.subnetMask}/${network.subnetPrefixLength} rssi=${network.rssi ?? '-'} ` +
+        `link=${network.linkSpeedMbps ?? '-'} tx=${network.txLinkSpeedMbps ?? '-'} rx=${network.rxLinkSpeedMbps ?? '-'} ` +
+        `freq=${network.frequency ?? '-'} ch=${network.channel ?? '-'} band=${network.bandGhz ?? '-'} ` +
+        `standard=${network.wifiStandard ?? '-'} mld=${network.apMldMacAddress ?? '-'} links=${network.mloLinks?.length ?? 0}`,
     ]
   })
 
@@ -254,10 +276,72 @@ export async function runSelfTest(
       const strongest = [...networks].sort((a, b) => (b.rssi ?? -999) - (a.rssi ?? -999))[0]
       return [
         networks.length > 0,
-        `${networks.length} networks; strongest ${strongest?.ssid ?? '-'} ${strongest?.rssi ?? '-'} dBm ch ${strongest?.channel ?? '-'}`,
+        `${networks.length} networks; strongest ${strongest?.ssid ?? '-'} ${strongest?.rssi ?? '-'} dBm ch ${strongest?.channel ?? '-'} ` +
+          `${strongest?.channelWidthMhz ?? '-'} MHz ${strongest?.wifiStandard ?? '-'}; ` +
+          `${networks.filter((network) => network.rttResponder).length} RTT responders, ` +
+          `${networks.filter((network) => network.apMldMacAddress).length} Wi-Fi 7 MLO`,
       ]
     })
+
+    await check('scan results carry band/width/standard', async () => {
+      const networks = await scanNetworks({ maxAge: 120_000 })
+      const complete = networks.filter(
+        (network) => network.bandGhz != null && network.channelWidthMhz != null
+      )
+      const standards = apiLevel >= 30 ? networks.filter((network) => network.wifiStandard != null).length : -1
+      return [
+        networks.length > 0 &&
+          complete.length >= Math.ceil(networks.length * 0.8) &&
+          (apiLevel < 30 || standards >= Math.ceil(networks.length * 0.8)),
+        `${complete.length}/${networks.length} with band+width, ${standards < 0 ? 'n/a' : standards} with standard`,
+      ]
+    })
+
+    await check('maxAge reuses cached results without a scan', async () => {
+      const before = await getScanThrottleStatus()
+      const networks = await scanNetworks({ maxAge: 120_000 })
+      const after = await getScanThrottleStatus()
+      return [
+        after.scansInWindow === before.scansInWindow && networks.length > 0,
+        `scans before=${before.scansInWindow} after=${after.scansInWindow}, ${networks.length} networks, ` +
+          `cache age ${after.cachedResultsAgeMs ?? '-'} ms`,
+      ]
+    })
+
+    await check('scan throttle status', async () => {
+      const status = await getScanThrottleStatus()
+      return [
+        status.maxScans === 4 && status.windowMs === 120_000 && status.scansInWindow >= 1,
+        `enabled=${status.throttleEnabled ?? 'unknown'} ${status.scansInWindow}/${status.maxScans} ` +
+          `next in ${Math.max(0, Math.round((status.nextScanAllowedAt - Date.now()) / 1000))} s`,
+      ]
+    })
+  } else {
+    await check('scan throttle status (iOS: no scan API)', async () => {
+      const status = await getScanThrottleStatus()
+      return [status.maxScans === 0, `maxScans=${status.maxScans}`]
+    })
   }
+
+  await check('Wi-Fi RTT ranging', async () => {
+    const capability = (await getWifiCapabilityStatus()).wifiRtt
+    const outcome = await rangeToAccessPoints({ includeOneSided: true, timeout: 10_000 })
+    const measured = outcome.results.filter((result) => result.status === 'success')
+    // Without RTT hardware the honest answer is 'unsupported'; with it, a
+    // completed run (or no responders around) is a pass.
+    const pass =
+      capability === 'supported'
+        ? outcome.status === 'completed' || outcome.status === 'noTargets'
+        : outcome.status === 'unsupported'
+    return [
+      pass,
+      `capability=${capability} status=${outcome.status} ${outcome.message ?? ''} ` +
+        measured
+          .slice(0, 4)
+          .map((result) => `${result.bssid} ${result.distanceMeters?.toFixed(2)} m`)
+          .join('; '),
+    ]
+  })
 
   let lanTarget: string | undefined
   await check('Bonjour / NSD discovery', async () => {

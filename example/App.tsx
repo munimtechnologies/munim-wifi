@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native'
 import { runSelfTest, type SelfTestReport } from './selftest'
+import { runBenchmark } from './benchmark'
 import {
   addNetworkObserverListener,
   addWifiStateListener,
@@ -31,7 +32,9 @@ import {
   txtRecordToObject,
   getNetworkDiagnostics,
   getNetworkSuggestionStatus,
+  getScanThrottleStatus,
   getWifiCapabilityStatus,
+  rangeToAccessPoints,
   isWifiEnabled,
   releaseConnection,
   removeNetworkSuggestion,
@@ -44,12 +47,34 @@ import {
   type CurrentNetworkInfo,
   type DiscoveredService,
   type NetworkDiagnostics,
+  type RttRangingOutcome,
   type WifiCapabilityStatus,
   type WifiNetwork,
 } from 'munim-wifi'
 
 const DEMO_SSID = 'munim-demo'
 const DEMO_PASSPHRASE = 'demo-passphrase'
+
+const mbps = (value?: number) => (value == null ? '—' : `${value} Mbps`)
+
+/** Wi-Fi 7 / link details the joined network reports (Android; iOS has addressing only). */
+function linkSummary(network: CurrentNetworkInfo): string[] {
+  const lines = [
+    `rssi ${network.rssi ?? '—'} dBm · link ${mbps(network.linkSpeedMbps)} · tx ${mbps(network.txLinkSpeedMbps)} · rx ${mbps(network.rxLinkSpeedMbps)}`,
+    `max tx ${mbps(network.maxTxLinkSpeedMbps)} · max rx ${mbps(network.maxRxLinkSpeedMbps)}`,
+    `freq ${network.frequency ?? '—'} MHz · ch ${network.channel ?? '—'} · band ${network.bandGhz ?? '—'} GHz · ${network.wifiStandard ?? 'standard —'}`,
+    `subnet ${network.subnetMask ?? '—'} (/${network.subnetPrefixLength ?? '—'}) · gw ${network.gateway ?? '—'} · dns ${(network.dnsServers ?? []).join(', ') || '—'}`,
+  ]
+  if (network.apMldMacAddress || network.mloLinks?.length) {
+    lines.push(
+      `MLO ${network.apMldMacAddress ?? '—'}: ` +
+        (network.mloLinks ?? [])
+          .map((link) => `#${link.linkId} ${link.bandGhz ?? '?'}GHz ch${link.channel ?? '?'} ${link.state ?? ''} ${link.rssi ?? ''}`)
+          .join(' | ')
+    )
+  }
+  return lines
+}
 
 export default function App() {
   const [busy, setBusy] = useState(false)
@@ -73,6 +98,8 @@ export default function App() {
   const [selfTestRunning, setSelfTestRunning] = useState(false)
   const stopWifiState = useRef<(() => void) | null>(null)
   const [watchingWifi, setWatchingWifi] = useState(false)
+  const [ranging, setRanging] = useState<RttRangingOutcome | null>(null)
+  const [benchmark, setBenchmark] = useState<string[] | null>(null)
 
   const startSelfTest = () => {
     if (selfTestRunning) return
@@ -125,6 +152,51 @@ export default function App() {
       setCurrent(nextCurrent)
       setNetworks(nextNetworks)
       setMessage(`Found ${nextNetworks.length} network${nextNetworks.length === 1 ? '' : 's'}.`)
+    })
+
+  const runCachedScan = () =>
+    guard(async () => {
+      const started = Date.now()
+      const cached = await scanNetworks({ maxResults: 30, maxAge: 30_000 })
+      setNetworks(cached)
+      const throttle = await getScanThrottleStatus()
+      setMessage(
+        `maxAge 30 s: ${cached.length} networks in ${Date.now() - started} ms ` +
+          `(cache age ${throttle.cachedResultsAgeMs ?? '—'} ms; a fresh scan runs only when older).`
+      )
+    })
+
+  const runThrottleStatus = () =>
+    guard(async () => {
+      const status = await getScanThrottleStatus()
+      const wait = Math.max(0, status.nextScanAllowedAt - Date.now())
+      setMessage(
+        `Scan throttle: enabled=${status.throttleEnabled ?? 'unknown'} ` +
+          `${status.scansInWindow}/${status.maxScans} scans in ${status.windowMs / 1000} s window; ` +
+          `next scan ${wait === 0 ? 'allowed now' : `in ${Math.ceil(wait / 1000)} s`}; ` +
+          `cache age ${status.cachedResultsAgeMs ?? '—'} ms`
+      )
+    })
+
+  const runRanging = () =>
+    guard(async () => {
+      setMessage('Ranging to 802.11mc access points…')
+      if (!(await requestWifiPermission())) {
+        setMessage('Wi-Fi permission was not granted.')
+        return
+      }
+      await scanNetworks({ maxAge: 60_000 })
+      const outcome = await rangeToAccessPoints({ includeOneSided: true, timeout: 10_000 })
+      setRanging(outcome)
+      setMessage(`RTT: ${outcome.status}${outcome.message ? ` (${outcome.message})` : ''}`)
+    })
+
+  const runBench = () =>
+    guard(async () => {
+      setMessage('Benchmarking (about 15 s)…')
+      const lines = await runBenchmark((line) => setMessage(line))
+      setBenchmark(lines)
+      setMessage('Benchmark finished.')
     })
 
   const runCapabilities = () =>
@@ -446,6 +518,18 @@ export default function App() {
           <Pressable onPress={togglePickerBrowse} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
             <Text style={styles.smallButtonText}>Bonjour picker</Text>
           </Pressable>
+          <Pressable disabled={busy} onPress={runCachedScan} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Cached scan</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runThrottleStatus} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Throttle status</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runRanging} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>RTT range</Text>
+          </Pressable>
+          <Pressable disabled={busy} onPress={runBench} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
+            <Text style={styles.smallButtonText}>Benchmark</Text>
+          </Pressable>
           <Pressable disabled={selfTestRunning} onPress={startSelfTest} style={({ pressed }) => [styles.smallButton, pressed && styles.buttonPressed]}>
             <Text style={styles.smallButtonText}>{selfTestRunning ? 'Self-test…' : 'Self-test'}</Text>
           </Pressable>
@@ -461,6 +545,31 @@ export default function App() {
             {selfTest.checks.map((item) => (
               <Text key={item.name} style={styles.meta}>
                 {item.pass ? 'PASS' : 'FAIL'} {item.name}: {item.detail}
+              </Text>
+            ))}
+          </View>
+        )}
+
+        {benchmark && (
+          <View style={styles.currentCard}>
+            <Text style={styles.cardLabel}>BENCHMARK</Text>
+            {benchmark.map((line) => (
+              <Text key={line} style={styles.meta}>{line}</Text>
+            ))}
+          </View>
+        )}
+
+        {ranging && (
+          <View style={styles.currentCard}>
+            <Text style={styles.cardLabel}>WI-FI RTT · {ranging.status.toUpperCase()}</Text>
+            {ranging.message ? <Text style={styles.meta}>{ranging.message}</Text> : null}
+            {ranging.results.map((result) => (
+              <Text key={result.bssid} style={styles.meta}>
+                {result.bssid} {result.status}
+                {result.distanceMeters == null
+                  ? ''
+                  : ` ${result.distanceMeters.toFixed(2)} m ±${(result.distanceStdDevMeters ?? 0).toFixed(2)} (${result.successfulMeasurements}/${result.attemptedMeasurements})`}
+                {result.oneSided ? ' one-sided' : ''}
               </Text>
             ))}
           </View>
@@ -495,6 +604,10 @@ export default function App() {
           <View style={styles.currentCard}>
             <Text style={styles.cardLabel}>DIAGNOSTICS{observing ? ' · LIVE' : ''}</Text>
             <Text style={styles.networkName}>{diagnostics.currentNetwork?.ssid ?? diagnostics.state}</Text>
+            {diagnostics.currentNetwork &&
+              linkSummary(diagnostics.currentNetwork).map((line) => (
+                <Text key={line} style={styles.meta}>{line}</Text>
+              ))}
             <Text style={styles.meta}>
               state: {diagnostics.state}
               {diagnostics.validated == null ? '' : ` · validated: ${diagnostics.validated}`}
@@ -533,6 +646,9 @@ export default function App() {
               <Text style={styles.meta}>{current.ipv6Addresses.join(', ')}</Text>
             )}
             <Text style={styles.meta}>security: {current.securityType}</Text>
+            {linkSummary(current).map((line) => (
+              <Text key={line} style={styles.meta}>{line}</Text>
+            ))}
           </View>
         )}
 
@@ -548,6 +664,13 @@ export default function App() {
               {` · ${network.securityType}`}
               {network.timestamp == null ? '' : ` · seen ${Math.round((Date.now() - network.timestamp) / 1000)}s ago`}
             </Text>
+            {network.channelWidthMhz != null && (
+              <Text style={styles.meta}>
+                {`${network.bandGhz ?? '?'} GHz · ${network.channelWidthMhz} MHz · ${network.wifiStandard ?? 'standard ?'}`}
+                {network.rttResponder ? ' · RTT' : ''}
+                {network.apMldMacAddress ? ` · MLO ${network.mloLinks?.length ?? 0} links` : ''}
+              </Text>
+            )}
           </View>
         ))}
       </ScrollView>

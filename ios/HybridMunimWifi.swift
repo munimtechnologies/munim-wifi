@@ -161,7 +161,9 @@ private final class WifiConnectionAttempt {
 }
 
 final class HybridMunimWifi: HybridMunimWifiSpec {
-  private var scanResults: [WifiNetwork] = []
+  private var _scanResults: [WifiNetwork] = []
+  private var scanTimer: DispatchSourceTimer?
+  private let scanQueue = DispatchQueue(label: "com.munimwifi.scan")
   private var locationManager: CLLocationManager?
   private var locationDelegate: LocationPermissionDelegate?
   private var pathMonitor: NWPathMonitor?
@@ -177,6 +179,12 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   private var lastJoinedSSID: String? {
     get { stateLock.lock(); defer { stateLock.unlock() }; return _lastJoinedSSID }
     set { stateLock.lock(); _lastJoinedSSID = newValue; stateLock.unlock() }
+  }
+
+  /// Last current-network read; written from NEHotspotNetwork callbacks on arbitrary queues.
+  private var scanResults: [WifiNetwork] {
+    get { stateLock.lock(); defer { stateLock.unlock() }; return _scanResults }
+    set { stateLock.lock(); _scanResults = newValue; stateLock.unlock() }
   }
 
   /// iOS has no public API for the Wi-Fi radio state. The most truthful signal
@@ -235,16 +243,32 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   ) throws {
     let options: ScanOptions? = options
     try validate(options: options)
-    fetchCurrentNetwork { network in
-      let networks = network.map { [self.toWifiNetwork($0)] } ?? []
-      self.scanResults = networks
-      // iOS has no scan API: this is a live read of the current network only.
-      onNetworks(networks, ScanResultInfo(fresh: true, throttled: false, message: nil))
+    try stopScan()
+    // iOS has no scan API: each tick is a live read of the current network,
+    // repeated every `interval` ms (default 30000) like Android's scan loop.
+    let interval = (options?.interval ?? 30_000) / 1_000
+    let timer = DispatchSource.makeTimerSource(queue: scanQueue)
+    timer.schedule(deadline: .now(), repeating: interval, leeway: .milliseconds(500))
+    timer.setEventHandler { [weak self] in
+      guard let self else { return }
+      self.fetchCurrentNetwork { network in
+        let networks = network.map { [self.toWifiNetwork($0)] } ?? []
+        self.scanResults = networks
+        onNetworks(networks, ScanResultInfo(fresh: true, throttled: false, message: nil))
+      }
     }
+    stateLock.lock()
+    scanTimer = timer
+    stateLock.unlock()
+    timer.resume()
   }
 
   func stopScan() throws {
-    // iOS does not expose general or continuous Wi-Fi scans to ordinary apps.
+    stateLock.lock()
+    let timer = scanTimer
+    scanTimer = nil
+    stateLock.unlock()
+    timer?.cancel()
   }
 
   func getSSIDs() throws -> Promise<[String]> {
@@ -584,6 +608,27 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     return promise
   }
 
+  /// iOS offers apps no Wi-Fi scan, so there is no scan budget to report.
+  func getScanThrottleStatus() throws -> Promise<ScanThrottleStatus> {
+    Promise.resolved(withResult: ScanThrottleStatus(
+      throttleEnabled: nil,
+      maxScans: 0,
+      windowMs: 0,
+      scansInWindow: 0,
+      nextScanAllowedAt: Date().timeIntervalSince1970 * 1_000,
+      cachedResultsAgeMs: nil
+    ))
+  }
+
+  /// Apple exposes no Wi-Fi RTT / fine timing measurement API to apps.
+  func rangeToAccessPoints(options: RttRangingOptions) throws -> Promise<RttRangingOutcome> {
+    Promise.resolved(withResult: RttRangingOutcome(
+      status: .unsupported,
+      results: [],
+      message: "munim-wifi: iOS has no public Wi-Fi RTT (802.11mc) ranging API"
+    ))
+  }
+
   func getNetworkDiagnostics() throws -> Promise<NetworkDiagnostics> {
     let promise = Promise<NetworkDiagnostics>()
     Self.snapshotPath { [weak self] path in
@@ -602,7 +647,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
             captivePortal: nil,
             metered: nil,
             constrained: nil,
-            currentNetwork: network.map(self.toCurrentNetworkInfo),
+            currentNetwork: network.map { self.toCurrentNetworkInfo($0) },
             linkProperties: nil
           ))
         }
@@ -942,13 +987,14 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     let state: NetworkState = path.status == .satisfied ? .available : .unavailable
     let interfaceName = path.availableInterfaces.first { path.usesInterfaceType($0.type) }?.name
       ?? path.availableInterfaces.first?.name
-    let addresses = getIPAddressSync().map { [$0] } ?? []
+    let snapshot = wifiInterfaceSnapshot()
+    let addresses = snapshot.ipv4.first.map { [$0] } ?? []
     let linkProperties = interfaceName == nil && addresses.isEmpty ? nil : NetworkLinkProperties(
       interfaceName: interfaceName,
       addresses: addresses,
       dnsServers: [],
       routes: [],
-      mtu: nil
+      mtu: snapshot.name != nil && snapshot.name == interfaceName ? snapshot.mtu.map { Double($0) } : nil
     )
     return NetworkDiagnostics(
       timestamp: Date().timeIntervalSince1970 * 1_000,
@@ -957,7 +1003,7 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       captivePortal: nil,
       metered: path.isExpensive,
       constrained: path.isConstrained,
-      currentNetwork: network.map(toCurrentNetworkInfo),
+      currentNetwork: network.map { toCurrentNetworkInfo($0, snapshot: snapshot) },
       linkProperties: linkProperties
     )
   }
@@ -976,20 +1022,50 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
       capabilities: nil,
       isSecure: network.isSecure,
       securityType: securityType(of: network),
-      timestamp: Date().timeIntervalSince1970 * 1_000
+      timestamp: Date().timeIntervalSince1970 * 1_000,
+      bandGhz: nil,
+      channelWidthMhz: nil,
+      centerFrequency0: nil,
+      centerFrequency1: nil,
+      wifiStandard: nil,
+      rttResponder: nil,
+      rttNtbResponder: nil,
+      apMldMacAddress: nil,
+      mloLinks: nil
     )
   }
 
-  private func toCurrentNetworkInfo(_ network: NEHotspotNetwork) -> CurrentNetworkInfo {
-    CurrentNetworkInfo(
+  /// NEHotspotNetwork.fetchCurrent only reports SSID, BSSID and security for
+  /// the joined network; signal strength, channel and link speed are not
+  /// available to ordinary apps. Addressing comes from the Wi-Fi interface.
+  private func toCurrentNetworkInfo(
+    _ network: NEHotspotNetwork,
+    snapshot: WifiInterfaceSnapshot? = nil
+  ) -> CurrentNetworkInfo {
+    let snapshot = snapshot ?? wifiInterfaceSnapshot()
+    return CurrentNetworkInfo(
       ssid: network.ssid,
       bssid: network.bssid,
       securityType: securityType(of: network),
-      ipAddress: getIPAddressSync(),
-      ipv6Addresses: wifiInterfaceAddresses().ipv6,
-      subnetMask: nil,
+      ipAddress: snapshot.ipv4.first,
+      ipv6Addresses: snapshot.ipv6,
+      subnetMask: snapshot.ipv4Netmask,
+      subnetPrefixLength: snapshot.ipv4PrefixLength.map { Double($0) },
       gateway: nil,
-      dnsServers: nil
+      dnsServers: nil,
+      rssi: nil,
+      linkSpeedMbps: nil,
+      txLinkSpeedMbps: nil,
+      rxLinkSpeedMbps: nil,
+      maxTxLinkSpeedMbps: nil,
+      maxRxLinkSpeedMbps: nil,
+      frequency: nil,
+      channel: nil,
+      bandGhz: nil,
+      wifiStandard: nil,
+      hiddenSsid: nil,
+      apMldMacAddress: nil,
+      mloLinks: nil
     )
   }
 
@@ -1060,19 +1136,25 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
   }
 
   private func getIPAddressSync() -> String? {
-    wifiInterfaceAddresses().ipv4.first
+    wifiInterfaceSnapshot().ipv4.first
   }
 
-  /// Wi-Fi is en0 on iPhone and iPad (en1 on some Mac Catalyst hosts). Only
-  /// interfaces that are up and running are considered.
   private func wifiInterfaceAddresses() -> IPAddressInfo {
-    var ipv4: [String] = []
+    let snapshot = wifiInterfaceSnapshot()
+    return IPAddressInfo(interfaceName: snapshot.name, ipv4: snapshot.ipv4, ipv6: snapshot.ipv6)
+  }
+
+  /// One getifaddrs() walk over the Wi-Fi interface: addresses, the IPv4
+  /// netmask and the MTU. Wi-Fi is en0 on iPhone and iPad (en1 on some Mac
+  /// Catalyst hosts). Only interfaces that are up and running are considered.
+  private func wifiInterfaceSnapshot() -> WifiInterfaceSnapshot {
+    var snapshot = WifiInterfaceSnapshot()
     var ipv6: [(address: String, rank: Int)] = []
-    var interfaceName: String?
+    var mtus: [String: Int] = [:]
 
     var interfaceAddresses: UnsafeMutablePointer<ifaddrs>?
     guard getifaddrs(&interfaceAddresses) == 0, let first = interfaceAddresses else {
-      return IPAddressInfo(interfaceName: nil, ipv4: [], ipv6: [])
+      return snapshot
     }
     defer { freeifaddrs(interfaceAddresses) }
 
@@ -1080,42 +1162,57 @@ final class HybridMunimWifi: HybridMunimWifiSpec {
     while let current = pointer {
       defer { pointer = current.pointee.ifa_next }
       guard let socketAddress = current.pointee.ifa_addr else { continue }
-      let family = socketAddress.pointee.sa_family
-      guard family == UInt8(AF_INET) || family == UInt8(AF_INET6) else { continue }
       let flags = Int32(current.pointee.ifa_flags)
       guard flags & IFF_UP != 0, flags & IFF_RUNNING != 0 else { continue }
       let name = String(cString: current.pointee.ifa_name)
       guard name == "en0" || name == "en1" else { continue }
+      let family = socketAddress.pointee.sa_family
+      if family == UInt8(AF_LINK) {
+        if let data = current.pointee.ifa_data {
+          mtus[name] = Int(data.assumingMemoryBound(to: if_data.self).pointee.ifi_mtu)
+        }
+        continue
+      }
+      guard family == UInt8(AF_INET) || family == UInt8(AF_INET6) else { continue }
       // Stick to the first Wi-Fi interface that has addresses.
-      if let interfaceName, interfaceName != name { continue }
+      if let interfaceName = snapshot.name, interfaceName != name { continue }
 
-      var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
-      let result = getnameinfo(
-        socketAddress,
-        socklen_t(socketAddress.pointee.sa_len),
-        &hostname,
-        socklen_t(hostname.count),
-        nil,
-        0,
-        NI_NUMERICHOST
-      )
-      guard result == 0 else { continue }
-      let address = String(cString: hostname)
-      interfaceName = name
+      guard let address = Self.numericHost(socketAddress) else { continue }
+      snapshot.name = name
       if family == UInt8(AF_INET) {
-        ipv4.append(address)
+        snapshot.ipv4.append(address)
+        if snapshot.ipv4Netmask == nil, let netmask = current.pointee.ifa_netmask {
+          snapshot.ipv4Netmask = Self.numericHost(netmask)
+          let bits = netmask.withMemoryRebound(to: sockaddr_in.self, capacity: 1) {
+            UInt32(bigEndian: $0.pointee.sin_addr.s_addr)
+          }
+          snapshot.ipv4PrefixLength = bits.nonzeroBitCount
+        }
       } else {
         ipv6.append((address, Self.ipv6Rank(address)))
       }
     }
 
-    return IPAddressInfo(
-      interfaceName: interfaceName,
-      ipv4: ipv4,
-      ipv6: ipv6.enumerated()
-        .sorted { ($0.element.rank, $0.offset) < ($1.element.rank, $1.offset) }
-        .map { $0.element.address }
+    snapshot.ipv6 = ipv6.enumerated()
+      .sorted { ($0.element.rank, $0.offset) < ($1.element.rank, $1.offset) }
+      .map { $0.element.address }
+    if let name = snapshot.name { snapshot.mtu = mtus[name] }
+    return snapshot
+  }
+
+  private static func numericHost(_ socketAddress: UnsafeMutablePointer<sockaddr>) -> String? {
+    var hostname = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+    let result = getnameinfo(
+      socketAddress,
+      socklen_t(socketAddress.pointee.sa_len),
+      &hostname,
+      socklen_t(hostname.count),
+      nil,
+      0,
+      NI_NUMERICHOST
     )
+    guard result == 0 else { return nil }
+    return String(cString: hostname)
   }
 
   /// 0 = global, 1 = unique local (fc00::/7), 2 = link-local (fe80::/10).
@@ -1181,6 +1278,16 @@ private final class ReachabilityProbe: NSObject, URLSessionTaskDelegate {
   ) {
     completionHandler(nil)
   }
+}
+
+/// Addressing of the Wi-Fi interface from one getifaddrs() walk.
+struct WifiInterfaceSnapshot {
+  var name: String?
+  var ipv4: [String] = []
+  var ipv6: [String] = []
+  var ipv4Netmask: String?
+  var ipv4PrefixLength: Int?
+  var mtu: Int?
 }
 
 /// Last Wi-Fi state a startWifiStateObserver() monitor reported; only touched on its serial queue.
