@@ -28,6 +28,15 @@
             "_companion-link._tcp"
           ]
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 37,
+            "targetSdkVersion": 37
+          }
+        }
       ]
     ]
   }

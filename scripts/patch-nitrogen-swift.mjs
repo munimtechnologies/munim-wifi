@@ -6,8 +6,9 @@
 // after every `nitrogen` codegen.
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const dir = new URL('../nitrogen/generated/ios/swift/', import.meta.url).pathname
+const dir = fileURLToPath(new URL('../nitrogen/generated/ios/swift/', import.meta.url))
 const MAP_CALL = /([A-Za-z0-9_.]+)\.map\(\{ __item in String\(__item\) \}\)/g
 const HELPER_NAME = '__nitroVectorToStringArray'
 const HELPER = `

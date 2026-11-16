@@ -4,7 +4,6 @@
   "exclude": ["**/node_modules"],
   "compilerOptions": {
     "strict": true,
-    "baseUrl": ".",
     "paths": {
       "munim-wifi": ["../src"]
     }

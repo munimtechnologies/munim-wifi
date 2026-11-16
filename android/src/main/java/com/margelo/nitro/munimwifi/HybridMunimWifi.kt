@@ -27,6 +27,7 @@ import android.net.wifi.WifiNetworkSuggestion
 import android.content.pm.PackageInfo
 import android.os.Build
 import android.os.Handler
+import android.os.HandlerThread
 import android.os.Looper
 import android.os.PatternMatcher
 import android.os.SystemClock
@@ -85,15 +86,38 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     get() = NitroModules.applicationContext
       ?: throw IllegalStateException("munim-wifi: React Native application context is unavailable")
 
-  private val wifiManager: WifiManager
-    get() = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+  private val wifiManager: WifiManager by lazy {
+    context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+  }
 
-  private val connectivityManager: ConnectivityManager
-    get() = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  private val connectivityManager: ConnectivityManager by lazy {
+    context.applicationContext.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  }
 
   private val mainHandler = Handler(Looper.getMainLooper())
-  private var continuousReceiver: BroadcastReceiver? = null
-  private var continuousRunnable: Runnable? = null
+
+  /**
+   * Broadcast receivers, network callbacks, NSD and RTT results run here rather
+   * than on the UI thread: reading scan results and link state are binder
+   * calls, and none of them needs the main looper.
+   */
+  private val workerHandler: Handler by lazy {
+    Handler(HandlerThread("munim-wifi").apply { start() }.looper)
+  }
+
+  /** Elapsed-realtime ms of scans this module started (accepted by the OS). */
+  private val scanStartTimes = ArrayDeque<Long>()
+
+  @Volatile private var cachedPermissionsInfo: PackageInfo? = null
+
+  // Network observer state; touched only on workerHandler's thread.
+  private var observerCapabilities: NetworkCapabilities? = null
+  private var observerLinkProperties: LinkProperties? = null
+  private var observerNetwork: Network? = null
+  private var lastObserverDiagnostics: NetworkDiagnostics? = null
+  private val flushObserverRunnable = Runnable { flushNetworkObserver() }
+  @Volatile private var continuousReceiver: BroadcastReceiver? = null
+  @Volatile private var continuousRunnable: Runnable? = null
   private var requestedNetworkCallback: ConnectivityManager.NetworkCallback? = null
   /** Process binding that was active before connectToNetwork() bound to its network. */
   @Volatile private var specifierPreviousBoundNetwork: Network? = null
@@ -184,8 +208,22 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       ensureCanScan()
       val timeoutMs = normalizedTimeout(options?.timeout)
       // Validated up front: a bad value would otherwise only throw once results
-      // arrive, on the main thread inside the receiver.
+      // arrive, on the worker thread inside the receiver.
       normalizedMaxResults(options?.maxResults)
+      val maxAge = options?.maxAge
+      require(maxAge == null || (maxAge.isFinite() && maxAge >= 0)) {
+        "munim-wifi: maxAge must be a non-negative number of milliseconds"
+      }
+      // Fresh enough cached results cost no scan from the throttle budget.
+      if (maxAge != null) {
+        val age = cachedResultsAgeMs()
+        if (age != null && age <= maxAge) {
+          val cached = readNetworks(options.maxResults)
+          settled.set(true)
+          promise.resolve(cached)
+          return promise
+        }
+      }
       val receiver = object : BroadcastReceiver() {
         override fun onReceive(receiverContext: Context, intent: Intent) {
           if (intent.action != WifiManager.SCAN_RESULTS_AVAILABLE_ACTION) return
@@ -207,8 +245,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       }
 
       registerReceiver(receiver)
-      @Suppress("DEPRECATION")
-      val started = wifiManager.startScan()
+      val started = startTrackedScan()
       if (!started && settled.compareAndSet(false, true)) {
         unregisterReceiverSafely(receiver)
         try {
@@ -223,7 +260,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         return promise
       }
 
-      mainHandler.postDelayed({
+      workerHandler.postDelayed({
         if (settled.compareAndSet(false, true)) {
           unregisterReceiverSafely(receiver)
           promise.reject(TimeoutException("munim-wifi: scan timed out after ${timeoutMs}ms"))
@@ -269,9 +306,9 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
       lateinit var scanRunnable: Runnable
       scanRunnable = Runnable {
-        if (continuousReceiver == null) return@Runnable
+        if (continuousReceiver !== receiver) return@Runnable
         try {
-          if (!wifiManager.startScan()) {
+          if (!startTrackedScan()) {
             // Android refused a fresh scan (throttled). Deliver what is cached,
             // flagged as such, instead of passing it off as a new scan.
             onNetworks(
@@ -282,11 +319,11 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         } catch (error: Throwable) {
           onError?.invoke(error.message ?: "munim-wifi: continuous scan failed")
         } finally {
-          if (continuousReceiver != null) mainHandler.postDelayed(scanRunnable, intervalMs)
+          if (continuousReceiver === receiver) workerHandler.postDelayed(scanRunnable, intervalMs)
         }
       }
       continuousRunnable = scanRunnable
-      mainHandler.post(scanRunnable)
+      workerHandler.post(scanRunnable)
     } catch (error: Throwable) {
       stopScan()
       onError?.invoke(error.message ?: "munim-wifi: could not start scanning")
@@ -294,7 +331,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   }
 
   override fun stopScan() {
-    continuousRunnable?.let(mainHandler::removeCallbacks)
+    continuousRunnable?.let(workerHandler::removeCallbacks)
     continuousRunnable = null
     continuousReceiver?.let(::unregisterReceiverSafely)
     continuousReceiver = null
@@ -949,7 +986,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
             message = "munim-wifi: the hotspot failed to start (reason $reason)",
           ))
         }
-      }, mainHandler)
+      }, workerHandler)
     } catch (error: Throwable) {
       if (settled.compareAndSet(false, true)) {
         promise.resolve(HotspotOutcome(
@@ -1020,6 +1057,75 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     )
   }
 
+  override fun getScanThrottleStatus(): Promise<ScanThrottleStatus> = Promise.parallel {
+    val throttleEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+      try {
+        wifiManager.isScanThrottleEnabled
+      } catch (_: Throwable) {
+        null
+      }
+    } else {
+      null
+    }
+    val now = SystemClock.elapsedRealtime()
+    val (count, oldest) = synchronized(scanStartTimes) {
+      pruneScanStartTimes(now)
+      scanStartTimes.size to scanStartTimes.firstOrNull()
+    }
+    val nextAllowedElapsed = if (throttleEnabled != false && count >= SCAN_THROTTLE_MAX && oldest != null) {
+      oldest + SCAN_THROTTLE_WINDOW_MS
+    } else {
+      now
+    }
+    ScanThrottleStatus(
+      throttleEnabled = throttleEnabled,
+      maxScans = SCAN_THROTTLE_MAX.toDouble(),
+      windowMs = SCAN_THROTTLE_WINDOW_MS.toDouble(),
+      scansInWindow = count.toDouble(),
+      nextScanAllowedAt = (System.currentTimeMillis() + (nextAllowedElapsed - now)).toDouble(),
+      cachedResultsAgeMs = cachedResultsAgeMs()?.toDouble(),
+    )
+  }
+
+  override fun rangeToAccessPoints(options: RttRangingOptions): Promise<RttRangingOutcome> {
+    val promise = Promise<RttRangingOutcome>()
+    try {
+      val timeout = options?.timeout ?: 10_000.0
+      require(timeout.isFinite() && timeout in 1_000.0..30_000.0) {
+        "munim-wifi: ranging timeout must be between 1000 and 30000 milliseconds"
+      }
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P ||
+        !context.packageManager.hasSystemFeature(PackageManager.FEATURE_WIFI_RTT)
+      ) {
+        promise.resolve(rttOutcome(
+          RttRangingStatus.UNSUPPORTED,
+          "munim-wifi: this device has no Wi-Fi RTT (IEEE 802.11mc) support",
+        ))
+        return promise
+      }
+      if (!hasWifiScanPermission()) {
+        promise.resolve(rttOutcome(
+          RttRangingStatus.PERMISSIONDENIED,
+          "munim-wifi: Wi-Fi RTT needs the same permissions as scanning " +
+            "(Nearby Wi-Fi Devices on Android 13+, precise location below)",
+        ))
+        return promise
+      }
+      WifiRtt.range(
+        context = context,
+        wifiManager = wifiManager,
+        handler = workerHandler,
+        bssids = options?.bssids?.toList(),
+        includeOneSided = options?.includeOneSided == true,
+        timeoutMs = timeout.toLong(),
+        onDone = promise::resolve,
+      )
+    } catch (error: Throwable) {
+      promise.reject(error)
+    }
+    return promise
+  }
+
   override fun getNetworkDiagnostics(): Promise<NetworkDiagnostics> = Promise.parallel {
     buildDiagnostics(connectivityManager.activeNetwork, null)
   }
@@ -1083,39 +1189,34 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     }
   }
 
+  /**
+   * Follows the default network. The capabilities and link properties the
+   * callback delivers are reused instead of being queried again, and the
+   * burst of callbacks Android sends for one change (available, capabilities,
+   * link properties) is coalesced into one update. Updates identical to the
+   * previous one (apart from the timestamp) are dropped.
+   */
   override fun startNetworkObserver(onUpdate: (diagnostics: NetworkDiagnostics) -> Unit) {
     synchronized(observerLock) {
       stopNetworkObserverLocked()
-      val callback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) = emit(network, NetworkState.AVAILABLE)
-
-        override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) =
-          emit(network, NetworkState.AVAILABLE)
-
-        override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) =
-          emit(network, NetworkState.AVAILABLE)
-
-        override fun onLost(network: Network) = emit(null, NetworkState.LOST)
-
-        override fun onUnavailable() = emit(null, NetworkState.UNAVAILABLE)
-
-        private fun emit(network: Network?, state: NetworkState) {
-          val emitter = networkObserverEmit ?: return
-          try {
-            emitter(buildDiagnostics(network, state))
-          } catch (_: Throwable) {
-            // Never crash the app because a JS listener threw.
-          }
-        }
+      // Android 12+: ask for unredacted WifiInfo in the capabilities, so updates
+      // read SSID/RSSI/link speed from the callback (when the app holds
+      // location) instead of calling WifiManager again.
+      val callback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        ObserverCallback(ConnectivityManager.NetworkCallback.FLAG_INCLUDE_LOCATION_INFO)
+      } else {
+        ObserverCallback()
       }
       networkObserverEmit = onUpdate
       networkObserverCallback = callback
-      when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ->
-          connectivityManager.registerDefaultNetworkCallback(callback, mainHandler)
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.N ->
-          connectivityManager.registerDefaultNetworkCallback(callback)
-        else -> connectivityManager.registerNetworkCallback(NetworkRequest.Builder().build(), callback)
+      workerHandler.post {
+        clearObserverNetwork()
+        lastObserverDiagnostics = null
+      }
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        connectivityManager.registerDefaultNetworkCallback(callback, workerHandler)
+      } else {
+        connectivityManager.registerDefaultNetworkCallback(callback)
       }
     }
   }
@@ -1136,6 +1237,93 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       }
     }
     networkObserverCallback = null
+    workerHandler.removeCallbacks(flushObserverRunnable)
+  }
+
+  /** Default-network callback; every event is handled on the worker thread. */
+  private inner class ObserverCallback : ConnectivityManager.NetworkCallback {
+    constructor() : super()
+
+    @RequiresApi(Build.VERSION_CODES.S)
+    constructor(flags: Int) : super(flags)
+
+    override fun onAvailable(network: Network) = onWorker {
+      if (observerNetwork != network) {
+        observerCapabilities = null
+        observerLinkProperties = null
+      }
+      observerNetwork = network
+      scheduleObserverFlush()
+    }
+
+    override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) = onWorker {
+      observerNetwork = network
+      observerCapabilities = networkCapabilities
+      scheduleObserverFlush()
+    }
+
+    override fun onLinkPropertiesChanged(network: Network, linkProperties: LinkProperties) = onWorker {
+      observerNetwork = network
+      observerLinkProperties = linkProperties
+      scheduleObserverFlush()
+    }
+
+    override fun onLost(network: Network) = onWorker {
+      if (observerNetwork != null && observerNetwork != network) return@onWorker
+      clearObserverNetwork()
+      emitObserverUpdate(buildDiagnostics(null, NetworkState.LOST))
+    }
+
+    override fun onUnavailable() = onWorker {
+      clearObserverNetwork()
+      emitObserverUpdate(buildDiagnostics(null, NetworkState.UNAVAILABLE))
+    }
+  }
+
+  /** Runs [block] on the worker thread (inline when already there). */
+  private fun onWorker(block: () -> Unit) {
+    if (Looper.myLooper() == workerHandler.looper) {
+      block()
+    } else {
+      workerHandler.post(block)
+    }
+  }
+
+  private fun clearObserverNetwork() {
+    workerHandler.removeCallbacks(flushObserverRunnable)
+    observerNetwork = null
+    observerCapabilities = null
+    observerLinkProperties = null
+  }
+
+  private fun scheduleObserverFlush() {
+    workerHandler.removeCallbacks(flushObserverRunnable)
+    workerHandler.postDelayed(flushObserverRunnable, OBSERVER_COALESCE_MS)
+  }
+
+  private fun flushNetworkObserver() {
+    val network = observerNetwork ?: return
+    emitObserverUpdate(
+      buildDiagnostics(
+        network,
+        NetworkState.AVAILABLE,
+        capabilitiesOverride = observerCapabilities,
+        linkPropertiesOverride = observerLinkProperties,
+      )
+    )
+  }
+
+  /** Worker thread only. */
+  private fun emitObserverUpdate(diagnostics: NetworkDiagnostics) {
+    val emitter = networkObserverEmit ?: return
+    val previous = lastObserverDiagnostics
+    if (previous != null && previous.copy(timestamp = diagnostics.timestamp) == diagnostics) return
+    lastObserverDiagnostics = diagnostics
+    try {
+      emitter(diagnostics)
+    } catch (_: Throwable) {
+      // Never crash the app because a JS listener threw.
+    }
   }
 
   override fun startWifiStateObserver(onChange: (event: WifiStateEvent) -> Unit) {
@@ -1143,11 +1331,11 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       stopWifiStateObserverLocked()
       wifiStateEmit = onChange
       if (Build.VERSION.SDK_INT >= WIFI_STATE_LISTENER_SDK) {
-        wifiStateListener = WifiStateListenerApi36.add(wifiManager, mainHandler) {
+        wifiStateListener = WifiStateListenerApi36.add(wifiManager, workerHandler) {
           emitWifiState(wifiManager.wifiState)
         }
         // The listener only reports changes; deliver the current state first.
-        mainHandler.post { emitWifiState(wifiManager.wifiState) }
+        workerHandler.post { emitWifiState(wifiManager.wifiState) }
       } else {
         // Sticky broadcast: registering delivers the current state straight away.
         val receiver = object : BroadcastReceiver() {
@@ -1159,9 +1347,9 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         wifiStateReceiver = receiver
         val filter = IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-          context.registerReceiver(receiver, filter, null, mainHandler, Context.RECEIVER_NOT_EXPORTED)
+          context.registerReceiver(receiver, filter, null, workerHandler, Context.RECEIVER_NOT_EXPORTED)
         } else {
-          context.registerReceiver(receiver, filter, null, mainHandler)
+          context.registerReceiver(receiver, filter, null, workerHandler)
         }
       }
     }
@@ -1228,7 +1416,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     val id = UUID.randomUUID().toString()
     val session = NsdDiscoverySession(
       nsdManager = nsdManager,
-      handler = mainHandler,
+      handler = workerHandler,
       id = id,
       type = serviceType,
       domain = options?.domain?.takeIf { it.isNotBlank() } ?: "local.",
@@ -1575,10 +1763,19 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private fun permissionState(granted: Boolean): PermissionState =
     if (granted) PermissionState.GRANTED else PermissionState.DENIED
 
-  private fun buildDiagnostics(networkOverride: Network?, stateOverride: NetworkState?): NetworkDiagnostics {
+  /**
+   * [capabilitiesOverride] / [linkPropertiesOverride] are what a network
+   * callback just delivered; passing them saves re-querying ConnectivityManager.
+   */
+  private fun buildDiagnostics(
+    networkOverride: Network?,
+    stateOverride: NetworkState?,
+    capabilitiesOverride: NetworkCapabilities? = null,
+    linkPropertiesOverride: LinkProperties? = null,
+  ): NetworkDiagnostics {
     val network = networkOverride ?: if (stateOverride == null) connectivityManager.activeNetwork else null
-    val capabilities = network?.let { connectivityManager.getNetworkCapabilities(it) }
-    val linkProperties = network?.let { connectivityManager.getLinkProperties(it) }
+    val capabilities = capabilitiesOverride ?: network?.let { connectivityManager.getNetworkCapabilities(it) }
+    val linkProperties = linkPropertiesOverride ?: network?.let { connectivityManager.getLinkProperties(it) }
     val state = stateOverride
       ?: if (network != null && capabilities != null) NetworkState.AVAILABLE else NetworkState.UNAVAILABLE
     val isWifi = capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
@@ -1593,7 +1790,11 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       } else {
         null
       },
-      currentNetwork = if (isWifi) currentNetworkInfo() else null,
+      currentNetwork = if (isWifi) {
+        currentNetworkInfo(wifiInfoFrom(capabilities), linkProperties)
+      } else {
+        null
+      },
       linkProperties = linkProperties?.let(::toNetworkLinkProperties),
     )
   }
@@ -1821,11 +2022,20 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     else -> PermissionState.DENIED
   }
 
+  /**
+   * The app's declared permissions cannot change while it runs, so the
+   * PackageManager round trip (a binder call that copies every requested
+   * permission) happens once instead of on every scan and permission check.
+   */
   @Suppress("DEPRECATION")
-  private fun requestedPermissionsInfo(): PackageInfo? = try {
-    context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
-  } catch (_: Throwable) {
-    null
+  private fun requestedPermissionsInfo(): PackageInfo? {
+    cachedPermissionsInfo?.let { return it }
+    return try {
+      context.packageManager.getPackageInfo(context.packageName, PackageManager.GET_PERMISSIONS)
+        .also { cachedPermissionsInfo = it }
+    } catch (_: Throwable) {
+      null
+    }
   }
 
   private fun isDeclaredInManifest(permission: String): Boolean =
@@ -1844,14 +2054,47 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private fun hasPermission(permission: String): Boolean =
     ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
+  /** Scan-result receivers run on the worker thread, off the UI thread. */
   private fun registerReceiver(receiver: BroadcastReceiver) {
     val filter = IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      context.registerReceiver(receiver, filter, Context.RECEIVER_NOT_EXPORTED)
+      context.registerReceiver(receiver, filter, null, workerHandler, Context.RECEIVER_NOT_EXPORTED)
     } else {
-      @Suppress("DEPRECATION")
-      context.registerReceiver(receiver, filter)
+      context.registerReceiver(receiver, filter, null, workerHandler)
     }
+  }
+
+  /** WifiManager.startScan(), remembering accepted scans for getScanThrottleStatus(). */
+  @Suppress("DEPRECATION")
+  private fun startTrackedScan(): Boolean {
+    val started = wifiManager.startScan()
+    if (started) {
+      val now = SystemClock.elapsedRealtime()
+      synchronized(scanStartTimes) {
+        pruneScanStartTimes(now)
+        scanStartTimes.addLast(now)
+      }
+    }
+    return started
+  }
+
+  /** Caller holds the scanStartTimes lock. */
+  private fun pruneScanStartTimes(now: Long) {
+    while (scanStartTimes.isNotEmpty() && now - scanStartTimes.first() >= SCAN_THROTTLE_WINDOW_MS) {
+      scanStartTimes.removeFirst()
+    }
+  }
+
+  /** Age of the newest cached scan result, or null when there is none or no permission. */
+  private fun cachedResultsAgeMs(): Long? = try {
+    if (!hasWifiScanPermission()) {
+      null
+    } else {
+      val newest = wifiManager.scanResults.maxOfOrNull { it.timestamp } ?: 0L
+      if (newest <= 0L) null else (SystemClock.elapsedRealtime() - newest / 1_000L).coerceAtLeast(0L)
+    }
+  } catch (_: Throwable) {
+    null
   }
 
   private fun unregisterReceiverSafely(receiver: BroadcastReceiver) {
@@ -1879,6 +2122,7 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
 
   private fun toWifiNetwork(result: ScanResult): WifiNetwork {
     val capabilities = result.capabilities.orEmpty()
+    val wifi7 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     return WifiNetwork(
       ssid = result.SSID.orEmpty(),
       bssid = result.BSSID.orEmpty(),
@@ -1890,8 +2134,92 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
         capabilities.contains("WPA", true) || capabilities.contains("EAP", true),
       securityType = classifySecurity(capabilities),
       timestamp = lastSeenWallClockMillis(result),
+      bandGhz = frequencyToBandGhz(result.frequency),
+      channelWidthMhz = channelWidthMhz(result.channelWidth),
+      centerFrequency0 = result.centerFreq0.takeIf { it > 0 }?.toDouble(),
+      centerFrequency1 = result.centerFreq1.takeIf { it > 0 }?.toDouble(),
+      wifiStandard = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        wifiStandard(result.wifiStandard)
+      } else {
+        null
+      },
+      rttResponder = result.is80211mcResponder(),
+      rttNtbResponder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+        result.is80211azNtbResponder()
+      } else {
+        null
+      },
+      apMldMacAddress = if (wifi7) result.apMldMacAddress?.toString() else null,
+      mloLinks = if (wifi7) {
+        result.affiliatedMloLinks.takeIf { it.isNotEmpty() }
+          ?.map { toMloLink(it, associated = false) }?.toTypedArray()
+      } else {
+        null
+      },
     )
   }
+
+  @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+  private fun toMloLink(link: android.net.wifi.MloLink, associated: Boolean): MloLink = MloLink(
+    linkId = link.linkId.toDouble(),
+    bandGhz = when (link.band) {
+      MLO_BAND_24_GHZ -> 2.4
+      MLO_BAND_5_GHZ -> 5.0
+      MLO_BAND_6_GHZ -> 6.0
+      MLO_BAND_60_GHZ -> 60.0
+      else -> null
+    },
+    channel = link.channel.takeIf { it > 0 }?.toDouble(),
+    apMacAddress = link.apMacAddress?.toString(),
+    state = if (associated) {
+      when (link.state) {
+        android.net.wifi.MloLink.MLO_LINK_STATE_ACTIVE -> MloLinkState.ACTIVE
+        android.net.wifi.MloLink.MLO_LINK_STATE_IDLE -> MloLinkState.IDLE
+        android.net.wifi.MloLink.MLO_LINK_STATE_UNASSOCIATED -> MloLinkState.UNASSOCIATED
+        else -> MloLinkState.INVALID
+      }
+    } else {
+      null
+    },
+    rssi = if (associated) link.rssi.takeIf { it > INVALID_RSSI && it < 0 }?.toDouble() else null,
+    txLinkSpeedMbps = if (associated) link.txLinkSpeedMbps.takeIf { it > 0 }?.toDouble() else null,
+    rxLinkSpeedMbps = if (associated) link.rxLinkSpeedMbps.takeIf { it > 0 }?.toDouble() else null,
+  )
+
+  private fun wifiStandard(standard: Int): WifiStandard = when (standard) {
+    ScanResult.WIFI_STANDARD_LEGACY -> WifiStandard.LEGACY
+    ScanResult.WIFI_STANDARD_11N -> WifiStandard.WIFI4
+    ScanResult.WIFI_STANDARD_11AC -> WifiStandard.WIFI5
+    ScanResult.WIFI_STANDARD_11AX -> WifiStandard.WIFI6
+    ScanResult.WIFI_STANDARD_11AD -> WifiStandard.WIGIG
+    WIFI_STANDARD_11BE -> WifiStandard.WIFI7
+    else -> WifiStandard.UNKNOWN
+  }
+
+  private fun channelWidthMhz(width: Int): Double? = when (width) {
+    ScanResult.CHANNEL_WIDTH_20MHZ -> 20.0
+    ScanResult.CHANNEL_WIDTH_40MHZ -> 40.0
+    ScanResult.CHANNEL_WIDTH_80MHZ -> 80.0
+    ScanResult.CHANNEL_WIDTH_160MHZ, ScanResult.CHANNEL_WIDTH_80MHZ_PLUS_MHZ -> 160.0
+    CHANNEL_WIDTH_320MHZ -> 320.0
+    else -> null
+  }
+
+  private fun frequencyToBandGhz(frequency: Int): Double? = when {
+    frequency in 2_400..2_500 -> 2.4
+    frequency in 4_900..5_900 -> 5.0
+    frequency in 5_925..7_125 -> 6.0
+    frequency in 57_000..71_000 -> 60.0
+    else -> null
+  }
+
+  /** Android 12+: the WifiInfo a location-aware network callback carries. */
+  private fun wifiInfoFrom(capabilities: NetworkCapabilities?): WifiInfo? =
+    if (capabilities != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+      capabilities.transportInfo as? WifiInfo
+    } else {
+      null
+    }
 
   /** ScanResult.timestamp is microseconds since boot; convert it to wall-clock time. */
   private fun lastSeenWallClockMillis(result: ScanResult): Double {
@@ -1951,6 +2279,10 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   private fun wifiAddresses(): IPAddressInfo? {
     val network = wifiNetwork() ?: return null
     val linkProperties = connectivityManager.getLinkProperties(network) ?: return null
+    return addressesOf(linkProperties)
+  }
+
+  private fun addressesOf(linkProperties: LinkProperties): IPAddressInfo {
     val addresses = linkProperties.linkAddresses.mapNotNull { it.address }
     val ipv4 = addresses.filterIsInstance<Inet4Address>().mapNotNull { it.hostAddress }
     val ipv6 = addresses.filterIsInstance<Inet6Address>()
@@ -1971,23 +2303,94 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
   @Suppress("DEPRECATION")
   private fun legacyWifiIpv4(): String? = ipv4(wifiManager.connectionInfo?.ipAddress ?: 0)
 
+  /**
+   * The joined Wi-Fi network, or null without location permission (Android
+   * redacts the SSID/BSSID then) or when not connected.
+   *
+   * [infoOverride] and [linkPropertiesOverride] come from a network callback;
+   * without them WifiManager and ConnectivityManager are queried. Subnet,
+   * gateway and DNS come from LinkProperties (IPv6-aware); the deprecated
+   * DhcpInfo is only a fallback for devices that report nothing there.
+   */
   @Suppress("DEPRECATION")
-  private fun currentNetworkInfo(): CurrentNetworkInfo? {
+  private fun currentNetworkInfo(
+    infoOverride: WifiInfo? = null,
+    linkPropertiesOverride: LinkProperties? = null,
+  ): CurrentNetworkInfo? {
     if (!hasLocationPermission()) return null
-    val info: WifiInfo = wifiManager.connectionInfo ?: return null
+    val info: WifiInfo = infoOverride ?: wifiManager.connectionInfo ?: return null
     val ssid = info.ssid?.removeSurrounding("\"").orEmpty()
     if (ssid.isBlank() || ssid == WifiManager.UNKNOWN_SSID) return null
-    val dhcp = wifiManager.dhcpInfo
+    val linkProperties = linkPropertiesOverride
+      ?: wifiNetwork()?.let { connectivityManager.getLinkProperties(it) }
+    val addresses = linkProperties?.let(::addressesOf)
+    val ipv4LinkAddress = linkProperties?.linkAddresses?.firstOrNull { it.address is Inet4Address }
+    val prefixLength = ipv4LinkAddress?.prefixLength?.takeIf { it in 1..32 }
+    var gateway = linkProperties?.routes
+      ?.firstOrNull { it.isDefaultRoute && (it.gateway as? Inet4Address)?.isAnyLocalAddress == false }
+      ?.gateway?.hostAddress
+    var dnsServers = linkProperties?.dnsServers?.mapNotNull { it.hostAddress?.substringBefore('%') }
+      ?.takeIf { it.isNotEmpty() }
+    var subnetMask = prefixLength?.let(::prefixToMask)
+    if (gateway == null || dnsServers == null || subnetMask == null) {
+      val dhcp = wifiManager.dhcpInfo
+      gateway = gateway ?: ipv4(dhcp?.gateway ?: 0)
+      dnsServers = dnsServers ?: listOfNotNull(ipv4(dhcp?.dns1 ?: 0), ipv4(dhcp?.dns2 ?: 0))
+      subnetMask = subnetMask ?: ipv4(dhcp?.netmask ?: 0)
+    }
+    val frequency = info.frequency.takeIf { it > 0 }
+    val wifi7 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     return CurrentNetworkInfo(
       ssid = ssid,
       bssid = info.bssid?.takeUnless { it == "02:00:00:00:00:00" }.orEmpty(),
       securityType = currentSecurityType(info),
-      ipAddress = ipv4(info.ipAddress),
-      ipv6Addresses = wifiAddresses()?.ipv6,
-      subnetMask = ipv4(dhcp?.netmask ?: 0),
-      gateway = ipv4(dhcp?.gateway ?: 0),
-      dnsServers = listOfNotNull(ipv4(dhcp?.dns1 ?: 0), ipv4(dhcp?.dns2 ?: 0)).toTypedArray(),
+      ipAddress = addresses?.ipv4?.firstOrNull() ?: ipv4(info.ipAddress),
+      ipv6Addresses = addresses?.ipv6 ?: wifiAddresses()?.ipv6,
+      subnetMask = subnetMask,
+      subnetPrefixLength = prefixLength?.toDouble(),
+      gateway = gateway,
+      dnsServers = dnsServers?.toTypedArray(),
+      rssi = info.rssi.takeIf { it > INVALID_RSSI && it < 0 }?.toDouble(),
+      linkSpeedMbps = info.linkSpeed.takeIf { it > 0 }?.toDouble(),
+      txLinkSpeedMbps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        info.txLinkSpeedMbps.takeIf { it > 0 }?.toDouble()
+      } else {
+        null
+      },
+      rxLinkSpeedMbps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        info.rxLinkSpeedMbps.takeIf { it > 0 }?.toDouble()
+      } else {
+        null
+      },
+      maxTxLinkSpeedMbps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        info.maxSupportedTxLinkSpeedMbps.takeIf { it > 0 }?.toDouble()
+      } else {
+        null
+      },
+      maxRxLinkSpeedMbps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        info.maxSupportedRxLinkSpeedMbps.takeIf { it > 0 }?.toDouble()
+      } else {
+        null
+      },
+      frequency = frequency?.toDouble(),
+      channel = frequency?.let(::frequencyToChannel)?.toDouble(),
+      bandGhz = frequency?.let(::frequencyToBandGhz),
+      wifiStandard = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) wifiStandard(info.wifiStandard) else null,
+      hiddenSsid = info.hiddenSSID,
+      apMldMacAddress = if (wifi7) info.apMldMacAddress?.toString() else null,
+      mloLinks = if (wifi7) {
+        info.associatedMloLinks.takeIf { it.isNotEmpty() }
+          ?.map { toMloLink(it, associated = true) }?.toTypedArray()
+      } else {
+        null
+      },
     )
+  }
+
+  private fun prefixToMask(prefixLength: Int): String {
+    val mask = if (prefixLength == 0) 0 else (-1 shl (32 - prefixLength))
+    return listOf(mask ushr 24 and 0xff, mask ushr 16 and 0xff, mask ushr 8 and 0xff, mask and 0xff)
+      .joinToString(".")
   }
 
   private fun normalizedMaxResults(value: Double?): Int {
@@ -2061,6 +2464,22 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
     const val EAP_TYPE_TTLS = 21
     const val EAP_TYPE_AKA = 23
     const val EAP_TYPE_AKA_PRIME = 50
+    /** Foreground apps may start 4 scans every 2 minutes (Android 9+). */
+    const val SCAN_THROTTLE_MAX = 4
+    const val SCAN_THROTTLE_WINDOW_MS = 120_000L
+    /** Network callbacks that arrive within this window become one update. */
+    const val OBSERVER_COALESCE_MS = 50L
+    /** WifiInfo.INVALID_RSSI. */
+    const val INVALID_RSSI = -127
+    /** ScanResult.WIFI_STANDARD_11BE (API 33). */
+    const val WIFI_STANDARD_11BE = 8
+    /** ScanResult.CHANNEL_WIDTH_320MHZ (API 33). */
+    const val CHANNEL_WIDTH_320MHZ = 5
+    /** WifiScanner.WIFI_BAND_* values MloLink.getBand() reports. */
+    const val MLO_BAND_24_GHZ = 1
+    const val MLO_BAND_5_GHZ = 2
+    const val MLO_BAND_6_GHZ = 8
+    const val MLO_BAND_60_GHZ = 16
     const val SCAN_FAILED_MESSAGE =
       "munim-wifi: the Wi-Fi scan did not complete; results are cached"
   }

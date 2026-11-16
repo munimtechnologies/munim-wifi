@@ -15,6 +15,8 @@ import type {
   HotspotStatus,
   IPAddressInfo,
   Location,
+  MloLink,
+  MloLinkState,
   MunimWifi as MunimWifiSpec,
   NativeConnectionOptions,
   NativeNetworkSuggestionOptions,
@@ -24,8 +26,14 @@ import type {
   PasspointConfig,
   PermissionState,
   ReachabilityOptions,
+  RttRangingOptions,
+  RttRangingOutcome,
+  RttRangingResult,
+  RttRangingStatus,
+  RttResultStatus,
   ScanOptions,
   ScanResultInfo,
+  ScanThrottleStatus,
   ServiceDiscoveryOptions,
   ServiceTxtEntry,
   SuggestionConnectionEvent,
@@ -39,6 +47,7 @@ import type {
   WifiPlatform,
   WifiRadioState,
   WifiSecurityType,
+  WifiStandard,
   WifiStateEvent,
 } from './specs/munim-wifi.nitro'
 import {
@@ -46,6 +55,8 @@ import {
   validateNativeConnectionOptions,
   validateReachabilityOptions,
   validateResolveTimeout,
+  validateRttRangingOptions,
+  validateScanOptions,
   validateSecurity,
   validateServiceType,
   validateSSID,
@@ -212,11 +223,24 @@ export function requestWifiPermission(): Promise<boolean> {
   return MunimWifi.requestWifiPermission()
 }
 
+/**
+ * Scans for nearby networks (Android) or reads the joined network (iOS).
+ *
+ * Android allows a foreground app 4 scans every 2 minutes. Pass `maxAge` to
+ * reuse results that are recent enough instead of spending a scan, and see
+ * getScanThrottleStatus() for when the next scan will be accepted.
+ */
 export function scanNetworks(options?: ScanOptions): Promise<WifiNetwork[]> {
-  return MunimWifi.scanNetworks(options ?? {})
+  try {
+    validateScanOptions(options)
+    return MunimWifi.scanNetworks(options ?? {})
+  } catch (error) {
+    return Promise.reject(error)
+  }
 }
 
 export function startScan(options?: ScanOptions): void {
+  validateScanOptions(options)
   MunimWifi.startScan(
     options ?? {},
     (networks, info) => {
@@ -224,9 +248,10 @@ export function startScan(options?: ScanOptions): void {
         throttledListeners.forEach((listener) => listener(info))
       }
       networksListeners.forEach((listener) => listener(networks, info))
-      networks.forEach((network) => {
+      if (networkListeners.size === 0) return
+      for (const network of networks) {
         networkListeners.forEach((listener) => listener(network))
-      })
+      }
     },
     (message) => errorListeners.forEach((listener) => listener(message))
   )
@@ -412,6 +437,33 @@ export function getIPAddresses(): Promise<IPAddressInfo | null> {
 
 export function getWifiCapabilityStatus(): Promise<WifiCapabilityStatus> {
   return MunimWifi.getWifiCapabilityStatus()
+}
+
+/**
+ * Android: where the app stands against the Wi-Fi scan throttle (4 scans per
+ * 2 minutes in the foreground) and how old the cached results are. iOS has no
+ * scan API and reports `maxScans: 0`.
+ */
+export function getScanThrottleStatus(): Promise<ScanThrottleStatus> {
+  return MunimWifi.getScanThrottleStatus()
+}
+
+/**
+ * Android 9+ with Wi-Fi RTT hardware: measures the distance to access points
+ * (IEEE 802.11mc fine timing measurement, plus one-sided RTT on Android 12+
+ * with `includeOneSided`). Scan first: targets come from the latest scan
+ * results. Resolves `status: 'unsupported'` on iOS and on devices without
+ * RTT; never rejects for platform reasons.
+ */
+export function rangeToAccessPoints(
+  options?: RttRangingOptions
+): Promise<RttRangingOutcome> {
+  try {
+    validateRttRangingOptions(options)
+    return MunimWifi.rangeToAccessPoints(options ?? {})
+  } catch (error) {
+    return Promise.reject(error)
+  }
 }
 
 export function getNetworkDiagnostics(): Promise<NetworkDiagnostics> {
@@ -651,6 +703,8 @@ export type {
   HotspotStatus,
   IPAddressInfo,
   Location,
+  MloLink,
+  MloLinkState,
   MunimWifiSpec,
   NativeConnectionOptions,
   NativeNetworkSuggestionOptions,
@@ -660,8 +714,14 @@ export type {
   PasspointConfig,
   PermissionState,
   ReachabilityOptions,
+  RttRangingOptions,
+  RttRangingOutcome,
+  RttRangingResult,
+  RttRangingStatus,
+  RttResultStatus,
   ScanOptions,
   ScanResultInfo,
+  ScanThrottleStatus,
   ServiceDiscoveryOptions,
   ServiceTxtEntry,
   SuggestionConnectionEvent,
@@ -675,6 +735,7 @@ export type {
   WifiPlatform,
   WifiRadioState,
   WifiSecurityType,
+  WifiStandard,
   WifiStateEvent,
 }
 
@@ -707,6 +768,8 @@ export default {
   getIPAddress,
   getIPAddresses,
   getWifiCapabilityStatus,
+  getScanThrottleStatus,
+  rangeToAccessPoints,
   getNetworkDiagnostics,
   isInternetReachable,
   startNetworkObserver,

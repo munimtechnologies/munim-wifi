@@ -91,6 +91,10 @@
 
 - 📡 **Nearby Network Scanning:** Retrieve Android scan results without blocking a native thread.
 - 📶 **Signal Information:** Read RSSI, frequency, and calculated 2.4/5/6/60 GHz channel information on Android.
+- 📐 **Channel and Generation:** Band, channel width (20–320 MHz), center frequencies and Wi-Fi generation (Wi-Fi 4–7) per scan result on Android.
+- 7️⃣ **Wi-Fi 7 Multi-Link:** Access point MLD address and per-link band/channel/BSSID in scans, plus the associated links' RSSI and speeds for the joined network (Android 13+).
+- 📏 **Wi-Fi RTT Ranging:** Measure the distance to 802.11mc access points (and one-sided RTT on Android 12+) with `rangeToAccessPoints()`.
+- ⏱️ **Throttle-aware Scans:** `scanNetworks({ maxAge })` reuses fresh cached results, and `getScanThrottleStatus()` says when the next scan will be accepted.
 - 🔐 **Security Details:** Read capabilities and an easy-to-use secure/open flag.
 - 🔄 **Continuous Results:** Subscribe to result batches or individual networks through Nitro callbacks.
 - 🧭 **Wi-Fi Fingerprinting:** Capture visible networks with a millisecond timestamp.
@@ -98,7 +102,7 @@
 ### Network Management
 
 - 🔌 **Native Connection Flows:** Android `WifiNetworkSpecifier` and iOS `NEHotspotConfiguration`.
-- 📱 **Current Network Information:** Read SSID, BSSID, IP address, gateway, DNS, and subnet data where available.
+- 📱 **Current Network Information:** Read SSID, BSSID, IP address, gateway, DNS and subnet data, plus RSSI, link speeds, frequency/channel and Wi-Fi generation on Android.
 - 🌐 **Local Routing:** Android 10+ binds the app process to the approved requested network until `disconnect()`, then restores the previous binding.
 - 🏢 **Enterprise and Passpoint:** WPA2/WPA3-Enterprise (PEAP, TTLS, TLS, …) and Hotspot 2.0 on both platforms.
 - 🔎 **SSID-prefix joins:** Join the first network whose SSID starts with a prefix (iOS 13+, Android 10+).
@@ -111,7 +115,8 @@
 - 📱 **Cross-platform:** One TypeScript API with honest platform-specific results.
 - 🎯 **TypeScript Support:** Full result, option, callback, and HybridObject types.
 - ⚡ **High Performance:** Nitro Modules with generated Swift/Kotlin/C++ bindings.
-- 🚀 **Expo Compatible:** Managed config plugin and Expo 57 example project.
+- 🚀 **Expo Compatible:** Managed config plugin and Expo SDK 58 example project.
+- 🧵 **Off the UI thread:** Android receivers, network callbacks, NSD and RTT run on a worker thread; the network observer coalesces callback bursts and drops duplicate updates.
 - 🔐 **Permission Handling:** Android runtime permission requests and real iOS location authorization.
 - 🧪 **Release Verification:** Package, example, iOS, and Android release-candidate checks.
 
@@ -123,12 +128,20 @@
 | SSID and BSSID | ✅ | ✅ | iOS requires the Wi-Fi Information entitlement plus an Apple access criterion. |
 | RSSI | ❌ | ✅ | Android returns dBm. |
 | Frequency and channel | ❌ | ✅ | Android covers 2.4, 5, 6, and 60 GHz channel calculations. |
+| Band, channel width, center frequencies | ❌ | ✅ | `bandGhz`, `channelWidthMhz`, `centerFrequency0/1` on scan results. |
+| Wi-Fi generation (`wifiStandard`) | ❌ | ✅ Android 11+ | `legacy`, `wifi4`–`wifi7`, `wigig`; scan results and the joined network. |
+| Wi-Fi 7 multi-link (MLO) | ❌ | ✅ Android 13+ | `apMldMacAddress` + `mloLinks` on scan results and `CurrentNetworkInfo`. |
+| Joined network RSSI / link speed | ❌ | ✅ | `rssi`, `linkSpeedMbps`, `tx/rxLinkSpeedMbps` (10+), `maxTx/maxRxLinkSpeedMbps` (11+). |
+| Subnet mask / prefix | ✅ | ✅ | `subnetMask`, `subnetPrefixLength`; gateway and DNS are Android-only. |
+| Wi-Fi RTT ranging | ❌ `unsupported` | ✅ Android 9+ with RTT hardware | `rangeToAccessPoints()`; one-sided RTT on Android 12+. |
+| Scan throttle status / cached scans | ❌ (no scan API) | ✅ | `getScanThrottleStatus()`, `scanNetworks({ maxAge })`. |
+| Wi-Fi Aware (NAN) | ❌ | ❌ | Reported by `getWifiCapabilityStatus().wifiAware`; no API yet. |
 | Capabilities/security | ⚠️ Security state only | ✅ | iOS does not expose Android-style capability strings. |
 | Current network | ✅ | ✅ | Values can be hidden by permissions or OS privacy behavior. |
 | Local IPv4/IPv6 addresses | ✅ | ✅ | `getIPAddress()` (IPv4) and `getIPAddresses()` (IPv4 + IPv6). |
 | Connect | ✅ | ✅ | Both platforms use system-controlled user-consent flows. |
 | Disconnect | ⚠️ Removes app configuration | ✅ | Resolves `false` when there was nothing this app could release. |
-| Continuous scan | ⚠️ One current-network result | ✅ | Throttled batches are flagged (`info.throttled`), never passed off as fresh. |
+| Continuous scan | ⚠️ Current network every `interval` | ✅ | Throttled batches are flagged (`info.throttled`), never passed off as fresh. |
 | Wi-Fi fingerprint | ⚠️ Current network only | ✅ | No location is inferred by the library. |
 | Security type | ⚠️ Coarse (open/WEP/personal/enterprise) | ✅ Full | Android classifies WPA2/WPA3/OWE/EAP/Passpoint from scan capabilities. |
 | Local network request | ✅ `joinOnce` configuration | ✅ Android 10+ specifier | Structured `ConnectionOutcome` on both platforms. |
@@ -216,9 +229,9 @@ All plugin options:
 
 > **Xcode 27 / iOS 27:** apps built with Xcode 27 crash at launch on iOS 27 unless they adopt the UIScene lifecycle ([expo/expo#46664](https://github.com/expo/expo/issues/46664)). This is an app setting, not a munim-wifi change: Expo SDK 58 and newer adopt it for you (the example app is on SDK 58). On Expo 57 use `expo` 57.0.23 or newer, run `npx expo install expo-build-properties`, and add `["expo-build-properties", { "ios": { "enableSceneSupport": true } }]` to your plugins.
 
-> **Nitro + Xcode 27 on iOS 17 and older:** any Nitro module built with Xcode 27 can crash at launch on iOS versions below 18 (`std::exception_ptr::__from_native_exception_pointer` missing; [margelo/nitro#1652](https://github.com/margelo/nitro/issues/1652), fix pending in [#1666](https://github.com/margelo/nitro/pull/1666)). It comes from `react-native-nitro-modules`, not munim-wifi. Until a fixed Nitro release ships, build with Xcode 26 if you support iOS 15–17, or apply the patch from that PR with `patch-package`.
+> **Nitro + Xcode 27 on iOS 17 and older:** Nitro modules built with Xcode 27 crashed at launch on iOS versions below 18 (`std::exception_ptr::__from_native_exception_pointer` missing; [margelo/nitro#1652](https://github.com/margelo/nitro/issues/1652)). `react-native-nitro-modules` 0.37.2 fixes it ([margelo/nitro#1824](https://github.com/margelo/nitro/pull/1824)); use 0.37.2 or newer if you build with Xcode 27 and support iOS 15–17.
 
-> **Android build defaults:** the library compiles against `compileSdk` 37 and targets 36 when your root project does not set them, and builds with Kotlin 2.2 and AGP 9.2 (React Native 0.87). Apps that still compile against API 36 (Expo SDK 57, React Native 0.86) build too; the Android 17 features then need an Android 17 device at runtime.
+> **Android build defaults:** the library compiles against `compileSdk` 37, targets 37 and supports `minSdk` 24 when your root project does not set them, and builds with Kotlin 2.2 and AGP 9.2 (React Native 0.88). Apps that still compile against API 36 (Expo SDK 57, React Native 0.86) build too; the Android 17 features then need an Android 17 device at runtime.
 
 Generate or rebuild native projects after changing the plugin configuration:
 
@@ -296,6 +309,8 @@ Apple's `NEHotspotNetwork.fetchCurrent()` returns a network only when the app ha
 | `scanNetworks`, `startScan`, `getSSIDs`, `getWifiFingerprint`, `getRSSI`, `getBSSID`, `getChannelInfo`, `getNetworkInfo` | `NEARBY_WIFI_DEVICES` (plus `ACCESS_FINE_LOCATION` if the app did not declare `neverForLocation`) | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` or `ACCESS_COARSE_LOCATION` | Access Wi-Fi Information entitlement + location (current network only) |
 | `getCurrentNetwork`, `CurrentNetworkInfo` in diagnostics | `ACCESS_FINE_LOCATION` (the SSID/BSSID is redacted without it) | `ACCESS_FINE_LOCATION` | location | entitlement + location, or a network this app configured |
 | `getIPAddress`, `getIPAddresses`, `getNetworkDiagnostics`, observer, `isInternetReachable` | none | none | none | none |
+| `rangeToAccessPoints` | same as scanning | same as scanning | unsupported (Android 9+) | unsupported |
+| `getScanThrottleStatus` | none (`cachedResultsAgeMs` needs scan permission) | none | none | none |
 | `connectToNetwork`, `requestLocalNetwork` | `NEARBY_WIFI_DEVICES` | none | none (legacy `WifiManager`) | Hotspot Configuration entitlement |
 | `configureNetwork`, suggestions | none (`CHANGE_WIFI_STATE`) | none | unsupported | Hotspot Configuration entitlement |
 | Suggestion connection events | `ACCESS_FINE_LOCATION` | `ACCESS_FINE_LOCATION` | unsupported | unsupported |
@@ -319,6 +334,16 @@ On Android 16 you can try the restriction early with `adb shell am compat enable
 ### Android scan throttling
 
 Android throttles `WifiManager.startScan()` (foreground apps: 4 scans every 2 minutes). When a continuous-scan request is refused, the cached batch is still delivered but flagged: `addNetworksFoundListener((networks, info) => …)` receives `info.throttled === true` and `info.fresh === false`, and `addScanThrottledListener` fires. `scanNetworks({ allowCached: false })` rejects instead of resolving with cached results. Each `WifiNetwork.timestamp` is when the radio last saw that network, so stale entries show their age.
+
+To spend fewer scans, pass `maxAge`: `scanNetworks({ maxAge: 30_000 })` resolves with the cached results straight away when the newest one is at most 30 s old, and only scans otherwise. `getScanThrottleStatus()` reports how many scans this app started in the current 2-minute window, when the next one will be accepted (`nextScanAllowedAt`), whether the device throttles at all (`throttleEnabled`, Android 11+; developers can turn throttling off in Developer options) and how old the cached results are.
+
+```typescript
+const status = await getScanThrottleStatus()
+const networks =
+  status.nextScanAllowedAt > Date.now()
+    ? await scanNetworks({ maxAge: Infinity }) // only cached results would come back anyway
+    : await scanNetworks()
+```
 
 ### Android process binding
 
@@ -426,12 +451,39 @@ Runs one Android scan or one iOS current-network lookup.
 - `maxResults?` (`number`): Positive integer result limit.
 - `timeout?` (`number`): Android timeout from 250 to 30,000 milliseconds.
 - `allowCached?` (`boolean`): Android. When the OS refuses or fails a fresh scan, resolve with cached results (`true`, default) or reject (`false`).
+- `maxAge?` (`number`): Android. Resolve with the cached results, without scanning, when the newest is at most this many milliseconds old.
 
-**Returns:** `Promise<WifiNetwork[]>`
+**Returns:** `Promise<WifiNetwork[]>`. On Android each network also carries `bandGhz`, `channelWidthMhz`, `centerFrequency0/1`, `wifiStandard` (Android 11+), `rttResponder` / `rttNtbResponder` (Android 15+) and, for Wi-Fi 7 access points, `apMldMacAddress` and `mloLinks` (Android 13+).
+
+#### `getScanThrottleStatus()`
+
+Android: `{ throttleEnabled?, maxScans, windowMs, scansInWindow, nextScanAllowedAt, cachedResultsAgeMs? }` for the foreground scan limit (4 scans per 120 s). Only scans started through munim-wifi are counted. iOS has no scan API and reports `maxScans: 0`.
+
+**Returns:** `Promise<ScanThrottleStatus>`
+
+#### `rangeToAccessPoints(options?)`
+
+Android 9+ on devices with Wi-Fi RTT hardware (`getWifiCapabilityStatus().wifiRtt === 'supported'`): measures the distance to access points with IEEE 802.11mc fine timing measurement. Targets come from the latest scan results, so scan first.
+
+- `bssids?` (`string[]`): access points to range to. Defaults to every 802.11mc responder (`rttResponder: true`) in the latest scan, strongest first, up to the platform limit (usually 10).
+- `includeOneSided?` (`boolean`): Android 12+. Also range to access points that are not responders, using one-sided RTT (less accurate; results have `oneSided: true`).
+- `timeout?` (`number`): 1,000–30,000 ms, default 10,000.
+
+Resolves `{ status, results, message? }` where `status` is `'completed' | 'unsupported' | 'unavailable' | 'permissionDenied' | 'noTargets' | 'failed'` and each result is `{ bssid, status: 'success' | 'failed' | 'responderUnsupported', distanceMeters?, distanceStdDevMeters?, rssi?, attemptedMeasurements?, successfulMeasurements?, oneSided, timestamp }`. iOS has no ranging API and resolves `'unsupported'`; it never rejects for platform reasons.
+
+```typescript
+await scanNetworks()
+const { status, results } = await rangeToAccessPoints({ includeOneSided: true })
+for (const result of results) {
+  if (result.status === 'success') console.log(result.bssid, result.distanceMeters, '±', result.distanceStdDevMeters)
+}
+```
+
+**Returns:** `Promise<RttRangingOutcome>`
 
 #### `startScan(options?)`
 
-Starts repeated Android scans. On iOS, emits one current-network result because general scanning is unavailable.
+Starts repeated Android scans. iOS has no scan API, so it emits the current network every `interval` instead.
 
 **Parameters:**
 
@@ -477,7 +529,7 @@ Returns complete information for the first matching SSID or `null`.
 
 #### `getCurrentNetwork()`
 
-Returns `CurrentNetworkInfo` or `null`. Depending on the platform, it can contain SSID, BSSID, IP address, subnet mask, gateway, and DNS servers.
+Returns `CurrentNetworkInfo` or `null`. Both platforms report SSID, BSSID, security, IPv4/IPv6 addresses, `subnetMask` and `subnetPrefixLength`. Android adds `gateway` and `dnsServers` (from `LinkProperties`, IPv6 included), `rssi`, `linkSpeedMbps`, `txLinkSpeedMbps`/`rxLinkSpeedMbps` (10+), `maxTxLinkSpeedMbps`/`maxRxLinkSpeedMbps` (11+), `frequency`, `channel`, `bandGhz`, `wifiStandard` (11+), `hiddenSsid` and, on a Wi-Fi 7 multi-link connection, `apMldMacAddress` plus the associated `mloLinks` with per-link state, RSSI and speeds (13+). iOS gives apps no signal strength or link speed for the joined network.
 
 #### `getIPAddress()`
 
@@ -632,6 +684,8 @@ One-shot snapshot of the default network.
 
 Continuous `NetworkDiagnostics` updates as the default network appears, changes capabilities, or is lost (`state: 'available' | 'lost' | 'unavailable'`). `addNetworkObserverListener` multiplexes many JS listeners over one native observer and returns a cleanup function.
 
+On Android the observer is event-driven (no polling): it reuses the capabilities and link properties each callback delivers, merges the burst Android sends for one change into a single update (50 ms window) and skips updates that are identical to the previous one apart from `timestamp`. On Android 12+ it reads the joined network's details from the callback itself, so `currentNetwork.rssi` and link speeds update live when the app holds location permission.
+
 #### `addWifiStateListener(callback)` / `startWifiStateObserver(callback)` / `stopWifiStateObserver()`
 
 Wi-Fi on/off events: `{ enabled, state, timestamp }`, where `state` is `'enabled' | 'enabling' | 'disabled' | 'disabling' | 'unknown'`. The current state arrives first, then each change.
@@ -706,6 +760,20 @@ type WifiSecurityType =
   | 'passpoint'
   | 'unknown'
 
+type WifiStandard = 'legacy' | 'wifi4' | 'wifi5' | 'wifi6' | 'wifi7' | 'wigig' | 'unknown'
+
+interface MloLink {
+  linkId: number
+  bandGhz?: number
+  channel?: number
+  apMacAddress?: string
+  // associated links (CurrentNetworkInfo.mloLinks) only:
+  state?: 'invalid' | 'unassociated' | 'idle' | 'active'
+  rssi?: number
+  txLinkSpeedMbps?: number
+  rxLinkSpeedMbps?: number
+}
+
 interface WifiNetwork {
   ssid: string
   bssid: string
@@ -716,6 +784,24 @@ interface WifiNetwork {
   isSecure?: boolean
   securityType: WifiSecurityType
   timestamp?: number // when the radio last saw it (Android ScanResult.timestamp)
+  bandGhz?: number // 2.4, 5, 6 or 60
+  channelWidthMhz?: number // 20, 40, 80, 160 (also 80+80) or 320
+  centerFrequency0?: number
+  centerFrequency1?: number
+  wifiStandard?: WifiStandard // Android 11+
+  rttResponder?: boolean // 802.11mc responder
+  rttNtbResponder?: boolean // 802.11az, Android 15+
+  apMldMacAddress?: string // Wi-Fi 7, Android 13+
+  mloLinks?: MloLink[] // Wi-Fi 7, Android 13+
+}
+
+interface ScanThrottleStatus {
+  throttleEnabled?: boolean
+  maxScans: number
+  windowMs: number
+  scansInWindow: number
+  nextScanAllowedAt: number
+  cachedResultsAgeMs?: number
 }
 
 interface ScanResultInfo {
@@ -737,8 +823,23 @@ interface CurrentNetworkInfo {
   ipAddress?: string
   ipv6Addresses?: string[]
   subnetMask?: string
-  gateway?: string
-  dnsServers?: string[]
+  subnetPrefixLength?: number
+  gateway?: string // Android
+  dnsServers?: string[] // Android
+  // Android only:
+  rssi?: number
+  linkSpeedMbps?: number
+  txLinkSpeedMbps?: number
+  rxLinkSpeedMbps?: number
+  maxTxLinkSpeedMbps?: number
+  maxRxLinkSpeedMbps?: number
+  frequency?: number
+  channel?: number
+  bandGhz?: number
+  wifiStandard?: WifiStandard
+  hiddenSsid?: boolean
+  apMldMacAddress?: string
+  mloLinks?: MloLink[]
 }
 
 interface WifiFingerprint {

@@ -9,6 +9,8 @@ import {
   validateResolveTimeout,
   validateServiceType,
   validateTimeout,
+  validateScanOptions,
+  validateRttRangingOptions,
 } from '../validation'
 
 describe('utf8ByteLength', () => {
@@ -424,5 +426,50 @@ describe('validateReachabilityOptions', () => {
       validateReachabilityOptions({ probeUrl: 'ftp://example.com' })
     ).toThrow(TypeError)
     expect(() => validateReachabilityOptions({ timeout: 100 })).toThrow(RangeError)
+  })
+})
+
+describe('validateScanOptions', () => {
+  it('accepts no options and typical options', () => {
+    expect(() => validateScanOptions(undefined)).not.toThrow()
+    expect(() => validateScanOptions({ maxAge: 0 })).not.toThrow()
+    expect(() => validateScanOptions({ maxAge: 30000, allowCached: false })).not.toThrow()
+  })
+
+  it('rejects a negative or non-finite maxAge', () => {
+    expect(() => validateScanOptions({ maxAge: -1 })).toThrow(RangeError)
+    expect(() => validateScanOptions({ maxAge: Number.NaN })).toThrow(RangeError)
+    expect(() => validateScanOptions({ maxAge: Infinity })).toThrow(RangeError)
+  })
+
+  it('rejects a non-boolean allowCached', () => {
+    expect(() =>
+      validateScanOptions({ allowCached: 'yes' as unknown as boolean })
+    ).toThrow(TypeError)
+  })
+})
+
+describe('validateRttRangingOptions', () => {
+  it('accepts no options and typical options', () => {
+    expect(() => validateRttRangingOptions(undefined)).not.toThrow()
+    expect(() => validateRttRangingOptions({})).not.toThrow()
+    expect(() =>
+      validateRttRangingOptions({
+        bssids: ['aa:bb:cc:dd:ee:ff'],
+        includeOneSided: true,
+        timeout: 5000,
+      })
+    ).not.toThrow()
+  })
+
+  it('rejects malformed or empty BSSID lists', () => {
+    expect(() => validateRttRangingOptions({ bssids: [] })).toThrow(TypeError)
+    expect(() => validateRttRangingOptions({ bssids: ['nope'] })).toThrow(TypeError)
+  })
+
+  it('rejects out-of-range timeouts', () => {
+    expect(() => validateRttRangingOptions({ timeout: 999 })).toThrow(RangeError)
+    expect(() => validateRttRangingOptions({ timeout: 30001 })).toThrow(RangeError)
+    expect(() => validateRttRangingOptions({ timeout: 1500.5 })).toThrow(RangeError)
   })
 })
