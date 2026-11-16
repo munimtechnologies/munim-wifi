@@ -16,7 +16,8 @@
     "codegen": "nitrogen --logLevel=\"debug\" && node scripts/patch-nitro-optionals.js && node scripts/patch-nitrogen-swift.mjs",
     "typecheck:example": "tsc --noEmit -p example/tsconfig.json",
     "prepack": "npm run build",
-    "test": "jest"
+    "test": "jest",
+    "lint": "eslint src example/App.tsx example/selftest.ts example/index.ts app.plugin.js eslint.config.js scripts"
   },
   "keywords": [
     "react-native",
@@ -78,21 +79,28 @@
     ]
   },
   "devDependencies": {
-    "@expo/config-plugins": "58.0.9",
-    "@semantic-release/changelog": "^6.0.3",
-    "@semantic-release/git": "^10.0.1",
+    "@eslint/js": "^10.0.1",
+    "@expo/config-plugins": "58.0.13",
+    "@semantic-release/changelog": "^7.0.0",
+    "@semantic-release/git": "^11.0.1",
     "@types/jest": "^30.0.0",
     "@types/react": "19.3.0",
-    "conventional-changelog-conventionalcommits": "^9.3.1",
+    "conventional-changelog-conventionalcommits": "^10.4.1",
+    "eslint": "^10.15.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
     "jest": "^30.5.2",
-    "nitrogen": "0.37.1",
-    "react": "19.3.0",
-    "react-native": "0.88.0",
-    "react-native-builder-bob": "^0.43.1",
-    "react-native-nitro-modules": "0.37.1",
-    "semantic-release": "^25.0.9",
-    "ts-jest": "^29.4.12",
-    "typescript": "^5.8.3"
+    "nitrogen": "0.37.2",
+    "prettier": "^3.10.1",
+    "react": "19.3.1",
+    "react-native": "0.88.1",
+    "react-native-builder-bob": "^0.44.1",
+    "react-native-nitro-modules": "0.37.2",
+    "semantic-release": "^26.0.1",
+    "ts-jest": "^29.4.15",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.2"
   },
   "peerDependencies": {
     "@expo/config-plugins": ">=10 <59",
@@ -120,32 +128,6 @@
     "undici@6.x": "6.29.0",
     "undici@7.x": "7.30.0"
   },
-  "eslintConfig": {
-    "root": true,
-    "extends": [
-      "@react-native",
-      "prettier"
-    ],
-    "plugins": [
-      "prettier"
-    ],
-    "rules": {
-      "prettier/prettier": [
-        "warn",
-        {
-          "quoteProps": "consistent",
-          "singleQuote": true,
-          "tabWidth": 2,
-          "trailingComma": "es5",
-          "useTabs": false
-        }
-      ]
-    }
-  },
-  "eslintIgnore": [
-    "node_modules/",
-    "lib/"
-  ],
   "prettier": {
     "quoteProps": "consistent",
     "singleQuote": true,
