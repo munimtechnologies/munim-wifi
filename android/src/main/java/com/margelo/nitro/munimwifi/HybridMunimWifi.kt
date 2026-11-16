@@ -217,8 +217,10 @@ class HybridMunimWifi : HybridMunimWifiSpec() {
       // Fresh enough cached results cost no scan from the throttle budget.
       if (maxAge != null) {
         val age = cachedResultsAgeMs()
-        if (age != null && age <= maxAge && settled.compareAndSet(false, true)) {
-          promise.resolve(readNetworks(options.maxResults))
+        if (age != null && age <= maxAge) {
+          val cached = readNetworks(options.maxResults)
+          settled.set(true)
+          promise.resolve(cached)
           return promise
         }
       }
