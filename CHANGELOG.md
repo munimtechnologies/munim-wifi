@@ -1,3 +1,9 @@
+## [0.7.1](https://github.com/munimtechnologies/munim-wifi/compare/v0.7.0...v0.7.1) (2026-11-17)
+
+### 🛠️ Other changes
+
+* **deps:** patch vulnerable dev dependencies (undici, shell-quote) ([#33](https://github.com/munimtechnologies/munim-wifi/issues/33)) ([4d86848](https://github.com/munimtechnologies/munim-wifi/commit/4d8684898f621da4246cdc4fc12f0405b7526dfd))
+
 ## [0.7.0](https://github.com/munimtechnologies/munim-wifi/compare/v0.6.1...v0.7.0) (2026-11-16)
 
 ### ✨ Features
